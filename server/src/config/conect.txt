@@ -1,0 +1,71 @@
+// kết nối mysql local
+{
+  "development": {
+    "username": "root",
+    "password": "Viet211003@s",
+    "database": "dtpm_db",
+    "host": "127.0.0.1",
+    "dialect": "mysql"
+  },
+  "test": {
+    "username": "root",
+    "password": "Viet211003@s",
+    "database": "dtpm_db",
+    "host": "127.0.0.1",
+    "dialect": "mysql"
+  },
+  "production": {
+    "username": "root",
+    "password": "Viet211003@s",
+    "database": "dtpm_db",
+    "host": "127.0.0.1",
+    "dialect": "mysql"
+  }
+}
+
+
+// kết nối tới cockroach db
+{
+  "development": {
+    "username": "viet003",
+    "password": "mcBKSrENDOb5-HQOYLc9KA",
+    "database": "ktpm_db",
+    "host": "nodedb-6250.6xw.aws-ap-southeast-1.cockroachlabs.cloud",
+    "port": 26257,
+    "dialect": "postgres",
+    "dialectOptions": {
+      "ssl": {
+        "require": true,
+        "rejectUnauthorized": false
+      }
+    }
+  },
+  "test": {
+    "username": "viet003",
+    "password": "mcBKSrENDOb5-HQOYLc9KA",
+    "database": "ktpm_db",
+    "host": "nodedb-6250.6xw.aws-ap-southeast-1.cockroachlabs.cloud",
+    "port": 26257,
+    "dialect": "postgres",
+    "dialectOptions": {
+      "ssl": {
+        "require": true,
+        "rejectUnauthorized": false
+      }
+    }
+  },
+  "production": {
+    "username": "viet003",
+    "password": "mcBKSrENDOb5-HQOYLc9KA",
+    "database": "ktpm_db",
+    "host": "nodedb-6250.6xw.aws-ap-southeast-1.cockroachlabs.cloud",
+    "port": 26257,
+    "dialect": "postgres",
+    "dialectOptions": {
+      "ssl": {
+        "require": true,
+        "rejectUnauthorized": false
+      }
+    }
+  }
+}
