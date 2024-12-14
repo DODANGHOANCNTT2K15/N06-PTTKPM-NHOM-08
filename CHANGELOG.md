@@ -6,5 +6,6 @@ Mọi thay đổi code của dự án sẽ được ghi lại ở đây.
 - Khởi tạo Server cơ bản.
 - Kết nối tới cơ sở dữ liệu.
 - Deploy server lên môi trường trực tuyến.
+- Tạo các bảng thông qua ORM-Sequlize.
 
 
