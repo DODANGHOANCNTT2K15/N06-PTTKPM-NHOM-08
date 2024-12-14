@@ -2,7 +2,7 @@
   "development": {
     "username": "viet003",
     "password": "mcBKSrENDOb5-HQOYLc9KA",
-    "database": "ktpm_db",
+    "database": "book_shop",
     "host": "nodedb-6250.6xw.aws-ap-southeast-1.cockroachlabs.cloud",
     "port": 26257,
     "dialect": "postgres",
@@ -16,7 +16,7 @@
   "test": {
     "username": "viet003",
     "password": "mcBKSrENDOb5-HQOYLc9KA",
-    "database": "ktpm_db",
+    "database": "book_shop",
     "host": "nodedb-6250.6xw.aws-ap-southeast-1.cockroachlabs.cloud",
     "port": 26257,
     "dialect": "postgres",
@@ -30,7 +30,7 @@
   "production": {
     "username": "viet003",
     "password": "mcBKSrENDOb5-HQOYLc9KA",
-    "database": "ktpm_db",
+    "database": "book_shop",
     "host": "nodedb-6250.6xw.aws-ap-southeast-1.cockroachlabs.cloud",
     "port": 26257,
     "dialect": "postgres",
