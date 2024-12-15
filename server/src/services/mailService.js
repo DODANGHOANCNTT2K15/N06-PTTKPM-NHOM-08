@@ -1,5 +1,6 @@
 import db from "../models";
 require('dotenv').config();
+import bcrypt from "bcryptjs";  // Nếu mật khẩu đã được mã hóa
 const nodemailer = require('nodemailer');
 
 // tạo mật khẩu ngẫu nhiên
@@ -12,7 +13,7 @@ function generateRandomPassword(length) {
     }
     return pass_word;
 }
-
+   
 // lấy lại mật khẩu
 export const getPassService = ({ email, type }) => new Promise(async (resolve, reject) => {
     const newPass = generateRandomPassword(8)
@@ -23,7 +24,7 @@ export const getPassService = ({ email, type }) => new Promise(async (resolve, r
         });
         if (response) {
             try {
-                await db.User.update({ pass_word: hash(newPass) }, {
+                await db.User.update({ pass_word:  bcrypt.hashSync(newPass, bcrypt.genSaltSync(10)) }, {
                     where: {
                         email,
                     },
@@ -98,7 +99,8 @@ export const getPassService = ({ email, type }) => new Promise(async (resolve, r
                         <body>
                             <div class="container">
                                 <h1>Lấy lại mật khẩu</h1>
-                                <p>Mật khẩu của bạn đã được thay đổi.Vui không chia sẻ với bất kỳ ai. </br> Dưới đây là mật khẩu mới của bạn:</p>
+                                <p>Mật khẩu của bạn đã được thay đổi. Vui không chia sẻ với bất kỳ ai.</p>
+                                <p>Dưới đây là mật khẩu mới của bạn:</p>
                                 <p class="pass"><strong>${newPass}</strong></p>
                                 <a href="#" class="button">Đăng nhập</a>
                                 <div class="bottom-bar">
@@ -120,9 +122,10 @@ export const getPassService = ({ email, type }) => new Promise(async (resolve, r
                     })
                 });
             } catch (error) {
+                console.log(error)
                 resolve({
                     err: 2,
-                    msg: "Không thể update mật khẩu!"
+                    msg: `Không thể update mật khẩu!, ${error.messsage}`
                 })
             }
 

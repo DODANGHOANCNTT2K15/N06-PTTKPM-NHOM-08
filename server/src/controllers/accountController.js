@@ -3,9 +3,9 @@ import * as mailService from "../services/mailService"
 
 // đổi mật khẩu
 export const changePassWordController = async (req, res) => {
-    const { email, oldPassword, newPassword } = req.body;
+    const { email, old_pass_word, new_pass_word } = req.body;
     try {
-        if (!email || !oldPassword || !newPassword) {
+        if (!email || !old_pass_word || !new_pass_word) {
             return res.status(400).json({
                 err: 1,
                 msg: "Thiếu dữ liệu đầu vào."
