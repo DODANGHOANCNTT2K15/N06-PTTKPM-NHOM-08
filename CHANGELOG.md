@@ -16,3 +16,12 @@ Mọi thay đổi code của dự án sẽ được ghi lại ở đây.
 ### Sửa đổi
 - Chỉnh sửa cơ sở dữ liệu
 - Chỉnh sửa lỗi logic, lỗi cú pháp
+
+## [Chưa phát hành] - 16/12/2024
+### Thêm mới
+- Kết nối với cloudinary
+- Xử lý upload ảnh
+
+### Sửa đổi
+- Chỉnh sửa cơ sở dữ liệu
+- Chỉnh sửa lỗi logic, lỗi cú pháp
