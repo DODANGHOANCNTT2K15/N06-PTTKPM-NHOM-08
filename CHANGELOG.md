@@ -8,4 +8,9 @@ Mọi thay đổi code của dự án sẽ được ghi lại ở đây.
 - Deploy server lên môi trường trực tuyến.
 - Tạo các bảng thông qua ORM-Sequlize.
 
+## [Chưa phát hành] - 15/12/2024
+### Thêm mới
+- Khởi tạo các dịch vụ: đăng nhập, đăng ký, quên mật khẩu...
+- Địa chỉ lấy Api: https://server-book-shop.onrender.com/
+
 
