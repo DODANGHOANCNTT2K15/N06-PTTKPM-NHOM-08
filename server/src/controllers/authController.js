@@ -1,7 +1,7 @@
 import * as authService from "../services/authService"
 
 // đăng ký
-export const register = async (req, res) => {
+export const registerController = async (req, res) => {
     const { user_name, email, pass_word, role } = req.body;
     try {
         if (!user_name || !email || !pass_word) {
@@ -18,7 +18,7 @@ export const register = async (req, res) => {
 }
 
 // đăng nhập
-export const login = async (req, res) => {
+export const loginController = async (req, res) => {
     const { email, pass_word } = req.body;
     try {
         if (!email || !pass_word) {

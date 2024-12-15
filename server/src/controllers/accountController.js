@@ -2,7 +2,7 @@ import * as authService from "../services/authService"
 import * as mailService from "../services/mailService"
 
 // đổi mật khẩu
-export const changePassWord = async (req, res) => {
+export const changePassWordController = async (req, res) => {
     const { email, oldPassword, newPassword } = req.body;
     try {
         if (!email || !oldPassword || !newPassword) {
@@ -19,7 +19,7 @@ export const changePassWord = async (req, res) => {
 }
 
 // quên mật khẩu
-export const forgotPassWord = async (req, res) => {
+export const forgotPassWordController = async (req, res) => {
     const { email } = req.body;
     try {
         if (!email) {
