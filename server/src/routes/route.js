@@ -9,6 +9,8 @@ const router = express.Router()
 router.post('/auth/login', authController.loginController)
 router.post('/auth/register', authController.registerController)
 router.post('/account/forgot', accountController.forgotPassWordController)
+router.post('/account/update', accountController.updateAccountController)
+router.post('/account/delete', accountController.deleteAccountController)
 router.post('/account/change', accountController.changePassWordController)
 
 

@@ -8,12 +8,12 @@ export const loginService = ({ email, pass_word }) => new Promise(async (resolve
     try {
         // Tìm account theo email
         const account = await db.User.findOne({
-            where: { email },
+            where: { email : email.trim() },
         });
 
         // Kiểm tra nếu không tìm thấy tài khoản
         if (!account) {
-            resolve({
+            return resolve({
                 err: 1,
                 msg: 'Không tìm thấy thông tin email.',
                 token: null,
@@ -21,9 +21,9 @@ export const loginService = ({ email, pass_word }) => new Promise(async (resolve
         }
 
         //Kiểm tra mật khẩu
-        const isPasswordValid = bcrypt.compareSync(pass_word, account.pass_word || '');
+        const isPasswordValid = bcrypt.compareSync(pass_word.trim(), account.pass_word || '');
         if (!isPasswordValid) {
-            resolve({
+            return resolve({
                 err: 2,
                 msg: 'Mật khẩu không chính xác.',
                 token: null,
@@ -32,7 +32,7 @@ export const loginService = ({ email, pass_word }) => new Promise(async (resolve
 
         // Kiểm tra trạng thái tài khoản
         if (!account?.status) {
-            resolve({
+            return resolve({
                 err: 1,
                 msg: 'Tài khoản của bạn đã bị khóa. Vui lòng liên hệ với QTV để được hỗ trợ.',
                 token: null,
@@ -52,14 +52,14 @@ export const loginService = ({ email, pass_word }) => new Promise(async (resolve
         );
 
         // Trả về thông tin thành công
-        resolve({
+        return resolve({
             err: 0,
             msg: 'Đăng nhập thành công!',
             token,
         });
     } catch (error) {
         console.error('Lỗi trong loginService:', error);
-        reject({
+        return reject({
             err: 2,
             msg: error.message,
             token: null,
@@ -75,9 +75,9 @@ export const registerService = ({ user_name, email, pass_word, role }) => new Pr
         const [account, created] = await db.User.findOrCreate({
             where: { email },
             defaults: {
-                email,
-                user_name,
-                pass_word: hash(pass_word),
+                email : email.trim(),
+                user_name: user_name.trim(),
+                pass_word: hash(pass_word.trim()),
                 role: role ? 1 : 0,
                 status: 1,
             }
@@ -96,14 +96,14 @@ export const registerService = ({ user_name, email, pass_word, role }) => new Pr
         );
 
         // trả về kết quả
-        resolve({
+        return resolve({
             err: token ? 0 : 2,
             msg: token ? 'Tạo tài khoản thành công!' : 'Nhân viên đã có tài khoản.',
             token: token || null
         });
     } catch (error) {
         console.log(error);
-        reject({
+        return reject({
             err: 1,
             msg: 'Lỗi khi tạo tài khoản!',
             error: error
@@ -111,96 +111,3 @@ export const registerService = ({ user_name, email, pass_word, role }) => new Pr
     }
 });
 
-// // sửa
-// export const updateAccountService = ({ email, pass_word, role }) =>
-//     new Promise(async (resolve, reject) => {
-//         try {
-//             // Cập nhật bản ghi tài khoản dựa trên email
-//             const response = await db.User.update(
-//                 { email, pass_word: hash(pass_word), role },
-//                 {
-//                     where: { email },
-//                 }
-//             );
-
-//             resolve({
-//                 err: response[0] ? 0 : 2,
-//                 msg: response[0] ? 'Cập nhật tài khoản thành công!' : 'Không tìm thấy tài khoản để cập nhật.',
-//             });
-//         } catch (error) {
-//             reject({
-//                 err: 1,
-//                 msg: 'Lỗi khi cập nhật tài khoản!',
-//                 error: error,
-//             });
-//         }
-//     });
-
-
-// // xóa
-// export const deleteAccountService = (email) =>
-//     new Promise(async (resolve, reject) => {
-//         try {
-//             // Xóa bản ghi tài khoản dựa trên email
-//             const response = await db.User.destroy({
-//                 where: { email },
-//             });
-
-//             resolve({
-//                 err: response ? 0 : 2,
-//                 msg: response ? 'Xóa tài khoản thành công!' : 'Không tìm thấy tài khoản để xóa.',
-//             });
-//         } catch (error) {
-//             reject({
-//                 err: 1,
-//                 msg: 'Lỗi khi xóa tài khoản!',
-//                 error: error.message,
-//             });
-//         }
-//     });
-
-// đổi mật khẩu
-export const changePasswordService = ({ email, old_pass_word, new_pass_word }) =>
-    new Promise(async (resolve, reject) => {
-        try {
-            // Tìm tài khoản dựa trên email
-            const account = await db.User.findOne({ where: { email } });
-
-            if (!account) {
-                return resolve({
-                    err: 2,
-                    msg: 'Tài khoản không tồn tại.',
-                });
-            }
-
-            // Kiểm tra mật khẩu cũ
-            const isCorrectOldPassword = bcrypt.compareSync(old_pass_word, account.pass_word);
-            if (!isCorrectOldPassword) {
-                return resolve({
-                    err: 2,
-                    msg: 'Mật khẩu cũ không chính xác.',
-                });
-            }
-
-            // Mã hóa mật khẩu mới
-            const hashedNewPassword = bcrypt.hashSync(new_pass_word, 10);
-
-            // Cập nhật mật khẩu mới
-            await db.User.update(
-                { pass_word: hashedNewPassword },
-                { where: { email } }
-            );
-
-            resolve({
-                err: 0,
-                msg: 'Đổi mật khẩu thành công!',
-            });
-        } catch (error) {
-            console.log(error)
-            reject({
-                err: 1,
-                msg: 'Lỗi khi đổi mật khẩu!',
-                error: error.message
-            });
-        }
-    });

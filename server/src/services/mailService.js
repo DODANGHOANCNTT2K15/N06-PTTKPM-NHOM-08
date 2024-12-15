@@ -15,18 +15,18 @@ function generateRandomPassword(length) {
 }
    
 // lấy lại mật khẩu
-export const getPassService = ({ email, type }) => new Promise(async (resolve, reject) => {
+export const getPassService = ({ email }) => new Promise(async (resolve, reject) => {
     const newPass = generateRandomPassword(8)
     try {
         const response = await db.User.findOne({
-            where: { email },
+            where: { email : email.trim() },
             raw: true
         });
         if (response) {
             try {
                 await db.User.update({ pass_word:  bcrypt.hashSync(newPass, bcrypt.genSaltSync(10)) }, {
                     where: {
-                        email,
+                        email : email.trim(),
                     },
                 });
                 let transporter = nodemailer.createTransport({
@@ -116,21 +116,21 @@ export const getPassService = ({ email, type }) => new Promise(async (resolve, r
 
                 // Gửi email và xử lý kết quả
                 transporter.sendMail(mailOptions, (error, info) => {
-                    resolve({
+                    return resolve({
                         err: error ? 2 : 0,
                         msg: error ? `Không thể gửi thông tin đến ${email}` : `Mật khẩu mới đã được gửi đến ${email}. Vui lòng kiểm tra email của bạn.`
                     })
                 });
             } catch (error) {
                 console.log(error)
-                resolve({
+                return resolve({
                     err: 2,
                     msg: `Không thể update mật khẩu!, ${error.messsage}`
                 })
             }
 
         } else {
-            resolve({
+            return resolve({
                 err: 2,
                 msg: "Email không tồn tại! Vui lòng kiểm tra lại thông tin",
             })
