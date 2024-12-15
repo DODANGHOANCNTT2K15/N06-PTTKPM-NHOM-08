@@ -4,7 +4,7 @@ import jwt from "jsonwebtoken"; // Để tạo token (JWT)
 require('dotenv').config()
 
 // đăng nhập
-export const loginService = ({ email, pass_word }) = new Promise(async (resolve, reject) => {
+export const loginService = ({ email, pass_word }) => new Promise(async (resolve, reject) => {
     try {
         // Tìm account theo email
         const account = await db.User.findOne({
