@@ -3,7 +3,7 @@ import { MySqlDialect } from '@sequelize/mysql';
 
 const sequelize = new Sequelize({
     dialect: MySqlDialect,
-    database: 'ktpm_db',
+    database: 'book_shop',
     user: 'root',
     password: 'Viet211003@s',
     host: 'localhost',
