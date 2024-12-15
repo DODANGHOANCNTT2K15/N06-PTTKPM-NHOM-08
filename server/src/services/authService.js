@@ -110,53 +110,53 @@ export const registerService = ({ user_name, email, pass_word, role }) => new Pr
     }
 });
 
-// sửa
-export const updateAccountService = ({ id, email, pass_word, type }) =>
-    new Promise(async (resolve, reject) => {
-        try {
-            // Cập nhật bản ghi tài khoản dựa trên id
-            const response = await db.Account.update(
-                { email, pass_word: hash(pass_word), type },
-                {
-                    where: { id },
-                }
-            );
+// // sửa
+// export const updateAccountService = ({ email, pass_word, role }) =>
+//     new Promise(async (resolve, reject) => {
+//         try {
+//             // Cập nhật bản ghi tài khoản dựa trên email
+//             const response = await db.User.update(
+//                 { email, pass_word: hash(pass_word), role },
+//                 {
+//                     where: { email },
+//                 }
+//             );
 
-            resolve({
-                err: response[0] ? 0 : 2,
-                msg: response[0] ? 'Cập nhật tài khoản thành công!' : 'Không tìm thấy tài khoản để cập nhật.',
-            });
-        } catch (error) {
-            reject({
-                err: 1,
-                msg: 'Lỗi khi cập nhật tài khoản!',
-                error: error,
-            });
-        }
-    });
+//             resolve({
+//                 err: response[0] ? 0 : 2,
+//                 msg: response[0] ? 'Cập nhật tài khoản thành công!' : 'Không tìm thấy tài khoản để cập nhật.',
+//             });
+//         } catch (error) {
+//             reject({
+//                 err: 1,
+//                 msg: 'Lỗi khi cập nhật tài khoản!',
+//                 error: error,
+//             });
+//         }
+//     });
 
 
-// xóa
-export const deleteAccountService = (id) =>
-    new Promise(async (resolve, reject) => {
-        try {
-            // Xóa bản ghi tài khoản dựa trên id
-            const response = await db.Account.destroy({
-                where: { id },
-            });
+// // xóa
+// export const deleteAccountService = (email) =>
+//     new Promise(async (resolve, reject) => {
+//         try {
+//             // Xóa bản ghi tài khoản dựa trên email
+//             const response = await db.User.destroy({
+//                 where: { email },
+//             });
 
-            resolve({
-                err: response ? 0 : 2,
-                msg: response ? 'Xóa tài khoản thành công!' : 'Không tìm thấy tài khoản để xóa.',
-            });
-        } catch (error) {
-            reject({
-                err: 1,
-                msg: 'Lỗi khi xóa tài khoản!',
-                error: error.message,
-            });
-        }
-    });
+//             resolve({
+//                 err: response ? 0 : 2,
+//                 msg: response ? 'Xóa tài khoản thành công!' : 'Không tìm thấy tài khoản để xóa.',
+//             });
+//         } catch (error) {
+//             reject({
+//                 err: 1,
+//                 msg: 'Lỗi khi xóa tài khoản!',
+//                 error: error.message,
+//             });
+//         }
+//     });
 
 // đổi mật khẩu
 export const changePasswordService = ({ email, oldPassword, newPassword }) =>
