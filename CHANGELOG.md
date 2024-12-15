@@ -13,4 +13,6 @@ Mọi thay đổi code của dự án sẽ được ghi lại ở đây.
 - Khởi tạo các dịch vụ: đăng nhập, đăng ký, quên mật khẩu...
 - Địa chỉ lấy Api: https://server-book-shop.onrender.com/
 
-
+### Sửa đổi
+- Chỉnh sửa cơ sở dữ liệu
+- Chỉnh sửa lỗi logic, lỗi cú pháp
