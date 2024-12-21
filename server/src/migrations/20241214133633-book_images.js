@@ -12,6 +12,10 @@ module.exports = {
         type: Sequelize.BIGINT,
         allowNull: false
       },
+      image_public_id: {
+        type: Sequelize.STRING,
+        allowNull: false
+      },
       image_path: {
         type: Sequelize.STRING,
         allowNull: false

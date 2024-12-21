@@ -2,17 +2,30 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
     async up(queryInterface, Sequelize) {
+        // Thêm ràng buộc giữa 'avatars' và 'users'
+        await queryInterface.addConstraint('avatars', {
+            fields: ['user_id'],
+            type: 'foreign key',
+            name: 'fk_avatars_users_user_id', // Tên constraint duy nhất
+            references: {
+                table: 'users',
+                field: 'user_id',
+            },
+            onDelete: 'CASCADE',
+            onUpdate: 'CASCADE',
+        });
+
         // Thêm ràng buộc giữa 'customers' và 'users'
         await queryInterface.addConstraint('customers', {
             fields: ['user_id'],
             type: 'foreign key',
-            name: 'fk_customers_users_user_id', // Tên constraint phải là duy nhất
+            name: 'fk_customers_users_user_id',
             references: {
                 table: 'users',
-                field: 'user_id'
+                field: 'user_id',
             },
             onDelete: 'CASCADE',
-            onUpdate: 'CASCADE'
+            onUpdate: 'CASCADE',
         });
 
         // Thêm ràng buộc giữa 'books' và 'book_types'
@@ -22,10 +35,10 @@ module.exports = {
             name: 'fk_books_book_types_book_type_id',
             references: {
                 table: 'book_types',
-                field: 'book_type_id'
+                field: 'book_type_id',
             },
             onDelete: 'CASCADE',
-            onUpdate: 'CASCADE'
+            onUpdate: 'CASCADE',
         });
 
         // Thêm ràng buộc giữa 'orders' và 'customers'
@@ -35,10 +48,10 @@ module.exports = {
             name: 'fk_orders_customers_customer_id',
             references: {
                 table: 'customers',
-                field: 'customer_id'
+                field: 'customer_id',
             },
             onDelete: 'CASCADE',
-            onUpdate: 'CASCADE'
+            onUpdate: 'CASCADE',
         });
 
         // Thêm ràng buộc giữa 'orders' và 'payment_methods'
@@ -48,10 +61,10 @@ module.exports = {
             name: 'fk_orders_payment_methods_payment_method_id',
             references: {
                 table: 'payment_methods',
-                field: 'payment_method_id'
+                field: 'payment_method_id',
             },
             onDelete: 'CASCADE',
-            onUpdate: 'CASCADE'
+            onUpdate: 'CASCADE',
         });
 
         // Thêm ràng buộc giữa 'order_details' và 'orders'
@@ -61,10 +74,10 @@ module.exports = {
             name: 'fk_order_details_orders_order_id',
             references: {
                 table: 'orders',
-                field: 'order_id'
+                field: 'order_id',
             },
             onDelete: 'CASCADE',
-            onUpdate: 'CASCADE'
+            onUpdate: 'CASCADE',
         });
 
         // Thêm ràng buộc giữa 'order_details' và 'books'
@@ -74,10 +87,10 @@ module.exports = {
             name: 'fk_order_details_books_book_id',
             references: {
                 table: 'books',
-                field: 'book_id'
+                field: 'book_id',
             },
             onDelete: 'CASCADE',
-            onUpdate: 'CASCADE'
+            onUpdate: 'CASCADE',
         });
 
         // Thêm ràng buộc giữa 'reviews' và 'books'
@@ -87,10 +100,10 @@ module.exports = {
             name: 'fk_reviews_books_book_id',
             references: {
                 table: 'books',
-                field: 'book_id'
+                field: 'book_id',
             },
             onDelete: 'CASCADE',
-            onUpdate: 'CASCADE'
+            onUpdate: 'CASCADE',
         });
 
         // Thêm ràng buộc giữa 'reviews' và 'users'
@@ -100,10 +113,10 @@ module.exports = {
             name: 'fk_reviews_users_user_id',
             references: {
                 table: 'users',
-                field: 'user_id'
+                field: 'user_id',
             },
             onDelete: 'CASCADE',
-            onUpdate: 'CASCADE'
+            onUpdate: 'CASCADE',
         });
 
         // Thêm ràng buộc giữa 'book_images' và 'books'
@@ -113,15 +126,16 @@ module.exports = {
             name: 'fk_book_images_books_book_id',
             references: {
                 table: 'books',
-                field: 'book_id'
+                field: 'book_id',
             },
             onDelete: 'CASCADE',
-            onUpdate: 'CASCADE'
+            onUpdate: 'CASCADE',
         });
     },
 
     async down(queryInterface, Sequelize) {
         // Xóa tất cả ràng buộc đã thêm
+        await queryInterface.removeConstraint('avatars', 'fk_avatars_users_user_id');
         await queryInterface.removeConstraint('customers', 'fk_customers_users_user_id');
         await queryInterface.removeConstraint('books', 'fk_books_book_types_book_type_id');
         await queryInterface.removeConstraint('orders', 'fk_orders_customers_customer_id');

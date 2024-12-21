@@ -21,5 +21,7 @@ router.post('/account/delete', accountController.deleteAccountController)
 router.post('/account/change', accountController.changePassWordController)
 router.post('/account/avatar', upload.single('avatar'), accountController.uploadAvatatController);
 
+// books route
+// router.post('/book/add', upload.array('images', 10), )
 
 export default router

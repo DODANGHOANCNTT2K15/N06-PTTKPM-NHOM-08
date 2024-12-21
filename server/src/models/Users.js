@@ -6,6 +6,7 @@ module.exports = (sequelize) => {
     static associate(models) {
       User.hasMany(models.Review, { foreignKey: 'user_id', as: 'reviews' });
       User.hasOne(models.Customer, { foreignKey: 'user_id', as: 'customer' });
+      User.hasOne(models.Avatar, { foreignKey: 'user_id', as: 'avatar' });
     }
   }
 
@@ -28,10 +29,6 @@ module.exports = (sequelize) => {
     pass_word: {
       type: DataTypes.STRING,
       allowNull: false
-    },
-    avatar: {
-      type: DataTypes.STRING,
-      allowNull: true
     },
     role: {
       type: DataTypes.INTEGER,

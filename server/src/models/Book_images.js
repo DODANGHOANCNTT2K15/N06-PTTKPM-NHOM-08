@@ -19,6 +19,10 @@ module.exports = (sequelize) => {
       type: DataTypes.BIGINT,
       allowNull: false
     },
+    image_public_id: {
+      type: DataTypes.STRING,
+      allowNull: false
+    },
     image_path: {
       type: DataTypes.STRING,
       allowNull: false

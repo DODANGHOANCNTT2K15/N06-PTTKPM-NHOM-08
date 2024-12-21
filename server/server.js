@@ -1,7 +1,7 @@
 import express from "express"
 require('dotenv').config()
 import ConnectCRDB from "./src/config/connectCRDB.js"
-import ConnectMSQL from "./src/config/connectMSQL.js"
+// import ConnectMSQL from "./src/config/connectMSQL.js"
 import cors from "cors"
 import initRoutes from "./src/routes/index.js" // khởi tạo tất cả các route
 
@@ -18,8 +18,10 @@ app.use(cors(
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
+// khởi tạo router và kết nối tới cơ sỏ dữ liệu
 initRoutes(app)
 ConnectCRDB()
+// ConnectMSQL()
 
 const port = process.env.PORT || 2025
 const listener = app.listen(port, () => {
