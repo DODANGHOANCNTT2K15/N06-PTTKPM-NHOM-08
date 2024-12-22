@@ -71,9 +71,9 @@ export const deleteAccountController = async (req, res) => {
 
 // upload avatar
 export const uploadAvatatController = async (req, res) => {
-    const { email } = req.body;
+    const { user_id } = req.body;
     try {
-        if (!email || !req.file) {
+        if (!user_id || !req.file) {
             return res.status(400).json({
                 err: 1,
                 msg: 'Thiếu dữ liệu đầu vào!'

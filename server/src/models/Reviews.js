@@ -33,7 +33,7 @@ module.exports = (sequelize) => {
     sequelize,
     modelName: 'Review',
     tableName: 'reviews',
-    timestamps: false
+    timestamps: true,
   });
 
   return Review;

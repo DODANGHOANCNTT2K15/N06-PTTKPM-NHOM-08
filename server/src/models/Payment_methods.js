@@ -27,7 +27,7 @@ module.exports = (sequelize) => {
     sequelize,
     modelName: 'PaymentMethod',
     tableName: 'payment_methods',
-    timestamps: false
+    timestamps: true,
   });
 
   return PaymentMethod;

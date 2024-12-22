@@ -3,7 +3,7 @@
 module.exports = {
     up: async (queryInterface, Sequelize) => {
         await queryInterface.createTable('avatars', {
-            id: {
+            avatar_id: {
                 type: Sequelize.BIGINT,
                 allowNull: false,
                 autoIncrement: true,
@@ -15,23 +15,22 @@ module.exports = {
             },
             avatar_public_id: {
                 type: Sequelize.STRING,
-                allowNull: false,
+                allowNull: true,
             },
             avatar_path: {
                 type: Sequelize.STRING,
-                allowNull: false,
+                allowNull: true,
             },
-            created_at: {
+            createdAt: {
                 type: Sequelize.DATE,
                 allowNull: false,
-                defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
+                defaultValue: Sequelize.NOW
             },
-            updated_at: {
+            updatedAt: {
                 type: Sequelize.DATE,
                 allowNull: false,
-                defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
-                onUpdate: Sequelize.literal('CURRENT_TIMESTAMP'),
-            },
+                defaultValue: Sequelize.NOW
+            }
         });
     },
 

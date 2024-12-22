@@ -42,7 +42,7 @@ export const loginService = ({ email, pass_word }) => new Promise(async (resolve
         // Tạo token JWT
         const token = jwt.sign(
             {
-                id: account.id,
+                user_id: account.user_id,
                 user_name: account.user_name,
                 email: account.email,
                 role: account.role,
@@ -50,7 +50,7 @@ export const loginService = ({ email, pass_word }) => new Promise(async (resolve
             process.env.JWT_SECRET || 'khongcokeygihet',
             { expiresIn: '1h' }
         );
-
+        console.log(account.user_id);
         // Trả về thông tin thành công
         return resolve({
             err: 0,

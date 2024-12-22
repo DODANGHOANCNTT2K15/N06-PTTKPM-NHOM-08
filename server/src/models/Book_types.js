@@ -27,7 +27,7 @@ module.exports = (sequelize) => {
     sequelize,
     modelName: 'BookType',
     tableName: 'book_types',
-    timestamps: false
+    timestamps: true,
   });
 
   return BookType;

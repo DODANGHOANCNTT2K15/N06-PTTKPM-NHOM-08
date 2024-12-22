@@ -31,7 +31,7 @@ module.exports = (sequelize) => {
     sequelize,
     modelName: 'BookImage',
     tableName: 'book_images',
-    timestamps: false
+    timestamps: true
   });
 
   return BookImage;

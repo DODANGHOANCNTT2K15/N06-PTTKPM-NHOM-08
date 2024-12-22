@@ -28,7 +28,7 @@ module.exports = (sequelize) => {
     sequelize,
     modelName: 'OrderDetail',
     tableName: 'order_details',
-    timestamps: false
+    timestamps: true,
   });
 
   return OrderDetail;

@@ -11,36 +11,59 @@ cloudinary.config({
     api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-export const uploadImageService = (req) => {
-    return new Promise(async (resolve, reject) => {
+// upload avatar
+export const uploadImageService = (req, avatar_public_id) => {
+    return new Promise((resolve, reject) => {
         try {
-            const { avatar_public_id } = req.body;
-
-
-            const result = await cloudinary.uploader.upload_stream(
+            const upload = cloudinary.uploader.upload_stream(
                 { folder: 'avatars' }, // Thư mục trên Cloudinary
-                (error, result) => {
+                async (error, result) => {
                     if (error) {
-                        reject(false);
+                        console.error('Lỗi khi upload ảnh lên Cloudinary:', error);
+                        return reject({
+                            err: 1,
+                            msg: 'Lỗi upload ảnh lên Cloudinary!',
+                            error: error.message,
+                        });
                     }
-                    // Phản hồi kết quả thành công
+
+                    // Nếu có ảnh cũ, xóa ảnh cũ sau khi upload thành công
+                    try {
+                        if (avatar_public_id) {
+                            await deleteImageService(avatar_public_id);
+                        }
+                    } catch (deleteError) {
+                        console.error('Lỗi khi xóa ảnh cũ:', deleteError);
+                    }
+
+                    // Trả về kết quả thành công
                     resolve({
                         url: result.secure_url,
                         avatar_public_id: result.public_id,
                     });
                 }
-            ).end(req.file.buffer); // Đẩy buffer của file
+            );
 
-            if (avatar_public_id) {
-                deleteImageService(avatar_public_id)
+            // Đẩy buffer của file lên Cloudinary
+            if (req.file && req.file.buffer) {
+                upload.end(req.file.buffer);
+            } else {
+                return reject({
+                    err: 2,
+                    msg: 'Không có file để upload!',
+                });
             }
-            
         } catch (error) {
-            console.error('Lỗi khi upload ảnh:', error);
-            return res.status(500).json({ msg: 'Lỗi server!', error: error.message });
+            console.error('Lỗi trong uploadImageService:', error);
+            reject({
+                err: 3,
+                msg: 'Lỗi server!',
+                error: error.message,
+            });
         }
     });
 };
+
 
 // upload multi images book
 export const uploadMultipleImagesService = (req) => {

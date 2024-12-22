@@ -100,21 +100,30 @@ export const changePasswordService = ({ email, old_pass_word, new_pass_word }) =
         }
     });
 
-// sửa
+// upload avatar
 export const uploadAvatarService = (req) =>
     new Promise(async (resolve, reject) => {
         try {
-            const { email } = req.body;
+            const { user_id } = req.body;
+            // Sử dụng findOrCreate để tìm hoặc tạo bản ghi
+            const [avatarRecord, created] = await db.Avatar.findOrCreate({
+                where: { user_id },
+                defaults: {
+                    avatar_path: '', // Đường dẫn mặc định ban đầu
+                    avatar_public_id: '', // Public ID mặc định ban đầu
+                },
+            });
 
-            const user = await db.User.findOne({ where: { email } });
-            if (!user) {
+            if (!avatarRecord) {
                 return reject({
                     err: 2,
-                    msg: 'Không tìm thấy tài khoản với email tương ứng!',
+                    msg: 'Không thể tìm hoặc tạo bản ghi Avatar!',
                 });
             }
 
-            const rs = await cloudinaryService.uploadImageService(req);
+            // Upload ảnh lên Cloudinary
+            const rs = await cloudinaryService.uploadImageService(req,avatarRecord?.avatar_public_id);
+
             if (!rs) {
                 return reject({
                     err: 2,
@@ -122,13 +131,12 @@ export const uploadAvatarService = (req) =>
                 });
             }
 
-            // Cập nhật đường dẫn avatar vào database
-            await db.User.update(
-                { avatar: rs?.url },
-                { where: { email } }
-            );
+            // Cập nhật bản ghi với đường dẫn mới từ Cloudinary
+            await avatarRecord.update({
+                avatar_path: rs.url,
+                avatar_public_id: rs.avatar_public_id,
+            });
 
-            // Trả về kết quả thành công
             resolve({
                 err: 0,
                 msg: 'Upload avatar thành công!',
@@ -138,11 +146,10 @@ export const uploadAvatarService = (req) =>
             console.error('Lỗi tại upload Avatar: ', error);
             reject({
                 err: 1,
-                msg: 'Lỗi khi thay đổi Avartar!',
+                msg: 'Lỗi khi thay đổi Avatar!',
                 error: error.message,
             });
         }
     });
-
 
 

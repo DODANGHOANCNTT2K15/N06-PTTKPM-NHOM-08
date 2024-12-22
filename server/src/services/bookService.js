@@ -1,6 +1,7 @@
 import db from "../models";
 import * as cloudinaryService from "../services/cloudinaryService"
 
+// thêm sách
 export const addBookService = (req) =>
     new Promise(async (resolve, reject) => {
         try {
@@ -43,4 +44,11 @@ export const addBookService = (req) =>
             });
         }
     });
+
+// sửa thông tin
+
+
+// xóa
+
+
 

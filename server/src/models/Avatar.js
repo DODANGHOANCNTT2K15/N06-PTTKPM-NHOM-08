@@ -12,7 +12,7 @@ module.exports = (sequelize) => {
 
     Avatar.init(
         {
-            id: {
+            avatar_id: {
                 type: DataTypes.BIGINT,
                 allowNull: false,
                 autoIncrement: true,
@@ -24,28 +24,18 @@ module.exports = (sequelize) => {
             },
             avatar_public_id: {
                 type: DataTypes.STRING,
-                allowNull: false,
+                allowNull: true,
             },
             avatar_path: {
                 type: DataTypes.STRING,
-                allowNull: false,
-            },
-            created_at: {
-                type: DataTypes.DATE,
-                allowNull: false,
-                defaultValue: DataTypes.NOW,
-            },
-            updated_at: {
-                type: DataTypes.DATE,
-                allowNull: false,
-                defaultValue: DataTypes.NOW,
+                allowNull: true,
             },
         },
         {
             sequelize,
             modelName: 'Avatar',
             tableName: 'avatars',
-            time: true,
+            timestamps: true,
         }
     );
 
