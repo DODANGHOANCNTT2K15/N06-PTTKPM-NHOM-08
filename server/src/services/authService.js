@@ -47,7 +47,7 @@ export const loginService = ({ email, pass_word }) => new Promise(async (resolve
                 email: account.email,
                 role: account.role,
             },
-            process.env.JWT_SECRET || 'khongcokeygihet',
+            process.env.SECRET_KEY || 'khongcokeygihet',
             { expiresIn: '1h' }
         );
         console.log(account.user_id);

@@ -1,8 +1,5 @@
 import db from "../models"
 
-// thêm loại sách
-import db from '../models';
-
 export const addBookTypeService = async ({ name, description }) => {
     try {
         // Thêm dữ liệu vào bảng
