@@ -39,6 +39,46 @@ export const getAllBooksService = () =>
         }
     });
 
+// lấy sách theo id
+export const getBookByIdService = (book_id) =>
+    new Promise(async (resolve, reject) => {
+        try {
+            const book = await db.Book.findOne({
+                where: { book_id: book_id },
+                include: [
+                    {
+                        model: db.BookImage,
+                        as: "images",
+                        attributes: ['image_public_id', 'image_path'],
+                    },
+                ],
+            });
+
+            // Kiểm tra nếu không tìm thấy sách
+            if (!book) {
+                return resolve({
+                    err: 0,
+                    msg: 'Không tìm thấy sách với ID này!',
+                    data: null,
+                });
+            }
+
+            // Trả về thông tin sách
+            resolve({
+                err: 0,
+                msg: 'Lấy thông tin sách thành công!',
+                data: book,
+            });
+        } catch (error) {
+            console.error('Lỗi khi lấy thông tin sách: ', error);
+            reject({
+                err: 1,
+                msg: 'Đã xảy ra lỗi khi lấy thông tin sách!',
+                error: error.message,
+            });
+        }
+    });
+
 
 // thêm sách
 export const addBookService = (req) =>

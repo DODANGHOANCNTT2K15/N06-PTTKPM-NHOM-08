@@ -22,6 +22,7 @@ router.post('/account/avatar', middleWare.authMiddleware, upload.single('avatar'
 
 // books route
 router.get('/book', bookController.getAllBookController)
+router.post('/book/id', bookController.getBookByIdController)
 router.post('/book/add', upload.array('images', 10), bookController.addBookController)
 
 // bookTyoe route

@@ -1,9 +1,28 @@
 import * as bookService from "../services/bookService"
 
-//select allbookController
+//lấy toàn bộ sách
 export const getAllBookController = async (req, res) => {
     try {
         const rs = await bookService.getAllBooksService();
+        return res.status(200).json(rs);
+
+    } catch (error) {
+        console.error('Error in addBookController:', error);
+        return res.status(500).json(error);
+    }
+};
+
+//lấy sách theo id
+export const getBookByIdController = async (req, res) => {
+    const { id } = req.body;
+    try {
+        if(!id) {
+            return res.status(400).json({
+                err: 1,
+                msg: "Thiếu dữ liệu đầu vào!"
+            })
+        }
+        const rs = await bookService.getBookByIdService(id);
         return res.status(200).json(rs);
 
     } catch (error) {
