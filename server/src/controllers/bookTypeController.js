@@ -4,7 +4,7 @@ import * as bookTypeService from '../services/bookTypeService';
 export const addBookTypeController = async (req, res) => {
     const { name, description } = req.body;
     try {
-        if (!name || !description) {
+        if (!name) {
             return res.status(400).json({
                 err: 1,
                 msg: 'Thiếu dữ liệu đầu vào!',

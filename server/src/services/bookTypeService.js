@@ -5,7 +5,7 @@ export const addBookTypeService = async ({ name, description }) => {
         // Thêm dữ liệu vào bảng
         const newBookType = await db.BookType.create({
             name,
-            description,
+            description: description.trim() || null,
         });
 
         return {

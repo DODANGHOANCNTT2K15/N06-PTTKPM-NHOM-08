@@ -21,6 +21,7 @@ router.post('/account/change', middleWare.authMiddleware, accountController.chan
 router.post('/account/avatar', middleWare.authMiddleware, upload.single('avatar'), accountController.uploadAvatatController);
 
 // books route
+router.get('/book', bookController.getAllBookController)
 router.post('/book/add', upload.array('images', 10), bookController.addBookController)
 
 // bookTyoe route
