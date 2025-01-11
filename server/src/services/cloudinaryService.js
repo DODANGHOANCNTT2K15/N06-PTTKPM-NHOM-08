@@ -80,6 +80,7 @@ export const uploadMultipleImagesService = (req) => {
                                 } else {
                                     resolve({
                                         url: result.secure_url,
+                                        image_public_id: result.public_id,
                                     });
                                 }
                             }

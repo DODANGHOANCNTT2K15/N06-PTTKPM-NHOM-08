@@ -2,14 +2,9 @@ import express from "express";
 import * as authController from "../controllers/authController"
 import * as accountController from "../controllers/accountController"
 import * as bookTypeController from "../controllers/bookTypeController"
+import * as bookController from "../controllers/bookController"
 import * as middleWare from "../middleware/authMiddleWare"
-
-// xử lý buffer với hình ảnh
-const multer = require('multer');
-const upload = multer({
-    storage: multer.memoryStorage(),
-    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
-});
+import { upload } from "../middleware/multerMiddleWare";
 
 // khởi tạo
 const router = express.Router()
@@ -26,11 +21,11 @@ router.post('/account/change', middleWare.authMiddleware, accountController.chan
 router.post('/account/avatar', middleWare.authMiddleware, upload.single('avatar'), accountController.uploadAvatatController);
 
 // books route
-// router.post('/book/add', upload.array('images', 10), )
+router.post('/book/add', upload.array('images', 10), bookController.addBookController)
 
 // bookTyoe route
-router.post('/booktype/add', middleWare.authMiddleware, middleWare.adminAuthMiddleware, bookTypeController.addBookTypeController)
-router.post('/booktype/update', middleWare.authMiddleware, middleWare.adminAuthMiddleware, bookTypeController.updateBookTypeController)
-router.post('/booktype/delete', middleWare.authMiddleware, middleWare.adminAuthMiddleware, bookTypeController.deleteBookTypeController)
+router.post('/booktype/add', bookTypeController.addBookTypeController)
+router.post('/booktype/update', bookTypeController.updateBookTypeController)
+router.post('/booktype/delete', bookTypeController.deleteBookTypeController)
 
 export default router

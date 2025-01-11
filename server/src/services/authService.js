@@ -9,6 +9,13 @@ export const loginService = ({ email, pass_word }) => new Promise(async (resolve
         // Tìm account theo email
         const account = await db.User.findOne({
             where: { email : email.trim() },
+            include: [
+                {
+                    model: db.Avatar,
+                    as: 'avatar',
+                    attributes: ['avatar_path']
+                }
+            ]
         });
 
         // Kiểm tra nếu không tìm thấy tài khoản
@@ -45,12 +52,13 @@ export const loginService = ({ email, pass_word }) => new Promise(async (resolve
                 user_id: account.user_id,
                 user_name: account.user_name,
                 email: account.email,
+                avatar: account.avatar.avatar_path,
                 role: account.role,
             },
             process.env.SECRET_KEY || 'khongcokeygihet',
             { expiresIn: '1h' }
         );
-        console.log(account.user_id);
+        // console.log(account.avatar.avatar_path);
         // Trả về thông tin thành công
         return resolve({
             err: 0,
