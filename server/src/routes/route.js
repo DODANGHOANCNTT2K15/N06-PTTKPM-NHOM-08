@@ -3,8 +3,10 @@ import * as authController from "../controllers/authController"
 import * as accountController from "../controllers/accountController"
 import * as bookTypeController from "../controllers/bookTypeController"
 import * as bookController from "../controllers/bookController"
+import * as bookImageController from "../controllers/bookImageController"
 import * as middleWare from "../middleware/authMiddleWare"
 import { upload } from "../middleware/multerMiddleWare";
+import { addBookImageController } from './../controllers/bookImageController';
 
 // init route
 const router = express.Router()
@@ -26,6 +28,10 @@ router.post('/book/id', bookController.getBookByIdController)
 router.post('/book/add', upload.array('images', 10), bookController.addBookController)
 router.post('/book/update', bookController.updateBookController)
 router.post('/book/delete', bookController.deleteBookController)
+
+//book image
+router.post('/bookimage/add', upload.array('images', 10), bookImageController.addBookImageController)
+router.post('/bookimage/delete', bookImageController.deleteBookImageController)
 
 // bookTyoe route
 router.post('/booktype/add', bookTypeController.addBookTypeController)

@@ -123,6 +123,7 @@ export const addBookService = (req) =>
             const uploadResults = await cloudinaryService.uploadMultipleImagesService(req);
 
             if (!uploadResults || uploadResults.length === 0) {
+                book.destroy();
                 return reject({
                     err: 2,
                     msg: 'Lỗi upload lên Cloudinary!',
@@ -152,7 +153,7 @@ export const addBookService = (req) =>
         } catch (error) {
             console.error('Lỗi khi thêm sách: ', error);
             reject({
-                err: 1,
+                err: 2,
                 msg: 'Đã xảy ra lỗi trong quá trình thêm sách!',
                 error: error.message,
             });
@@ -212,7 +213,7 @@ export const updateBookService = ({
         }
     });
 
-
+// xóa sách
 export const deleteBookService = (book_id) =>
     new Promise(async (resolve, reject) => {
         try {
