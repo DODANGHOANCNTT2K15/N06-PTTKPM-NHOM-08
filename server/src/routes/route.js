@@ -6,7 +6,7 @@ import * as bookController from "../controllers/bookController"
 import * as middleWare from "../middleware/authMiddleWare"
 import { upload } from "../middleware/multerMiddleWare";
 
-// khởi tạo
+// init route
 const router = express.Router()
 
 //auth route
@@ -24,6 +24,8 @@ router.post('/account/avatar', middleWare.authMiddleware, upload.single('avatar'
 router.get('/book', bookController.getAllBookController)
 router.post('/book/id', bookController.getBookByIdController)
 router.post('/book/add', upload.array('images', 10), bookController.addBookController)
+router.post('/book/update', bookController.updateBookController)
+router.post('/book/delete', bookController.deleteBookController)
 
 // bookTyoe route
 router.post('/booktype/add', bookTypeController.addBookTypeController)

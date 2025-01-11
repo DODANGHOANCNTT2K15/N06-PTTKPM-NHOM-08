@@ -8,12 +8,12 @@ export const getAllBooksService = () =>
             const books = await db.Book.findAll({
                 include: [
                     {
-                        model: db.BookImage, 
+                        model: db.BookImage,
                         as: "images",
                         attributes: ['image_public_id', 'image_path'],
                     },
                 ],
-                order: [['published_date', 'DESC']], 
+                order: [['published_date', 'DESC']],
             });
 
             if (!books) {
@@ -133,7 +133,7 @@ export const addBookService = (req) =>
             await Promise.all(
                 uploadResults.map(async (image) => {
                     await db.BookImage.create({
-                        book_id: book.book_id, 
+                        book_id: book.book_id,
                         image_public_id: image.image_public_id,
                         image_path: image.image_path,
                     });
@@ -160,9 +160,96 @@ export const addBookService = (req) =>
     });
 
 // sửa thông tin
+export const updateBookService = ({
+    book_id,
+    title,
+    author,
+    publisher,
+    published_date,
+    price,
+    discount_price,
+    stock_quantity,
+    description,
+    book_type_id,
+}) =>
+    new Promise(async (resolve, reject) => {
+        try {
+            // Tìm sách theo ID
+            const book = await db.Book.findOne({ where: { book_id: book_id } });
+            if (!book) {
+                return resolve({
+                    err: 0,
+                    msg: 'Không tìm thấy sách với ID này!',
+                });
+            }
+
+            // Cập nhật thông tin sách
+            await book.update({
+                title: title?.trim() || book.title,
+                author: author?.trim() || book.author,
+                publisher: publisher?.trim() || book.publisher,
+                published_date: published_date ? new Date(published_date) : book.published_date,
+                price: price !== undefined ? price : book.price,
+                discount_price: discount_price !== undefined ? discount_price : book.discount_price,
+                stock_quantity: stock_quantity !== undefined ? stock_quantity : book.stock_quantity,
+                description: description?.trim() || book.description,
+                book_type_id: book_type_id || book.book_type_id,
+            });
+
+            // Trả về thông tin sách sau khi cập nhật
+            resolve({
+                err: 0,
+                msg: 'Cập nhật thông tin sách thành công!',
+                data: book,
+            });
+        } catch (error) {
+            console.error('Lỗi khi cập nhật sách: ', error);
+            reject({
+                err: 1,
+                msg: 'Đã xảy ra lỗi khi cập nhật thông tin sách!',
+                error: error.message,
+            });
+        }
+    });
 
 
-// xóa
+export const deleteBookService = (book_id) =>
+    new Promise(async (resolve, reject) => {
+        try {
+            const book = await db.Book.findOne({ where: { book_id } });
+            const images = await db.BookImage.findAll({ where: { book_id } });
 
+            // Kiểm tra nếu sách không tồn tại
+            if (!book) {
+                return resolve({
+                    err: 0,
+                    msg: 'Không tìm thấy sách với ID này!',
+                });
+            }
+
+            if (images.length > 0) {
+                await Promise.all(images.map(async (image) => {
+                    await cloudinaryService.deleteImageService(image.image_public_id);
+                    await image.destroy();
+                }));
+            }
+
+            // Xóa sách
+            await book.destroy();
+
+            // Trả về kết quả thành công
+            resolve({
+                err: 0,
+                msg: 'Xóa sách thành công!',
+            });
+        } catch (error) {
+            console.error('Lỗi khi xóa sách:', error);
+            reject({
+                err: 2,
+                msg: 'Đã xảy ra lỗi khi xóa sách!',
+                error: error.message,
+            });
+        }
+    });
 
 
