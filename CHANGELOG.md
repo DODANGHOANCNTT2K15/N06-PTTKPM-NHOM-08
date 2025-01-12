@@ -27,7 +27,7 @@ Mọi thay đổi code của dự án sẽ được ghi lại ở đây.
 - Chỉnh sửa lỗi logic, lỗi cú pháp
 
 ## [Đã phát hành] - 12/01/2025
-###Thêm mới
+### Thêm mới
 - HTML, CSS header/footer/HomePage/Login
 - Popup Login
 - Popup Fitlet
