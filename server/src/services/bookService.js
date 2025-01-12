@@ -51,6 +51,10 @@ export const getBookByIdService = (book_id) =>
                         as: "images",
                         attributes: ['image_public_id', 'image_path'],
                     },
+                    {
+                        model: db.Review,
+                        as: "reviews",
+                    }
                 ],
             });
 
@@ -89,6 +93,7 @@ export const addBookService = (req) =>
             publisher,
             published_date,
             price,
+            rating_avg,
             discount_price,
             stock_quantity,
             description,
@@ -105,6 +110,7 @@ export const addBookService = (req) =>
                     publisher: publisher.trim(),
                     published_date: new Date(published_date),
                     price: price,
+                    rating_avg: rating_avg ? rating_avg : 5,
                     discount_price: discount_price || null,
                     stock_quantity: stock_quantity,
                     description: description?.trim() || null,

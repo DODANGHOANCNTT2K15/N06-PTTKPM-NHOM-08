@@ -39,7 +39,7 @@ module.exports = (sequelize) => {
       allowNull: false
     },
     rating_avg: {
-      type: DataTypes.BIGINT,
+      type: DataTypes.FLOAT,
       allowNull: false
     },
     discount_price: {
