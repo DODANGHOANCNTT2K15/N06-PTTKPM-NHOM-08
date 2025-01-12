@@ -17,6 +17,14 @@ module.exports = {
         type: Sequelize.BIGINT,
         allowNull: false,
       },
+      quantity: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+      },
+      all_price: {
+        type: Sequelize.BIGINT,
+        allowNull: false,
+      },
       createdAt: {
         type: Sequelize.DATE,
         allowNull: false,
