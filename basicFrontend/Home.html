@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="icon" href="../assets/Icon_00.jpg" type="image/png">
+    <link rel="stylesheet" href="../assets/css/AppHeader.css">
+    <link rel="stylesheet" href="../assets/css/AppFooter.css">
+    <link rel="stylesheet" href="../assets/css/General.css">
+    <link rel="stylesheet" href="../assets/css/AppHome.css">
+    <link rel="stylesheet" href="../assets/css/Filter_popup.css">
+    <link rel="stylesheet" href="../assets/css/Address_popup.css">
+    <link rel="stylesheet" href="../assets/css/Login_popup.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <title>Playbook</title>
+</head>
+<body>
+    <header>
+        <div>
+            <p>PLAYBOOK TỦ SÁCH CHO MỌI NHÀ</p>
+        </div>
+        <div>
+            <div>
+                <img src="../assets/images/Logo_00.png" alt="">
+            </div>
+            <div>
+                <div>
+                    <div>
+                        <form action="" class="search-container"> 
+                            <i class="fa fa-search"></i> 
+                            <input type="text" placeholder="Tìm kiếm"> 
+                            <button type="submit">Tìm kiếm</button> 
+                        </form>
+                        <div>
+                            <div>
+                                <button type="">
+                                    <i class="fa fa-home"></i> Trang chủ
+                                </button>
+                                <button>
+                                    <i class="fa fa-user"></i> Tài khoản
+                                </button>
+                            </div>
+                            <div id="div_cart">
+                                <button><i class="fas fa-shopping-basket"></i></button>
+                                <div>0</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <div>
+                            <div class="tag_search">
+                                Truyện
+                            </div>
+                            <div class="tag_search">
+                                Tiểu thuyết
+                            </div>
+                        </div>
+                        <div>
+                            <i class="fas fa-map-marker-alt"></i> <a id="location_text">Thị trấn Hương Sơn, Phú Bình, Thái Nguyên</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+    <main>
+        <div>
+            <div id="catagory">
+                <div>
+                    <h1>DANH MỤC</h1>
+                </div>
+                <div>
+                    <div>
+                        <h2>Sách tiếng Anh</h2>
+                        <ul> 
+                            <li>Art & Photography</li> <li>Biographies & Memoirs</li> <li>Business & Economics</li> <li>How-to - Self Help</li> <li>Children's Books</li> <li>Dictionary</li> 
+                            <li>Education - Teaching</li> 
+                            <li>Magazines</li> 
+                            <li>Medical Books</li> 
+                        </ul>
+                    </div>
+                    <div>
+                        <h2>Sách tiếng Việt</h2>
+                        <ul> 
+                            <li>Sách văn học</li> 
+                            <li>Sách kinh tế</li> 
+                            <li>Sách thiếu nhi</li> 
+                            <li>Sách kỹ năng sống</li> 
+                            <li>Nuôi dạy con</li> 
+                            <li>Sách giáo khoa - Giáo trình</li> 
+                            <li>Sách học ngoại ngữ</li> 
+                            <li>Sách tham khảo</li> 
+                            <li>Sách kiến thức tổng hợp</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div id="content">
+                <div id="banner">
+                    <div class="div_banner">
+                        <img src="../assets/images/Banner_00.png" alt="">
+                    </div>
+                    <div class="div_banner">
+                        <img src="../assets/images/Banner_00.png" alt="">
+                    </div>
+                    <div class="div_banner">
+                        <img src="../assets/images/Banner_00.png" alt="">
+                    </div>
+                    <div id="arrow_left" class="arrow_banner"><i class="fas fa-chevron-left"></i></div>
+                    <div id="arrow_right" class="arrow_banner"><i class="fas fa-chevron-right"></i></div>
+                </div>
+                <div id="filter">
+                    <div><h1>Tất cả sản phẩm</h1></div>
+                    <div>
+                        <div id="filter_tag_cover">
+                            <div class="filter_tag">Truyện</div>
+                            <div class="filter_tag">Tiểu thuyết</div>
+                            <div class="filter_tag">Trinh thám</div>
+                        </div>
+                        <div>
+                            <div id="filter_tag_all">
+                                <div>
+                                    <i class="fas fa-filter"></i>
+                                    Tất cả
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <div>
+                            <label for="sort-options" style="font-size: 0.9em; opacity: 0.8;">Sắp xếp</label> 
+                            <select id="sort-options">                      <option value="popular">Phổ biến</option> 
+                                <option value="best-seller">Bán chạy nhất</option> 
+                                <option value="low-to-high">Giá thấp đến cao</option> 
+                                <option value="high-to-low">Giá cao đến thấp</option> 
+                                <option value="newest">Mới nhất</option> 
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div id="products">
+                    <div class="product">
+                        <div class="product_img">
+                            <img src="../assets/images/Product_00.png" alt="">
+                        </div>
+                        <div>
+                            <p><span class="discounted">600,000₫</span> <span class="original">1,600,000₫</span></p>
+                            <p>DAISETZ TEITARO SUZUKI</p>
+                            <h1>Thiền luận</h1>
+                            <span>⭐⭐⭐⭐⭐</span><span>|</span>
+                            <span>Đã bán 96</span>
+                            <div class="tags_cover_card">
+                                <span class="tags">#khoahoc</span>
+                                <span class="tags">#4Sao</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="product">
+                        <div class="product_img">
+                            <img src="../assets/images/Product_00.png" alt="">
+                        </div>
+                        <div>
+                            <p><span class="discounted">600,000₫</span> <span class="original">1,600,000₫</span></p>
+                            <p>DAISETZ TEITARO SUZUKI</p>
+                            <h1>Thiền luận ối xoiasdasd</h1>
+                            <span>⭐⭐⭐⭐⭐</span><span>|</span>
+                            <span>Đã bán 96</span>
+                            <div class="tags_cover_card">
+                                <span class="tags">#khoahoc</span>
+                                <span class="tags">#4Sao</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="product">
+                        <div class="product_img">
+                            <img src="../assets/images/Product_00.png" alt="">
+                        </div>
+                        <div>
+                            <p><span class="discounted">600,000₫</span> <span class="original">1,600,000₫</span></p>
+                            <p>DAISETZ TEITARO SUZUKI</p>
+                            <h1>Thiền luận Thiền luận ối xoiasdasd Thiền luận ối xoiasdasd Thiền luận ối xoiasdasd</h1>
+                            <span>⭐⭐⭐⭐⭐</span><span>|</span>
+                            <span>Đã bán 96</span>
+                            <div class="tags_cover_card">
+                                <span class="tags">#khoahoc</span>
+                                <span class="tags">#4Sao</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="product">
+                        <div class="product_img">
+                            <img src="../assets/images/Product_00.png" alt="">
+                        </div>
+                        <div>
+                            <p><span class="discounted">600,000₫</span> <span class="original">1,600,000₫</span></p>
+                            <p>DAISETZ TEITARO SUZUKI</p>
+                            <h1>Thiền luận Thiền luận ối xoiasdasd Thiền luận ối xoiasdasd Thiền luận ối xoiasdasd</h1>
+                            <span>⭐⭐⭐⭐⭐</span><span>|</span>
+                            <span>Đã bán 96</span>
+                            <div class="tags_cover_card">
+                                <span class="tags">#khoahoc</span>
+                                <span class="tags">#4Sao</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="product">
+                        <div class="product_img">
+                            <img src="../assets/images/Product_00.png" alt="">
+                        </div>
+                        <div>
+                            <p><span class="discounted">600,000₫</span> <span class="original">1,600,000₫</span></p>
+                            <p>DAISETZ TEITARO SUZUKI</p>
+                            <h1>Thiền luận Thiền luận ối xoiasdasd Thiền luận ối xoiasdasd Thiền luận ối xoiasdasd</h1>
+                            <span>⭐⭐⭐⭐⭐</span><span>|</span>
+                            <span>Đã bán 96</span>
+                            <div class="tags_cover_card">
+                                <span class="tags">#khoahoc</span>
+                                <span class="tags">#4Sao</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="product">
+                        <div class="product_img">
+                            <img src="../assets/images/Product_00.png" alt="">
+                        </div>
+                        <div>
+                            <p><span class="discounted">600,000₫</span> <span class="original">1,600,000₫</span></p>
+                            <p>DAISETZ TEITARO SUZUKI</p>
+                            <h1>Thiền luận Thiền luận ối xoiasdasd Thiền luận ối xoiasdasd Thiền luận ối xoiasdasd</h1>
+                            <span>⭐⭐⭐⭐⭐</span><span>|</span>
+                            <span>Đã bán 96</span>
+                            <div class="tags_cover_card">
+                                <span class="tags">#khoahoc</span>
+                                <span class="tags">#4Sao</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="product">
+                        <div class="product_img">
+                            <img src="../assets/images/Product_00.png" alt="">
+                        </div>
+                        <div>
+                            <p><span class="discounted">600,000₫</span> <span class="original">1,600,000₫</span></p>
+                            <p>DAISETZ TEITARO SUZUKI</p>
+                            <h1>Thiền luận</h1>
+                            <span>⭐⭐⭐⭐⭐</span><span>|</span>
+                            <span>Đã bán 96</span>
+                            <div class="tags_cover_card">
+                                <span class="tags">#khoahoc</span>
+                                <span class="tags">#4Sao</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="load_more">
+                    <button>XEM THÊM</button>
+                </div>
+            </div>
+        </div>
+        <div id="history">
+            <div>
+                <h1>Sản phẩm đã xem</h1>
+            </div>
+            <div>
+                <div class="product">
+                    <div class="product_img">
+                        <img src="../assets/images/Product_00.png" alt="">
+                    </div>
+                    <div>
+                        <p><span class="discounted">600,000₫</span> <span class="original">1,600,000₫</span></p>
+                        <p>DAISETZ TEITARO SUZUKI</p>
+                        <h1>Thiền luận</h1>
+                        <span>⭐⭐⭐⭐⭐</span><span>|</span>
+                        <span>Đã bán 96</span>
+                        <div class="tags_cover_card">
+                            <span class="tags">#khoahoc</span>
+                            <span class="tags">#4Sao</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="product">
+                    <div class="product_img">
+                        <img src="../assets/images/Product_00.png" alt="">
+                    </div>
+                    <div>
+                        <p><span class="discounted">600,000₫</span> <span class="original">1,600,000₫</span></p>
+                        <p>DAISETZ TEITARO SUZUKI</p>
+                        <h1>Thiền luận</h1>
+                        <span>⭐⭐⭐⭐⭐</span><span>|</span>
+                        <span>Đã bán 96</span>
+                        <div class="tags_cover_card">
+                            <span class="tags">#khoahoc</span>
+                            <span class="tags">#4Sao</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    <div id="filter_popup" class="hidden">
+        <div>
+            <div>
+                <h1>Tất cả bộ lọc</h1>
+            </div>
+            <div>
+                <div class="filter_group_cover" style="border: none;">
+                    <h1>Dịch vụ</h1>
+                    <div>
+                        <div>
+                            <input type="checkbox" name="" id="">
+                            <label for="">Giao hàng miễn phí</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="filter_group_cover">
+                    <h1>Đánh giá</h1>
+                    <div>
+                        <div class="checkbox_cover">
+                            <input type="checkbox" name="" id="">
+                            <label for="">⭐</label> <label for=""> 1 Sao</label>
+                        </div>
+                        <div class="checkbox_cover">
+                            <input type="checkbox" name="" id="">
+                            <label for="">⭐⭐</label><label for=""> 2 Sao</label>
+                        </div>
+                        <div class="checkbox_cover">
+                            <input type="checkbox" name="" id="">
+                            <label for="">⭐⭐⭐</label><label for=""> 3 Sao</label>
+                        </div>
+                        <div class="checkbox_cover">
+                            <input type="checkbox" name="" id="">
+                            <label for="">⭐⭐⭐⭐</label><label for=""> 4 Sao</label>
+                        </div>
+                        <div class="checkbox_cover">
+                            <input type="checkbox" name="" id="">
+                            <label for="">⭐⭐⭐⭐⭐</label><label for=""> 5 Sao</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="filter_group_cover">
+                    <h1>Giá</h1>
+                    <div>
+                        <div class="checkbox_cover">
+                            <input type="checkbox" name="" id="">
+                            <label for="">Dưới 100.000₫</label>
+                        </div>
+                        <div class="checkbox_cover">
+                            <input type="checkbox" name="" id="">
+                            <label for="">100.000₫ - 200.000₫</label>
+                        </div>
+                        <div class="checkbox_cover">
+                            <input type="checkbox" name="" id="">
+                            <label for="">200.000₫ - 500.000₫</label>
+                        </div>
+                        <div class="checkbox_cover">
+                            <input type="checkbox" name="" id="">
+                            <label for="">500.000₫ - 1.000.000₫</label>
+                        </div>
+                        <div class="checkbox_cover">
+                            <input type="checkbox" name="" id="">
+                            <label for="">1.000.000₫ - 2.000.000₫</label>
+                        </div>
+                        <div class="checkbox_cover">
+                            <input type="checkbox" name="" id="">
+                            <label for="">Trên 2.000.000₫</label>
+                        </div>
+                    </div>
+                    <h1>Tự nhập khoảng giá</h1>
+                    <div>
+                        <div id="about_price">
+                            <input type="text" name="" id="" placeholder="Từ"> 
+                            <span>_</span>
+                            <input type="text" name="" id="" placeholder="Đến">
+                            <button type="">Xóa</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="filter_popup_button">
+                <button>Xóa tất cả</button>
+                <button>Xem kết quả</button>
+            </div>
+            <div>
+                <i class="fas fa-times"></i>
+            </div>
+        </div>
+    </div>
+    <div id="address_popup" class="hidden">
+        <div>
+            <div>
+                <div>
+                    <h1>Địa chỉ giao hàng</h1>
+                </div>
+                <div>
+                    <div>
+                        <p>Hãy chọn địa chỉ để nhân hàng để được dự báo thời gian giao hàng cùng chi phí đống gói, vận chuyển một cách chính xác nhất.</p>
+                        <button>
+                            Đăng nhập để lưu địa chỉ giao hàng
+                        </button>
+                        <span>Hoặc</span>
+                    </div>
+                    <div>
+                        <div>
+                            <div class="input_address">
+                                <span>Tỉnh/Thành phố</span>
+                                <input type="text" placeholder="Vui lòng nhập tỉnh/thành phố">
+                            </div>
+                            <div class="input_address">
+                                <span>Quận/Huyện</span>
+                                <input type="text" placeholder="Vui lòng nhập quận/huyện">
+                            </div>
+                            <div class="input_address">
+                                <span>Phường/Xã</span>
+                                <input type="text" placeholder="Vui lòng nhập phường/xã">
+                            </div>
+                            <div class="input_address">
+                                <span>Chi tiết</span>
+                                <input type="text" placeholder="Vui lòng nhập chi tiết địa chỉ">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="address_popup_button">
+                <button >
+                    Giao đến địa chỉ này
+                </button>
+            </div>
+            <div id="address_popup_close">
+                <i class="fas fa-times"></i>
+            </div>
+        </div>
+    </div>
+    <div id="login_popup" class="hidden">
+        <div>
+            <div>
+                <h1>Xin chào,</h1>
+                <p>Đăng nhập để trải nghiệm tốt nhất từ PlayBook</p>
+                <input type="text" placeholder="Email hoặc số điện thoại">
+                <input type="text" placeholder="Mật khẩu">
+                <p id="foreget_password">Quên mật khẩu ?</p>
+                <button>Đăng nhập</button>
+                <p id="continue_or">Hoặc tiếp tục bằng</p>
+                <div id="social_login">
+                    <img src="../assets/images/Social_00.png" alt="">
+                </div>
+                <div id="login_popup_footer">
+                    <span>Chưa có tài khoản?</span><span>Tạo tài khoản</span>
+                </div>
+            </div>
+            <div>
+                <img src="../assets/images/image_00.png" alt="">
+                <div>
+                    <h1>HELLO</h1>
+                    <p>Trở thành viên của PlayBook</p>
+                </div>
+            </div>
+            <div id="login_popup_close">
+                <i class="fas fa-times"></i>
+            </div>
+        </div>     
+    </div>
+    <div id="Forget_Pass_popup" class="hidden">
+        <div></div>
+    </div>
+    <div id="Signup_popup" class="hidden">
+        <div></div>
+    </div>
+    <footer>
+        <div>
+            <div>
+                <div class="footer_group">
+                    <h1>Hỗ trợ khách hàng</h2>
+                    <ul>
+                        <li>Hotline: 0987 654 321</li>
+                        <li>Email: dohoan@gmail.com</li>
+                        <li>Gửi yêu cầu hỗ trợ</li> 
+                        <li>Hướng dẫn đặt hàng</li>
+                        <li>Chính sách kiểm hàng</li>
+                        <li>Phương thức vận chuyển</li>
+                        <li>Chính sách vận chuyển</li>
+                        <li>Báo lỗi</li>
+                    </ul>
+                </div>
+                <div class="footer_group">
+                    <h1>Về PlayBook</h2>
+                    <ul>
+                        <li>Giới thiệu về PlayBook</li>
+                        <li>PlayBook Blog</li>
+                        <li>Tuyển dụng</li> 
+                        <li>Chính sách bảo mật thanh toán</li>
+                        <li>Chính sách giải quyết kiếu nại</li>
+                        <li>Chính sách bảo mật thông tin các nhân</li>
+                        <li>Điều khoản sử dụng</li>
+                        <li>Tiếp thị liên kết PlayBook</li>
+                        <li>Bán hàng doanh nghiệp</li>
+                        <li>Điều kiện vận chuyển</li>
+                    </ul>
+                </div>
+                <div class="footer_group">
+                    <h1>Hợp tác và liên kết</h1>
+                    <ul>
+                        <li>Bán hàng cùng PlayBook</li>
+                    </ul>
+                </div>
+                <div class="footer_group footer_group_payment">
+                    <h1>Phương thứ thanh toán</h1>
+                    <ul class="flex">
+                        <li>
+                            <img src="../assets/images/Payment_00.png" alt="">
+                        </li>
+                        <li>
+                            <img src="../assets/images/Payment_01.png" alt="">
+                        </li>
+                        <li>
+                            <img src="../assets/images/Payment_02.png" alt="">
+                        </li>
+                    </ul>
+                    <h1>Phương thức vận chuyển</h1>
+                    <ul class="flex">
+                        <li>
+                            <img src="../assets/images/Transport_00.png" alt="">
+                        </li>
+                        <li>
+                            <img src="../assets/images/Transport_01.png" alt="">
+                        </li>
+                    </ul>
+                </div>
+                <div class="footer_group footer_group_social">
+                    <h1>Kết nối với chúng tôi</h1>
+                    <ul class="flex">
+                        <li><img src="../assets/images/Social_00.png" alt=""></li>
+                        <li><img src="../assets/images/Social_01.png" alt=""></li>
+                    </ul>
+                </div>
+            </div>
+            <div>
+                &copy; 2025 Playbook. All rights reserved.
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

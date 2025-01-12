@@ -1,0 +1,42 @@
+footer > div{
+    padding: 20px 10%;
+}
+
+footer li{
+    list-style: none;
+    margin-bottom: 10px;
+    font-size: 0.8em;
+}
+
+footer ul{
+    margin-top: 10px;
+    margin-bottom: 20px;
+}
+
+footer h1{
+    font-size: 1.2em;
+    margin-bottom: 10px;
+}
+
+footer > div> div:nth-child(1){
+    display: flex;
+    justify-content: space-between;
+}
+
+footer > div > div:nth-child(2){
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    border-top: 1px solid rgb(79, 79, 79);
+    padding-top: 20px;
+}
+
+.footer_group_payment > ul > li{
+    margin-right: 15px;
+}
+
+.footer_group_social img{
+    width: 40px; 
+    height: 40px;
+    margin-right: 10px;
+}
