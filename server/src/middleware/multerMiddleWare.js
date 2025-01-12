@@ -1,6 +1,8 @@
 import multer from 'multer';
 import path from 'path';
 
+// sử dụng trong trường hợp up ảnh lên server thông qua formdata
+
 // Lọc file để chỉ chấp nhận file ảnh
 const fileFilter = (req, file, cb) => {
     const ext = path.extname(file.originalname).toLowerCase();
