@@ -5,6 +5,7 @@ import * as bookTypeController from "../controllers/bookTypeController"
 import * as bookController from "../controllers/bookController"
 import * as bookImageController from "../controllers/bookImageController"
 import * as reviewController from "../controllers/reviewController"
+import * as cartController from "../controllers/cartController"
 import * as middleWare from "../middleware/authMiddleWare"
 import { upload } from "../middleware/multerMiddleWare";
 
@@ -42,4 +43,9 @@ router.post('/booktype/delete', bookTypeController.deleteBookTypeController)
 router.post('/review/add', reviewController.addReviewController)
 router.post('/review/delete', reviewController.deleteReviewController)
 
+// cart route
+router.get('/cart', cartController.getCartController)
+router.post('/cart/add', cartController.addToCartController)
+router.post('/cart/update', cartController.updateCartController)
+router.post('/cart/delete', cartController.deleteCartItemController)
 export default router
