@@ -44,9 +44,9 @@ export const getCartController = async (req, res) => {
 
 // Cập nhật giỏ hàng
 export const updateCartController = async (req, res) => {
-    const { user_id, book_id, quantity, all_price } = req.body;
+    const { cart_id, quantity, all_price } = req.body;
     try {
-        if (!user_id || !book_id || !quantity || !all_price) {
+        if (!cart_id|| !quantity || !all_price) {
             return res.status(400).json({
                 err: 1,
                 msg: "Thiếu dữ liệu đầu vào."
@@ -65,15 +65,15 @@ export const updateCartController = async (req, res) => {
 
 // Xóa sản phẩm khỏi giỏ hàng
 export const deleteCartItemController = async (req, res) => {
-    const { user_id, book_id } = req.body;
+    const { cart_id } = req.body;
     try {
-        if (!user_id || !book_id) {
+        if (!cart_id) {
             return res.status(400).json({
                 err: 1,
                 msg: "Thiếu dữ liệu đầu vào."
             });
         }
-        const rs = await cartService.deleteCartItemService({ user_id, book_id });
+        const rs = await cartService.deleteCartItemService({ cart_id });
         return res.status(200).json(rs);
     } catch (error) {
         return res.status(500).json({
