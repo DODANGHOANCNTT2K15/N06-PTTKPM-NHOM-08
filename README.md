@@ -7,7 +7,7 @@
   Mục tiêu của dự án là xây dựng một ứng dụng web bán sách trực tuyến, cung cấp một nền tảng tiện lợi, dễ sử dụng cho người dùng khi mua sách. Ứng dụng này sẽ bao gồm các tính năng chính giúp người dùng dễ dàng tìm kiếm, chọn lựa, và thanh toán sách trực tuyến, đồng thời hỗ trợ quản lý đơn hàng, khách hàng, và thông tin sách cho người quản trị.
   
 # Công nghệ sử dụng
-  - Fontend: Reatjs 
+  - Fontend: Vuejs 
   - Backend: Nodejs
   - Database: My Sql
 
