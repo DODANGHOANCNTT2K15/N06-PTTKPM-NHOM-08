@@ -28,6 +28,10 @@ module.exports = {
         type: Sequelize.BIGINT,
         allowNull: false
       },
+      rating_avg: {
+        type: Sequelize.BIGINT,
+        allowNull: false
+      },
       discount_price: {
         type: Sequelize.BIGINT,
         allowNull: true

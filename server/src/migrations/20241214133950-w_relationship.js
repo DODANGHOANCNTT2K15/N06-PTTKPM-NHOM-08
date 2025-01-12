@@ -131,6 +131,32 @@ module.exports = {
             onDelete: 'CASCADE',
             onUpdate: 'CASCADE',
         });
+
+        // Thêm ràng buộc giữa 'carts' và 'users'
+        await queryInterface.addConstraint('carts', {
+            fields: ['user_id'],
+            type: 'foreign key',
+            name: 'fk_carts_users_user_id', // Tên constraint duy nhất
+            references: {
+                table: 'users',
+                field: 'user_id',
+            },
+            onDelete: 'CASCADE',
+            onUpdate: 'CASCADE',
+        });
+
+        // Thêm ràng buộc giữa 'carts' và 'books'
+        await queryInterface.addConstraint('carts', {
+            fields: ['book_id'],
+            type: 'foreign key',
+            name: 'fk_carts_books_book_id',
+            references: {
+                table: 'books',
+                field: 'book_id',
+            },
+            onDelete: 'CASCADE',
+            onUpdate: 'CASCADE',
+        });
     },
 
     async down(queryInterface, Sequelize) {
@@ -145,5 +171,7 @@ module.exports = {
         await queryInterface.removeConstraint('reviews', 'fk_reviews_books_book_id');
         await queryInterface.removeConstraint('reviews', 'fk_reviews_users_user_id');
         await queryInterface.removeConstraint('book_images', 'fk_book_images_books_book_id');
+        await queryInterface.removeConstraint('carts', 'fk_carts_users_user_id');
+        await queryInterface.removeConstraint('carts', 'fk_carts_books_book_id');
     }
 };

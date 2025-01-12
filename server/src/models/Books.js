@@ -38,6 +38,10 @@ module.exports = (sequelize) => {
       type: DataTypes.BIGINT,
       allowNull: false
     },
+    rating_avg: {
+      type: DataTypes.BIGINT,
+      allowNull: false
+    },
     discount_price: {
       type: DataTypes.BIGINT,
       allowNull: true
