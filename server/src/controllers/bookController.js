@@ -54,9 +54,7 @@ export const addBookController = async (req, res) => {
 
 //chỉnh sửa thông tin
 export const updateBookController = async (req, res) => {
-    const {
-        book_id,
-    } = req.body;
+    const { book_id } = req.body;
 
     try {
         console.log(req)
