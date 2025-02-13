@@ -25,3 +25,11 @@ Mọi thay đổi code của dự án sẽ được ghi lại ở đây.
 ### Sửa đổi
 - Chỉnh sửa cơ sở dữ liệu
 - Chỉnh sửa lỗi logic, lỗi cú pháp
+
+## [Đã phát hành] - 12/01/2025
+### Thêm mới
+- HTML, CSS header/footer/HomePage/Login
+- Popup Login
+- Popup Fitlet
+- Popup address for client
+- Design Layout Admin Figma
