@@ -33,3 +33,9 @@ Mọi thay đổi code của dự án sẽ được ghi lại ở đây.
 - Popup Fitlet
 - Popup address for client
 - Design Layout Admin Figma
+
+## [Đã phát hành] - 14/02/2025
+### Thêm mới 
+- Bổ sung các tài liệu thuộc các nội dung 1,2,3,4,5,6
+- Báo cáo học phần.
+- DOCUMENTSLOGS.md (ghi nhận hoạt động của các tài liệu).
