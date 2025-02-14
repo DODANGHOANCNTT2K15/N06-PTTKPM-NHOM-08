@@ -59,7 +59,6 @@
 - [x] Đặc tả từng màn hình (layout khách hàng).
 
 ### Tasks chưa hoàn thành
-- [x] Đã hoàn thành Nội dung 2.
 - [x] Chưa vẽ layout admin (nội dung 3).
 - [x] Chưa demo layout admin.
 - [x] Chưa đặc tả từng màn hình (layout admin).
@@ -71,7 +70,6 @@
 - [x] Mô tả chỉ tiết qua UML. (đã hoàn thành ở nội dung 2)
  
 ### Tasks chưa hoàn thành
-- [x] Đã hoàn thành Nội dung 2.
 - [x] Chưa vẽ layout admin (nội dung 3).
 - [x] Chưa demo layout admin.
 - [x] Chưa đặc tả từng màn hình (layout admin).
