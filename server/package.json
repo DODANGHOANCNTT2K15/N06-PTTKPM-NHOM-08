@@ -26,6 +26,7 @@
   "dependencies": {
     "@sequelize/core": "^7.0.0-alpha.43",
     "@sequelize/mysql": "^7.0.0-alpha.43",
+    "axios": "^1.8.1",
     "bcryptjs": "^2.4.3",
     "cloudinary": "^2.5.1",
     "cors": "^2.8.5",

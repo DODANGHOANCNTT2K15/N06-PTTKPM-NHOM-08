@@ -8,6 +8,7 @@ import * as reviewController from "../controllers/reviewController"
 import * as cartController from "../controllers/cartController"
 import * as customerController from "../controllers/customerController"
 import * as orderController from "../controllers/orderController"
+import * as paymentService from "../services/paymentService"
 import * as middleWare from "../middleware/authMiddleWare"
 import { upload } from "../middleware/multerMiddleWare";
 
@@ -64,5 +65,8 @@ router.post("/order/update", orderController.updateOrderController);
 router.post("/order/delete", orderController.deleteOrderController);
 
 // payment method
+
+// payment
+router.post("/payment", paymentService.payment);
 
 export default router
