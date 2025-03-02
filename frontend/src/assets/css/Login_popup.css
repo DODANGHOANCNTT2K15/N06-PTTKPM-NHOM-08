@@ -1,0 +1,104 @@
+#login_popup{
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.479);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+    display: flex;
+}
+
+#login_popup > div{
+    background-color: white;
+    position: relative;
+    border-radius: 10px;
+    box-sizing: border-box;
+    display: flex;
+}
+#login_popup > div > div:nth-child(1){
+    width: 500px;
+    padding: 40px;
+    padding-bottom: 30px;
+    position: relative;
+}
+#login_popup > div > div:nth-child(1) > input{
+    width: 100%;
+    height: 40px;
+    margin-top: 20px;
+    padding: 0px 10px;
+    box-sizing: border-box;
+    border: none;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.479);
+}
+#foreget_password{
+    font-size: 0.8em;
+    margin-top: 10px;
+    cursor: pointer;
+    color: blue;
+}
+#login_popup > div > div:nth-child(1) > button{
+    width: 100%;
+    height: 40px;
+    margin-top: 20px;
+    background-color: rgb(255, 5, 5);
+    color: white;
+    font-size: 1em;
+    border: none;
+    cursor: pointer;
+    margin-bottom: 20px;
+}
+#login_popup > div > div:nth-child(2){
+    position: relative;
+}
+#social_login{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 60px;
+    width: 100%;
+    border-top: 1px solid rgba(0, 0, 0, 0.479);
+    padding-top: 20px;
+}
+#continue_or{
+    position: absolute;
+    top: 60%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: white;
+    padding: 0px 10px;
+    font-size: 0.8em;
+    color: rgba(0, 0, 0, 0.477);
+}
+#social_login img{
+    width: 50px;
+    height: 50px;
+    margin-right: 10px;
+}
+#login_popup_footer > span:nth-child(2){
+    margin-left: 10px;
+    color: #297bee;
+}
+#login_popup > div > div:nth-child(2) > div{
+    position: absolute;
+    top: 50%;
+    right: 15%;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    width: 240px;
+    font-weight: 600;
+}
+#login_popup_close{
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    font-size: 18px;
+    font-weight: 100;
+}
+#forget_password{
+    margin-top: 20px;
+    font-size: 14px;
+}

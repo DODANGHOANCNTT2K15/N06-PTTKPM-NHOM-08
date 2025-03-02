@@ -1,0 +1,128 @@
+#Signup_popup {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.479);
+    z-index: 1000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#Signup_popup.hidden {
+    display: none; /* Ẩn popup khi có class "hidden" */
+}
+
+#Signup_popup > div {
+    background-color: white;
+    position: relative;
+    border-radius: 10px;
+    box-sizing: border-box;
+    display: flex;
+    max-width: 800px; /* Giới hạn chiều rộng tối đa */
+}
+
+#Signup_popup > div > div:nth-child(1) {
+    width: 500px;
+    padding: 40px;
+    padding-bottom: 30px;
+    position: relative;
+}
+
+#Signup_popup > div > div:nth-child(1) h1 {
+    margin: 0;
+    font-size: 1.5em;
+}
+
+#Signup_popup > div > div:nth-child(1) p {
+    margin: 10px 0 20px;
+    color: rgba(0, 0, 0, 0.7);
+}
+
+#Signup_popup > div > div:nth-child(1) > input {
+    width: 100%;
+    height: 40px;
+    margin-top: 20px;
+    padding: 0 10px;
+    box-sizing: border-box;
+    border: none;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.479);
+    font-size: 1em;
+}
+
+#Signup_popup > div > div:nth-child(1) > button {
+    width: 100%;
+    height: 40px;
+    margin-top: 20px;
+    background-color: rgb(255, 5, 5);
+    color: white;
+    font-size: 1em;
+    border: none;
+    cursor: pointer;
+}
+
+#social_login {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 20px 0;
+}
+
+#social_login img {
+    width: 50px;
+    height: 50px;
+    margin-right: 10px;
+}
+
+#login_popup_footer {
+    text-align: center;
+}
+
+#login_popup_footer > span:nth-child(2) {
+    margin-left: 10px;
+    color: #297bee;
+    cursor: pointer;
+}
+
+#Signup_popup > div > div:nth-child(2) {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+#Signup_popup > div > div:nth-child(2) img {
+    max-width: 100%;
+    height: auto;
+}
+
+#Signup_popup > div > div:nth-child(2) > div {
+    text-align: center;
+}
+
+#Signup_popup > div > div:nth-child(2) > div h1 {
+    margin: 10px 0;
+    font-size: 1.5em;
+}
+
+#Signup_popup > div > div:nth-child(2) > div p {
+    margin: 0;
+    color: rgba(0, 0, 0, 0.7);
+}
+
+#Signup_popup_close {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    font-size: 18px;
+    cursor: pointer;
+}
+
+/* Hiệu ứng hover cho button */
+#Signup_popup > div > div:nth-child(1) > button:hover {
+    background-color: rgb(220, 0, 0);
+}

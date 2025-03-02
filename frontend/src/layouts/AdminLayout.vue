@@ -1,0 +1,154 @@
+<template>
+    <div class="admin-layout">
+      <div class="sidebar">
+        <h2>Admin Panel</h2>
+        <nav>
+          <router-link to="/admin/dashboard" class="sidebar-item">
+            <i class="fas fa-tachometer-alt"></i> Dashboard
+          </router-link>
+          <router-link to="/admin/books" class="sidebar-item">
+            <i class="fas fa-book"></i> Quản lý Sách
+          </router-link>
+          <router-link to="/admin/users" class="sidebar-item">
+            <i class="fas fa-users"></i> Quản lý Người dùng
+          </router-link>
+          <router-link to="/admin/orders" class="sidebar-item">
+            <i class="fas fa-shopping-cart"></i> Quản lý Đơn hàng
+          </router-link>
+        </nav>
+      </div>
+  
+      <div class="main-content">
+        <header class="header">
+          <h3>Admin Dashboard</h3>
+          <div class="user-info">
+            <span>Admin User</span>
+            <button @click="logout">Logout</button>
+          </div>
+        </header>
+        <div class="content">
+          <RouterView />
+        </div>
+      </div>
+    </div>
+  </template>
+  
+  <script>
+  import { RouterLink, RouterView } from 'vue-router';
+  
+  export default {
+    name: 'AdminLayout',
+    setup() {
+      const logout = () => {
+        console.log('Logged out');
+        alert('Đã đăng xuất!');
+        // Thêm logic redirect hoặc clear token tại đây (ví dụ: dùng router.push('/login'))
+      };
+  
+      return {
+        logout,
+      };
+    },
+    components: {
+      RouterLink,
+      RouterView,
+    },
+  };
+  </script>
+  
+  <style scoped>
+  /* Giữ nguyên CSS */
+  .admin-layout {
+    display: flex;
+    height: 100vh;
+    background-color: #f5f5f5;
+  }
+  
+  .sidebar {
+    width: 250px;
+    background-color: #2c3e50;
+    color: white;
+    padding: 20px 0;
+  }
+  
+  .sidebar h2 {
+    padding: 20px;
+    margin: 0;
+    font-size: 20px;
+    text-align: center;
+    background-color: #34495e;
+  }
+  
+  .sidebar nav {
+    padding: 20px;
+  }
+  
+  .sidebar-item {
+    display: block;
+    padding: 10px 15px;
+    color: white;
+    text-decoration: none;
+    font-size: 16px;
+  }
+  
+  .sidebar-item i {
+    margin-right: 10px;
+  }
+  
+  .sidebar-item:hover, .sidebar-item.router-link-active {
+    background-color: #34495e;
+    border-radius: 5px;
+  }
+  
+  .main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .header {
+    background-color: white;
+    padding: 15px 20px;
+    border-bottom: 1px solid #ddd;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .header h3 {
+    margin: 0;
+    font-size: 18px;
+    color: #2c3e50;
+  }
+  
+  .user-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .user-info span {
+    font-size: 14px;
+    color: #666;
+  }
+  
+  .user-info button {
+    padding: 5px 15px;
+    background-color: #e74c3c;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  
+  .user-info button:hover {
+    background-color: #c0392b;
+  }
+  
+  .content {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+  }
+  </style>
