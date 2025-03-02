@@ -7,6 +7,7 @@ import * as bookImageController from "../controllers/bookImageController"
 import * as reviewController from "../controllers/reviewController"
 import * as cartController from "../controllers/cartController"
 import * as customerController from "../controllers/customerController"
+import * as orderController from "../controllers/orderController"
 import * as middleWare from "../middleware/authMiddleWare"
 import { upload } from "../middleware/multerMiddleWare";
 
@@ -57,6 +58,10 @@ router.post('/customer/update', customerController.updateCustomerController)
 router.post('/customer/delete', customerController.deleteCustomerController)
 
 // order route
+router.post("/order/get", orderController.getOrderController);
+router.post("/order/add", orderController.addOrderController);
+router.post("/order/update", orderController.updateOrderController);
+router.post("/order/delete", orderController.deleteOrderController);
 
 // payment method
 
