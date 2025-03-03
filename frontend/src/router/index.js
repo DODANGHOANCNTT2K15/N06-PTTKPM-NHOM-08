@@ -68,63 +68,63 @@ const routes = [
           ],
         },
         {
-        path: '/login',
-        name: 'Login',
-        component: HomePage, // Sử dụng cùng HomePage.vue
-      },
-      {
-        path: '/forget-password',
-        name: 'ForgetPassword',
-        component: HomePage, // Sử dụng cùng HomePage.vue
-      },
-      {
-        path: '/signup',
-        name: 'Signup',
-        component: HomePage, // Sử dụng cùng HomePage.vue
-      },
-      {
-        path: '/address',
-        name: 'Address',
-        component: HomePage,
-      },
-      {
-        path: '/filter',
-        name: 'Filter',
-        component: HomePage,
-      },
-      ]
-    },
-    {
-      path: '/admin',
-      component: AdminLayout,
-      children: [
-        {
-          path: 'dashboard',
-          name: 'AdminDashboard',
-          component: Dashboard,
+          path: '/login',
+          name: 'Login',
+          component: HomePage, // Sử dụng cùng HomePage.vue
         },
         {
-          path: 'books',
-          name: 'BooksAdmin',
-          component: Books,
+          path: '/forget-password',
+          name: 'ForgetPassword',
+          component: HomePage, // Sử dụng cùng HomePage.vue
         },
         {
-          path: 'users',
-          name: 'AdminUsers',
-          component: Users,
+          path: '/signup',
+          name: 'Signup',
+          component: HomePage, // Sử dụng cùng HomePage.vue
         },
         {
-          path: 'orders',
-          name: 'AdminOrders',
-          component: Orders,
+          path: '/address',
+          name: 'Address',
+          component: HomePage,
         },
-      ],
-    },
-    {
-      path: '/:pathMatch(.*)*',
-      name: 'NotFound',
-      component: NotFound,
-    },
+        {
+          path: '/filter',
+          name: 'Filter',
+          component: HomePage,
+        },
+        ]
+      },
+      {
+        path: '/admin',
+        component: AdminLayout,
+        children: [
+          {
+            path: 'dashboard',
+            name: 'AdminDashboard',
+            component: Dashboard,
+          },
+          {
+            path: 'books',
+            name: 'BooksAdmin',
+            component: Books,
+          },
+          {
+            path: 'users',
+            name: 'AdminUsers',
+            component: Users,
+          },
+          {
+            path: 'orders',
+            name: 'AdminOrders',
+            component: Orders,
+          },
+        ],
+      },
+      {
+        path: '/:pathMatch(.*)*',
+        name: 'NotFound',
+        component: NotFound,
+      },
   ];
   
 

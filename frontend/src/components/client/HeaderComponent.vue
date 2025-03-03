@@ -4,7 +4,7 @@
             <p>PLAYBOOK TỦ SÁCH CHO MỌI NHÀ</p>
         </div>
         <div>
-            <div>
+            <div @click="goToHome">
                 <img src="@/assets/images/Logo_00.png" alt="">
             </div>
             <div>
@@ -17,10 +17,10 @@
                         </form>
                         <div>
                             <div>
-                                <button type="button">
+                                <button type="button" @click="goToHome">
                                     <i class="fa fa-home"></i> Trang chủ
                                 </button>
-                                <button>
+                                <button type="button" @click="gotoLogin">
                                     <i class="fa fa-user"></i> Tài khoản
                                 </button>
                             </div>
@@ -62,8 +62,18 @@ export default {
       router.push('/address');
     };
 
+    const goToHome = () => {
+      router.push('/');
+    };
+
+    const gotoLogin = () => {
+      router.push('/login');
+    };
+
     return {
       goToAddress,
+      goToHome,
+      gotoLogin,
     };
   },
 };

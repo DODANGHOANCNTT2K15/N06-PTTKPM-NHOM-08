@@ -60,7 +60,7 @@
                     <div class="filter_tag">Trinh thám</div>
                     </div>
                     <div>
-                    <div id="filter_tag_all">
+                    <div id="filter_tag_all" @click="goToFilter">
                         <div>
                         <i class="fas fa-filter"></i>
                         Tất cả
@@ -346,30 +346,38 @@
   </template>
   
   <script>
-  import ProductCard from "@/components/client/ProductCard.vue";
-  import { computed } from 'vue';
-  import { useRoute } from 'vue-router';
+import ProductCard from "@/components/client/ProductCard.vue";
+import { computed } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+
+export default {
+  name: "HomePage",
+  components: { ProductCard },
+  setup() {
+    const route = useRoute();
+    const router = useRouter();
+
+    const currentRouteName = computed(() => route.name);
+
+    const goToFilter = () => {
+      router.push('/filter');
+    };
+
+    return {
+      currentRouteName,
+      goToFilter, // Sửa tên hàm cho đồng nhất
+    };
+  },
+};
+</script>
   
-  export default {
-    name: "HomePage",
-    components: { ProductCard },
-    setup() {
-      const currentRouteName = computed(() => useRoute().name);
-  
-      return {
-        currentRouteName,
-      };
-    },
-  };
-  </script>
-  
-  <style>
-  /* Bỏ scoped để áp dụng CSS global, nhưng giữ import các file CSS */
-  @import "@/assets/css/Address_popup.css";
-  @import "@/assets/css/AppHome.css";
-  @import "@/assets/css/Filter_popup.css";
-  @import "@/assets/css/Login_popup.css";
-  @import "@/assets/css/General.css";
-  @import "@/assets/css/Forget_Pass_popup.css";
-  @import "@/assets/css/Signup_popup.css";
-  </style>
+<style>
+/* Bỏ scoped để áp dụng CSS global, nhưng giữ import các file CSS */
+@import "@/assets/css/Address_popup.css";
+@import "@/assets/css/AppHome.css";
+@import "@/assets/css/Filter_popup.css";
+@import "@/assets/css/Login_popup.css";
+@import "@/assets/css/General.css";
+@import "@/assets/css/Forget_Pass_popup.css";
+@import "@/assets/css/Signup_popup.css";
+</style>
