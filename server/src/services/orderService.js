@@ -40,7 +40,7 @@ export const getOrderService = (order_id) =>
         }
     });
 
-// Thêm đơn hàng mới
+// Thêm đơn hàng mới kèm chi tiết đơn hàng
 export const addOrderService = ({
     customer_id,
     order_date,
@@ -49,24 +49,47 @@ export const addOrderService = ({
     total_price,
     payment_method_id,
     payment_status,
+    order_details = [],
 }) =>
     new Promise(async (resolve, reject) => {
+        const transaction = await db.sequelize.transaction();
         try {
-            const newOrder = await db.Orders.create({
-                customer_id,
-                order_date,
-                delivery_date,
-                delivery_price,
-                total_price,
-                payment_method_id,
-                payment_status,
-            });
+            // Thêm đơn hàng
+            const newOrder = await db.Orders.create(
+                {
+                    customer_id,
+                    order_date,
+                    delivery_date,
+                    delivery_price,
+                    total_price,
+                    payment_method_id,
+                    payment_status,
+                },
+                { transaction }
+            );
+
+            // Thêm danh sách chi tiết đơn hàng nếu có
+            if (order_details.length > 0) {
+                const orderDetailsData = order_details.map((detail) => ({
+                    order_id: newOrder.order_id,
+                    book_id: detail.book_id,
+                    quantity: detail.quantity,
+                    price: detail.price,
+                }));
+
+                await db.OrderDetails.bulkCreate(orderDetailsData, { transaction });
+            }
+
+            // Commit transaction
+            await transaction.commit();
+
             return resolve({
                 err: 0,
-                msg: "Thêm đơn hàng thành công.",
+                msg: "Thêm đơn hàng và chi tiết đơn hàng thành công.",
                 data: newOrder,
             });
         } catch (error) {
+            await transaction.rollback();
             console.error("Lỗi tại addOrderService: ", error);
             return reject({
                 err: 1,
@@ -75,7 +98,7 @@ export const addOrderService = ({
             });
         }
     });
-
+    
 // Cập nhật thông tin đơn hàng
 export const updateOrderService = ({
     order_id,
