@@ -2,6 +2,12 @@
   <div class="admin-books">
     <h1>Quản lý Sách</h1>
     <div class="book-actions">
+      <input
+        v-model="searchQuery"
+        type="text"
+        placeholder="Tìm kiếm theo tiêu đề..."
+        class="search-input"
+      />
       <button @click="showAddBookPopup = true" class="add-button">
         <i class="fas fa-plus"></i> Thêm Sách
       </button>
@@ -10,60 +16,176 @@
       <table>
         <thead>
           <tr>
-            <th>Tiêu đề</th>
-            <th>Tác giả</th>
-            <th>Giá giảm</th>
-            <th>Giá gốc</th>
-            <th>Số lượng đã bán</th>
-            <th>Đánh giá</th>
+            <th @click="sort('book_id')">
+              Book ID <i :class="getSortIcon('book_id')"></i>
+            </th>
+            <th @click="sort('title')">
+              Tiêu đề <i :class="getSortIcon('title')"></i>
+            </th>
+            <th @click="sort('author')">
+              Tác giả <i :class="getSortIcon('author')"></i>
+            </th>
+            <th @click="sort('price')">
+              Giá sản phẩm <i :class="getSortIcon('price')"></i>
+            </th>
+            <th @click="sort('discount_price')">
+              Khuyến mãi <i :class="getSortIcon('discount_price')"></i>
+            </th>
+            <th @click="sort('stock_quantity')">
+              Số lượng <i :class="getSortIcon('stock_quantity')"></i>
+            </th>
+            <th>Ảnh</th>
             <th>Hành động</th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="book in books" :key="book.id">
+          <tr v-for="book in filteredAndSortedBooks" :key="book.book_id">
+            <td>{{ book.book_id }}</td>
             <td>{{ book.title }}</td>
             <td>{{ book.author }}</td>
-            <td>{{ book.discountedPrice }}₫</td>
-            <td>{{ book.originalPrice }}₫</td>
-            <td>{{ book.sold }}</td>
-            <td>{{ book.rating }}</td>
-            <td class="actions">
-              <button @click="editBook(book.id)">Sửa</button>
-              <button @click="deleteBook(book.id)">Xóa</button>
+            <td>{{ formatPrice(book.price) }}</td>
+            <td>
+              {{
+                book.discount_price ? formatPrice(book.discount_price) : "N/A"
+              }}
+            </td>
+            <td>{{ book.stock_quantity }}</td>
+            <td>
+              <div class="book-images">
+                <img
+                  v-for="image in book.images"
+                  :key="image.image_public_id"
+                  :src="image.image_path"
+                  alt="Book Image"
+                  class="book-image"
+                />
+              </div>
+            </td>
+            <td>
+              <button
+                @click="editBook(book.book_id)"
+                class="action-btn edit-btn"
+              >
+                <i class="fas fa-pencil-alt"></i>
+              </button>
+              <button
+                @click="deleteBook(book.book_id)"
+                class="action-btn delete-btn"
+              >
+                <i class="fas fa-trash"></i>
+              </button>
             </td>
           </tr>
         </tbody>
       </table>
+      <div class="pagination">
+        <span
+          >Hiển thị trang {{ currentPage }} / {{ totalPages }} -
+          {{ filteredAndSortedBooks.length }} kết quả</span
+        >
+        <div>
+          <button
+            @click="prevPage"
+            :disabled="currentPage === 1"
+            class="pagination-btn"
+          >
+            <i class="fas fa-chevron-left"></i>
+          </button>
+          <button
+            @click="nextPage"
+            :disabled="currentPage === totalPages"
+            class="pagination-btn"
+          >
+            <i class="fas fa-chevron-right"></i>
+          </button>
+        </div>
+      </div>
     </div>
 
     <!-- Popup Thêm Sách -->
     <div v-if="showAddBookPopup" class="modal">
       <div class="modal-content">
-        <h2>Thêm Sách Mới</h2>
-        <div class="form-group">
-          <label>Hình ảnh</label>
-          <input type="file" multiple @change="handleImageUpload" accept="image/*" />
-        </div>
-        <div class="form-group">
-          <label>Giá giảm</label>
-          <input type="number" v-model.number="newBook.discountedPrice" placeholder="Nhập giá giảm (VNĐ)" />
-        </div>
-        <div class="form-group">
-          <label>Giá gốc</label>
-          <input type="number" v-model.number="newBook.originalPrice" placeholder="Nhập giá gốc (VNĐ)" />
-        </div>
-        <div class="form-group">
-          <label>Tác giả</label>
-          <input type="text" v-model="newBook.author" placeholder="Nhập tên tác giả" />
-        </div>
-        <div class="form-group">
-          <label>Tiêu đề</label>
-          <input type="text" v-model="newBook.title" placeholder="Nhập tiêu đề sách" />
-        </div>
-        <div class="modal-actions">
-          <button @click="addBook">Lưu</button>
-          <button @click="showAddBookPopup = false">Hủy</button>
-        </div>
+        <h2>Thêm Sách</h2>
+        <form @submit.prevent="addBook">
+          <div class="form-columns">
+            <div class="form-column">
+              <div class="form-group">
+                <label>Tiêu đề:</label>
+                <input v-model="newBook.title" type="text" required />
+              </div>
+              <div class="form-group">
+                <label>Tác giả:</label>
+                <input v-model="newBook.author" type="text" required />
+              </div>
+              <div class="form-group">
+                <label>Nhà xuất bản:</label>
+                <input v-model="newBook.publisher" type="text" required />
+              </div>
+              <div class="form-group">
+                <label>Ngày xuất bản:</label>
+                <input v-model="newBook.published_date" type="date" required />
+              </div>
+            </div>
+            <div class="form-column">
+              <div class="form-group">
+                <label>Giá:</label>
+                <input v-model="newBook.price" type="number" required />
+              </div>
+              <div class="form-group">
+                <label>Giá giảm (nếu có):</label>
+                <input v-model="newBook.discount_price" type="number" />
+              </div>
+              <div class="form-group">
+                <label>Số lượng tồn kho:</label>
+                <input
+                  v-model="newBook.stock_quantity"
+                  type="number"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label>Loại sách:</label>
+                <select v-model="newBook.book_type_id" required>
+                  <option value="" disabled>Chọn loại sách</option>
+                  <option
+                    v-for="type in bookTypes"
+                    :key="type.book_type_id"
+                    :value="type.book_type_id"
+                  >
+                    {{ type.name }}
+                  </option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div class="form-group full-width">
+            <label>Mô tả:</label>
+            <textarea v-model="newBook.description" rows="4"></textarea>
+          </div>
+          <div class="form-group full-width">
+            <label>Ảnh:</label>
+            <input
+              type="file"
+              multiple
+              @change="handleNewImages"
+              accept="image/*"
+              ref="fileInput"
+            />
+            <div class="image-preview" v-if="newBook.imagePreviews.length > 0">
+              <img
+                v-for="(preview, index) in newBook.imagePreviews"
+                :key="index"
+                :src="preview"
+                alt="Preview"
+                class="preview-image"
+              />
+            </div>
+          </div>
+          <div class="modal-actions">
+            <button type="submit">Lưu</button>
+            <button @click="cancelAddBook">Hủy</button>
+          </div>
+        </form>
       </div>
     </div>
 
@@ -71,145 +193,408 @@
     <div v-if="showEditBookPopup" class="modal">
       <div class="modal-content">
         <h2>Sửa Sách</h2>
-        <div class="form-group">
-          <label>Hình ảnh</label>
-          <input type="file" multiple @change="handleImageUpload" accept="image/*" />
-        </div>
-        <div class="form-group">
-          <label>Giá giảm</label>
-          <input type="number" v-model.number="editedBook.discountedPrice" placeholder="Nhập giá giảm (VNĐ)" />
-        </div>
-        <div class="form-group">
-          <label>Giá gốc</label>
-          <input type="number" v-model.number="editedBook.originalPrice" placeholder="Nhập giá gốc (VNĐ)" />
-        </div>
-        <div class="form-group">
-          <label>Tác giả</label>
-          <input type="text" v-model="editedBook.author" placeholder="Nhập tên tác giả" />
-        </div>
-        <div class="form-group">
-          <label>Tiêu đề</label>
-          <input type="text" v-model="editedBook.title" placeholder="Nhập tiêu đề sách" />
-        </div>
-        <div class="modal-actions">
-          <button @click="updateBook">Cập nhật</button>
-          <button @click="showEditBookPopup = false">Hủy</button>
-        </div>
+        <form @submit.prevent="updateBook">
+          <div class="form-columns">
+            <div class="form-column">
+              <div class="form-group">
+                <label>Book ID:</label>
+                <input
+                  v-model="editedBook.book_id"
+                  type="text"
+                  required
+                  disabled
+                />
+              </div>
+              <div class="form-group">
+                <label>Tiêu đề:</label>
+                <input v-model="editedBook.title" type="text" required />
+              </div>
+              <div class="form-group">
+                <label>Tác giả:</label>
+                <input v-model="editedBook.author" type="text" required />
+              </div>
+              <div class="form-group">
+                <label>Nhà xuất bản:</label>
+                <input v-model="editedBook.publisher" type="text" required />
+              </div>
+            </div>
+            <div class="form-column">
+              <div class="form-group">
+                <label>Ngày xuất bản:</label>
+                <input
+                  v-model="editedBook.published_date"
+                  type="date"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label>Giá:</label>
+                <input v-model="editedBook.price" type="number" required />
+              </div>
+              <div class="form-group">
+                <label>Giá giảm (nếu có):</label>
+                <input v-model="editedBook.discount_price" type="number" />
+              </div>
+              <div class="form-group">
+                <label>Số lượng tồn kho:</label>
+                <input
+                  v-model="editedBook.stock_quantity"
+                  type="number"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label>Loại sách:</label>
+                <select v-model="editedBook.book_type_id" required>
+                  <option value="" disabled>Chọn loại sách</option>
+                  <option
+                    v-for="type in bookTypes"
+                    :key="type.book_type_id"
+                    :value="type.book_type_id"
+                  >
+                    {{ type.name }}
+                  </option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div class="form-group full-width">
+            <label>Mô tả:</label>
+            <textarea v-model="editedBook.description" rows="4"></textarea>
+          </div>
+          <div class="form-group full-width">
+            <label>Ảnh hiện tại:</label>
+            <div class="book-images">
+              <img
+                v-for="image in editedBook.images"
+                :key="image.image_public_id"
+                :src="image.image_path"
+                alt="Book Image"
+                class="preview-image"
+              />
+            </div>
+          </div>
+          <div class="modal-actions">
+            <button type="submit">Cập nhật</button>
+            <button @click="cancelEditBook">Hủy</button>
+          </div>
+        </form>
       </div>
     </div>
   </div>
 </template>
 
 <script>
-import { ref } from 'vue';
+import { ref, onMounted, computed } from "vue";
+import {
+  apiGetAllBooks,
+  apiAddBook,
+  apiEditBook,
+  apiDeleteBook,
+} from "@/services/admin/BookService";
+import { apiGetAllBookTypes } from "@/services/admin/TagBooksService";
 
 export default {
-  name: 'BooksAdmin',
+  name: "BooksAdmin",
   setup() {
-    const books = ref([
-      { id: 1, image: [], discountedPrice: 600000, originalPrice: 1600000, author: 'DAISETZ TEITARO SUZUKI', title: 'Thiền luận', sold: 96, rating: 4 },
-      { id: 2, image: [], discountedPrice: 350000, originalPrice: 800000, author: 'NGUYEN DU', title: 'Truyện Kiều', sold: 150, rating: 5 },
-    ]);
-
+    const books = ref([]);
+    const bookTypes = ref([]);
+    const searchQuery = ref("");
+    const sortKey = ref("");
+    const sortOrder = ref("asc");
     const showAddBookPopup = ref(false);
     const showEditBookPopup = ref(false);
     const newBook = ref({
-      id: null,
-      image: [],
-      discountedPrice: 0,
-      originalPrice: 0,
-      author: '',
-      title: '',
-      sold: 0, // Không cho phép sửa
-      rating: 1, // Không cho phép sửa
+      title: "",
+      author: "",
+      publisher: "",
+      published_date: "",
+      price: 0,
+      discount_price: null,
+      stock_quantity: 0,
+      description: null,
+      book_type_id: "",
+      images: [], // Khởi tạo mặc định là mảng rỗng
+      imagePreviews: [], // Mảng để chứa bản xem trước của ảnh
     });
+    const editedBook = ref({});
+    const currentPage = ref(1);
+    const itemsPerPage = ref(10);
+    const errorMessage = ref(""); // Thêm biến để lưu thông báo lỗi
 
-    const editedBook = ref({
-      id: null,
-      image: [],
-      discountedPrice: 0,
-      originalPrice: 0,
-      author: '',
-      title: '',
-      sold: 0, // Không cho phép sửa
-      rating: 1, // Không cho phép sửa
-    });
-
-    const handleImageUpload = (event) => {
-      const files = Array.from(event.target.files);
-      const imagePaths = files.map(file => file.name); // Lưu tên file (hoặc bạn có thể xử lý file thực tế)
-      if (showAddBookPopup.value) {
-        newBook.value.image = imagePaths;
-      } else if (showEditBookPopup.value) {
-        editedBook.value.image = imagePaths;
+    const fetchBookTypes = async () => {
+      try {
+        const response = await apiGetAllBookTypes();
+        if (response.data && response.data.err === 0) {
+          bookTypes.value = response.data.data;
+        } else {
+          console.warn("Dữ liệu không đúng định dạng:", response.data);
+          bookTypes.value = [];
+        }
+      } catch (error) {
+        console.error("Lỗi khi lấy danh sách loại sách:", error);
+        bookTypes.value = [];
       }
-      console.log('Hình ảnh đã chọn:', imagePaths);
     };
 
-    const addBook = () => {
-      const newId = books.value.length + 1;
-      books.value.push({
-        id: newId,
-        image: newBook.value.image,
-        discountedPrice: newBook.value.discountedPrice,
-        originalPrice: newBook.value.originalPrice,
-        author: newBook.value.author,
-        title: newBook.value.title,
-        sold: newBook.value.sold, // Giá trị mặc định, không cho phép chỉnh sửa
-        rating: newBook.value.rating, // Giá trị mặc định, không cho phép chỉnh sửa
-      });
-      showAddBookPopup.value = false;
-      newBook.value = { id: null, image: [], discountedPrice: 0, originalPrice: 0, author: '', title: '', sold: 0, rating: 1 };
-      console.log('Sách mới đã được thêm:', books.value);
+    const fetchBooks = async () => {
+      try {
+        const response = await apiGetAllBooks();
+        if (response.data && Array.isArray(response.data.data)) {
+          books.value = response.data.data;
+        } else {
+          console.warn("Dữ liệu không phải mảng:", response.data);
+          books.value = [];
+        }
+      } catch (error) {
+        console.error("Lỗi khi lấy danh sách sách:", error);
+        books.value = [];
+      }
     };
 
-    const editBook = (id) => {
-      const book = books.value.find((b) => b.id === id);
-      editedBook.value = { ...book };
+    const handleNewImages = (event) => {
+      const files = event.target.files ? Array.from(event.target.files) : [];
+      newBook.value.images = files; // Gán mảng file vào images
+      newBook.value.imagePreviews = files.map((file) =>
+        URL.createObjectURL(file)
+      ); // Tạo bản xem trước
+    };
+
+    const addBook = async () => {
+      try {
+        const formData = new FormData();
+        formData.append("title", newBook.value.title);
+        formData.append("author", newBook.value.author);
+        formData.append("publisher", newBook.value.publisher);
+        formData.append("published_date", newBook.value.published_date);
+        formData.append("price", newBook.value.price);
+        if (newBook.value.discount_price)
+          formData.append("discount_price", newBook.value.discount_price);
+        formData.append("stock_quantity", newBook.value.stock_quantity);
+        if (newBook.value.description)
+          formData.append("description", newBook.value.description);
+        formData.append("book_type_id", newBook.value.book_type_id);
+
+        // Thêm từng file ảnh vào FormData với field name 'images'
+        if (newBook.value.images.length > 0) {
+          newBook.value.images.forEach((file) => {
+            formData.append("images", file);
+          });
+        } else {
+          console.warn("Không có ảnh nào được chọn để upload.");
+        }
+
+        const response = await apiAddBook(formData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        });
+
+        if (response.data && response.data.err === 0) {
+          await fetchBooks();
+          resetNewBook();
+          showAddBookPopup.value = false;
+          errorMessage.value = ""; // Xóa thông báo lỗi nếu thành công
+          console.log("Thêm sách thành công:", response.data);
+        } else {
+          errorMessage.value =
+            response.data.msg || "Lỗi không xác định từ server!";
+          console.error("Lỗi từ server:", response.data);
+        }
+      } catch (error) {
+        errorMessage.value =
+          error.response?.data?.msg || "Đã xảy ra lỗi khi thêm sách!";
+        console.error("Lỗi khi thêm sách:", error);
+      }
+    };
+
+    const editBook = (book_id) => {
+      const book = books.value.find((b) => b.book_id === book_id);
+      editedBook.value = {
+        ...book,
+        published_date: book.published_date.split("T")[0],
+      };
       showEditBookPopup.value = true;
     };
 
-    const updateBook = () => {
-      const index = books.value.findIndex((b) => b.id === editedBook.value.id);
-      if (index !== -1) {
-        books.value[index] = {
-          ...editedBook.value,
-          sold: books.value[index].sold, // Giữ nguyên sold
-          rating: books.value[index].rating, // Giữ nguyên rating
-        };
+    const updateBook = async () => {
+      try {
+        const formData = new FormData();
+        formData.append("book_id", editedBook.value.book_id);
+        formData.append("title", editedBook.value.title);
+        formData.append("author", editedBook.value.author);
+        formData.append("publisher", editedBook.value.publisher);
+        formData.append("published_date", editedBook.value.published_date);
+        formData.append("price", editedBook.value.price);
+        if (editedBook.value.discount_price)
+          formData.append("discount_price", editedBook.value.discount_price);
+        formData.append("stock_quantity", editedBook.value.stock_quantity);
+        if (editedBook.value.description)
+          formData.append("description", editedBook.value.description);
+        formData.append("book_type_id", editedBook.value.book_type_id);
+
+        const response = await apiEditBook(formData);
+        if (response.data && response.data.err === 0) {
+          await fetchBooks();
+          showEditBookPopup.value = false;
+          console.log("Cập nhật sách thành công:", response.data);
+        }
+      } catch (error) {
+        console.error("Lỗi khi cập nhật sách:", error);
       }
-      showEditBookPopup.value = false;
-      editedBook.value = { id: null, image: [], discountedPrice: 0, originalPrice: 0, author: '', title: '', sold: 0, rating: 1 };
-      console.log('Sách đã được cập nhật:', books.value);
     };
 
-    const deleteBook = (id) => {
-      books.value = books.value.filter((book) => book.id !== id);
-      console.log(`Xóa sách ID: ${id}`);
+    const deleteBook = async (book_id) => {
+      try {
+        const payload = { book_id };
+        const response = await apiDeleteBook(payload);
+        if (response.data && response.data.err === 0) {
+          await fetchBooks();
+          console.log(`Xóa sách ID: ${book_id} thành công`);
+        }
+      } catch (error) {
+        console.error("Lỗi khi xóa sách:", error);
+      }
     };
+
+    const resetNewBook = () => {
+      newBook.value = {
+        title: "",
+        author: "",
+        publisher: "",
+        published_date: "",
+        price: 0,
+        discount_price: null,
+        stock_quantity: 0,
+        description: null,
+        book_type_id: "",
+        images: [],
+        imagePreviews: [],
+      };
+    };
+
+    const cancelAddBook = () => {
+      resetNewBook();
+      showAddBookPopup.value = false;
+      errorMessage.value = ""; // Xóa thông báo lỗi khi hủy
+    };
+
+    const cancelEditBook = () => {
+      editedBook.value = {};
+      showEditBookPopup.value = false;
+    };
+
+    const filteredAndSortedBooks = computed(() => {
+      let result = [...books.value];
+      if (searchQuery.value) {
+        result = result.filter((book) =>
+          book.title.toLowerCase().includes(searchQuery.value.toLowerCase())
+        );
+      }
+      if (sortKey.value) {
+        result.sort((a, b) => {
+          const valueA = a[sortKey.value] || 0;
+          const valueB = b[sortKey.value] || 0;
+          if (sortOrder.value === "asc") {
+            return valueA > valueB ? 1 : valueA < valueB ? -1 : 0;
+          } else {
+            return valueA < valueB ? 1 : valueA > valueB ? -1 : 0;
+          }
+        });
+      }
+      const start = (currentPage.value - 1) * itemsPerPage.value;
+      const end = start + itemsPerPage.value;
+      return result.slice(start, end);
+    });
+
+    const totalPages = computed(() => {
+      return Math.ceil(books.value.length / itemsPerPage.value);
+    });
+
+    const sort = (key) => {
+      if (sortKey.value === key) {
+        sortOrder.value = sortOrder.value === "asc" ? "desc" : "asc";
+      } else {
+        sortKey.value = key;
+        sortOrder.value = "asc";
+      }
+    };
+
+    const getSortIcon = (key) => {
+      if (sortKey.value === key) {
+        return sortOrder.value === "asc" ? "fas fa-sort-up" : "fas fa-sort-down";
+      }
+      return "fas fa-sort";
+    };
+
+    const prevPage = () => {
+      if (currentPage.value > 1) {
+        currentPage.value--;
+      }
+    };
+
+    const nextPage = () => {
+      if (currentPage.value < totalPages.value) {
+        currentPage.value++;
+      }
+    };
+
+    const formatPrice = (price) => {
+      return new Intl.NumberFormat("vi-VN", {
+        style: "currency",
+        currency: "VND",
+      }).format(price);
+    };
+
+    onMounted(() => {
+      fetchBooks();
+      fetchBookTypes();
+    });
 
     return {
       books,
+      bookTypes,
+      searchQuery,
       showAddBookPopup,
       showEditBookPopup,
       newBook,
       editedBook,
-      handleImageUpload,
-      addBook,
       editBook,
-      updateBook,
       deleteBook,
+      addBook,
+      updateBook,
+      handleNewImages,
+      filteredAndSortedBooks,
+      sort,
+      getSortIcon,
+      currentPage,
+      totalPages,
+      prevPage,
+      nextPage,
+      formatPrice,
+      cancelAddBook,
+      cancelEditBook,
+      errorMessage, // Trả về errorMessage để hiển thị nếu cần
     };
   },
 };
 </script>
 
 <style scoped>
+/* Giữ nguyên style cũ, thêm style cho thông báo lỗi nếu cần */
+.error-message {
+  color: #dc3545;
+  font-size: 14px;
+  margin-top: 10px;
+  text-align: center;
+}
+
+/* Các style khác giữ nguyên */
 .admin-books {
   background-color: white;
   padding: 20px;
-  border-radius: 5px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
 .admin-books h1 {
@@ -220,77 +605,131 @@ export default {
 
 .book-actions {
   margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.search-input {
+  padding: 8px 16px;
+  border: 1px solid #ccc;
+  border-radius: 20px;
+  font-size: 14px;
+  width: 250px;
+  background-color: #f8f9fa;
+  color: #495057;
+  transition: border-color 0.3s ease;
+}
+
+.search-input::placeholder {
+  color: #6c757d;
+}
+
+.search-input:focus {
+  border-color: #007bff;
+  outline: none;
+  box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
 }
 
 .add-button {
-  padding: 10px 20px;
-  background-color: #27ae60;
+  padding: 8px 16px;
+  background-color: #007bff;
   color: white;
   border: none;
-  border-radius: 5px;
+  border-radius: 20px;
   cursor: pointer;
-  font-size: 16px;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 2px 5px rgba(0, 123, 255, 0.2);
 }
 
 .add-button:hover {
-  background-color: #219653;
+  background-color: #0056b3;
+}
+
+.add-button i {
+  margin-right: 5px;
 }
 
 .book-table {
-  margin-top: 20px;
+  overflow-x: auto;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
 .book-table table {
   width: 100%;
   border-collapse: collapse;
+  margin-bottom: 0;
 }
 
-.book-table th, .book-table td {
-  padding: 12px;
+.book-table th,
+.book-table td {
+  padding: 12px 16px;
   text-align: left;
-  border-bottom: 1px solid #ddd;
+  border-bottom: 1px solid #e9ecef;
+  font-size: 14px;
+  color: #495057;
 }
 
 .book-table th {
-  background-color: #2c3e50;
-  color: white;
-  font-size: 16px;
+  background-color: #f8f9fa;
+  color: #343a40;
+  font-weight: 600;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.book-table th i {
+  margin-left: 5px;
+  color: #6c757d;
+  cursor: pointer;
 }
 
 .book-table td {
-  font-size: 14px;
-  color: #666;
+  background-color: #ffffff;
 }
 
-.book-table .actions {
-  display: flex;
-  gap: 10px;
-}
-
-.book-table button {
-  padding: 5px 10px;
+.book-table button.action-btn {
   border: none;
-  border-radius: 5px;
+  background: none;
   cursor: pointer;
-  font-size: 14px;
+  padding: 5px;
+  margin-right: 5px;
+  border-radius: 3px;
+  transition: opacity 0.3s ease;
 }
 
-.book-table button:first-child {
-  background-color: #3498db;
-  color: white;
+.book-table button.action-btn:hover {
+  opacity: 0.8;
 }
 
-.book-table button:first-child:hover {
-  background-color: #2980b9;
+.book-table .edit-btn i {
+  color: #007bff;
+  font-size: 16px;
 }
 
-.book-table button:last-child {
-  background-color: #e74c3c;
-  color: white;
+.book-table .delete-btn i {
+  color: #dc3545;
+  font-size: 16px;
 }
 
-.book-table button:last-child:hover {
-  background-color: #c0392b;
+.book-images,
+.image-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.book-image,
+.preview-image {
+  width: 50px;
+  height: 50px;
+  object-fit: cover;
+  border-radius: 4px;
 }
 
 /* Modal Styles */
@@ -310,19 +749,35 @@ export default {
 .modal-content {
   background-color: white;
   padding: 20px;
-  border-radius: 5px;
-  width: 400px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+  width: 600px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border: 1px solid #ddd;
 }
 
 .modal-content h2 {
   font-size: 20px;
   color: #2c3e50;
   margin-bottom: 15px;
+  text-align: center;
+}
+
+.form-columns {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 15px;
+}
+
+.form-column {
+  flex: 1;
 }
 
 .form-group {
   margin-bottom: 15px;
+}
+
+.form-group.full-width {
+  width: 100%;
 }
 
 .form-group label {
@@ -330,22 +785,30 @@ export default {
   margin-bottom: 5px;
   font-size: 14px;
   color: #2c3e50;
+  font-weight: 500;
 }
 
-.form-group input[type="text"],
-.form-group input[type="number"] {
+.form-group input,
+.form-group textarea,
+.form-group select {
   width: 100%;
-  padding: 8px;
+  padding: 8px 12px;
   border: 1px solid #ddd;
-  border-radius: 4px;
+  border-radius: 5px;
   font-size: 14px;
+  background-color: #f9f9f9;
+  transition: border-color 0.3s ease;
 }
 
-.form-group input[type="file"] {
-  width: 100%;
-  padding: 8px 0;
-  border: none;
-  font-size: 14px;
+.form-group textarea {
+  resize: vertical;
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+  border-color: #3498db;
+  outline: none;
 }
 
 .modal-actions {
@@ -355,11 +818,13 @@ export default {
 }
 
 .modal-actions button {
-  padding: 8px 16px;
+  padding: 10px 20px;
   border: none;
   border-radius: 5px;
   cursor: pointer;
   font-size: 14px;
+  font-weight: 500;
+  transition: background-color 0.3s ease;
 }
 
 .modal-actions button:first-child {
@@ -378,5 +843,38 @@ export default {
 
 .modal-actions button:last-child:hover {
   background-color: #c0392b;
+}
+
+/* Pagination */
+.pagination {
+  padding: 10px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #f8f9fa;
+  border-top: 1px solid #e9ecef;
+  border-radius: 0 0 8px 8px;
+  font-size: 14px;
+  color: #495057;
+}
+
+.pagination-btn {
+  padding: 6px 12px;
+  border: none;
+  background-color: #007bff;
+  color: white;
+  border-radius: 20px;
+  cursor: pointer;
+  margin-left: 10px;
+  transition: background-color 0.3s ease;
+}
+
+.pagination-btn:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  background-color: #0056b3;
 }
 </style>
