@@ -10,6 +10,8 @@ import Books from '@/pages/admin/Books.vue';
 import Users from '@/pages/admin/Users.vue';
 import Orders from '@/pages/admin/Orders.vue';
 import NotFound from '@/pages/client/NotFound.vue';
+import Banners from '@/pages/admin/Banners.vue';
+import Tags from '@/pages/admin/Tags.vue';
 
 const routes = [
     {
@@ -117,6 +119,15 @@ const routes = [
             path: 'orders',
             name: 'AdminOrders',
             component: Orders,
+          },
+          { 
+            path: 'banners', 
+            name: 'AdminBanners', 
+            component: Banners },
+          { 
+            path: 'tags', 
+            name: 'AdminTags', 
+            component: Tags 
           },
         ],
       },
