@@ -39,17 +39,15 @@
         </div>
         <div id="content">
           <div id="banner">
-            <div class="div_banner">
-              <img src="@/assets/images/Banner_00.png" alt="">
+            <div class="div_banner" v-for="(banner, index) in banners" :key="index" :class="{ 'active': index === currentBanner }">
+              <img :src="require(`@/assets/images/${banner}`)" :alt="`Banner ${index + 1}`">
             </div>
-            <div class="div_banner">
-              <img src="@/assets/images/Banner_00.png" alt="">
+            <div id="arrow_left" class="arrow_banner" @click="prevBanner">
+              <i class="fas fa-chevron-left"></i>
             </div>
-            <div class="div_banner">
-              <img src="@/assets/images/Banner_00.png" alt="">
+            <div id="arrow_right" class="arrow_banner" @click="nextBanner">
+              <i class="fas fa-chevron-right"></i>
             </div>
-            <div id="arrow_left" class="arrow_banner"><i class="fas fa-chevron-left"></i></div>
-            <div id="arrow_right" class="arrow_banner"><i class="fas fa-chevron-right"></i></div>
           </div>
           <div id="filter">
             <div><h1>Tất cả sản phẩm</h1></div>
@@ -324,59 +322,12 @@
       </div>
     </div>
 
-    <!-- Popup Address -->
-    <div :class="{ 'hidden': currentRouteName !== 'Address' }" id="address_popup">
-      <div>
-        <div>
-          <div>
-            <h1>Địa chỉ giao hàng</h1>
-          </div>
-          <div>
-            <div>
-              <p>Hãy chọn địa chỉ để nhân hàng để được dự báo thời gian giao hàng cùng chi phí đống gói, vận chuyển một cách chính xác nhất.</p>
-              <button @click="$router.push('/login')">
-                Đăng nhập để lưu địa chỉ giao hàng
-              </button>
-              <span>Hoặc</span>
-            </div>
-            <div>
-              <div>
-                <div class="input_address">
-                  <span>Tỉnh/Thành phố</span>
-                  <input type="text" placeholder="Vui lòng nhập tỉnh/thành phố">
-                </div>
-                <div class="input_address">
-                  <span>Quận/Huyện</span>
-                  <input type="text" placeholder="Vui lòng nhập quận/huyện">
-                </div>
-                <div class="input_address">
-                  <span>Phường/Xã</span>
-                  <input type="text" placeholder="Vui lòng nhập phường/xã">
-                </div>
-                <div class="input_address">
-                  <span>Chi tiết</span>
-                  <input type="text" placeholder="Vui lòng nhập chi tiết địa chỉ">
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div id="address_popup_button">
-          <button>
-            Giao đến địa chỉ này
-          </button>
-        </div>
-        <div id="address_popup_close" @click="$router.push('/')">
-          <i class="fas fa-times"></i>
-        </div>
-      </div>
-    </div>
   </div>
 </template>
 
 <script>
 import ProductCard from "@/components/client/ProductCard.vue";
-import { computed, ref } from 'vue';
+import { computed, ref, onMounted, onUnmounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
 export default {
@@ -389,11 +340,20 @@ export default {
     const currentRouteName = computed(() => route.name);
     const showFilterPopup = ref(false);
 
+    // Dữ liệu mẫu: nhân bản Banner_00.png thành 5 lần
+    const banners = ref(['Banner_00.png', 'Banner_01.jpg']);
+    const currentBanner = ref(0); // Index của banner hiện tại
+    let autoSlideInterval = null; // Biến để lưu interval tự động chạy
+
     const goToFilter = () => {
       router.push('/filter');
     };
 
-    // Khởi tạo trạng thái cho các bộ lọc
+    const goToProductDetail = (id) => {
+      router.push(`/product/${id}`);
+    };
+
+    // Khởi tạo trạng thái cho các bộ lọc (nếu cần, giữ nguyên từ trước)
     const filters = ref({
       freeShipping: false,
       ratings: { '1': false, '2': false, '3': false, '4': false, '5': false },
@@ -432,13 +392,34 @@ export default {
       console.log('Applying filters:', filters.value, customPriceRange.value);
       setTimeout(() => {
         router.push('/filter-results'); // Chuyển hướng đến trang kết quả sau 2 giây
-      }, 2000);
+      }, 10000);
     };
 
-    // Chuyển hướng đến trang chi tiết sản phẩm
-    const goToProductDetail = (id) => {
-      router.push(`/product/${id}`);
+    // Chuyển đến banner tiếp theo
+    const nextBanner = () => {
+      currentBanner.value = (currentBanner.value + 1) % banners.value.length;
     };
+
+    // Chuyển đến banner trước đó
+    const prevBanner = () => {
+      currentBanner.value = (currentBanner.value - 1 + banners.value.length) % banners.value.length;
+    };
+
+    // Tự động chạy banner (3 giây mỗi lần)
+    const startAutoSlide = () => {
+      autoSlideInterval = setInterval(nextBanner, 10000);
+    };
+
+    // Dừng tự động chạy khi component bị hủy
+    onMounted(() => {
+      startAutoSlide();
+    });
+
+    onUnmounted(() => {
+      if (autoSlideInterval) {
+        clearInterval(autoSlideInterval);
+      }
+    });
 
     return {
       currentRouteName,
@@ -451,6 +432,10 @@ export default {
       clearAllFilters,
       showResults,
       goToProductDetail,
+      banners,
+      currentBanner,
+      nextBanner,
+      prevBanner,
     };
   },
 };
@@ -465,4 +450,5 @@ export default {
 @import "@/assets/css/General.css";
 @import "@/assets/css/Forget_Pass_popup.css";
 @import "@/assets/css/Signup_popup.css";
+@import "@/assets/css/BannerHome.css";
 </style>
