@@ -1,5 +1,27 @@
 import db from "../models";
 import * as cloudinaryService from "./cloudinaryService"
+
+// lấy toàn bộ
+export const getAllAccountService = () => new Promise(async (resolve, reject) => {
+    try {
+        const users = await db.User.findAll({});
+
+        return resolve({
+            err: users.length ? 0 : 2,
+            msg: users.length ? 'Lấy danh sách người dùng thành công!' : 'Không có người dùng nào.',
+            data: users
+        });
+    } catch (error) {
+        console.error("Lỗi khi lấy danh sách người dùng:", error);
+        return reject({
+            err: 1,
+            msg: 'Lỗi khi lấy danh sách người dùng!',
+            error: error,
+        });
+    }
+})
+
+
 // sửa
 export const updateAccountService = ({ email, role, status, user_name }) =>
     new Promise(async (resolve, reject) => {
@@ -122,7 +144,7 @@ export const uploadAvatarService = (req) =>
             }
 
             // Upload ảnh lên Cloudinary
-            const rs = await cloudinaryService.uploadImageService(req,avatarRecord?.avatar_public_id);
+            const rs = await cloudinaryService.uploadImageService(req, avatarRecord?.avatar_public_id);
 
             if (!rs) {
                 return reject({

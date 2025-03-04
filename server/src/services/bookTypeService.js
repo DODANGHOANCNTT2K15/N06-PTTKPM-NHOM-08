@@ -1,5 +1,26 @@
 import db from "../models"
 
+// lấy toàn bộ
+export const getAllBookTypeService = () => new Promise(async (resolve, reject) => {
+    try {
+        const bookTypes = await db.BookType.findAll({});
+
+        return resolve({
+            err: bookTypes.length ? 0 : 2,
+            msg: bookTypes.length ? 'Lấy danh sách loại sách thành công!' : 'Không có loại sách nào.',
+            data: bookTypes
+        });
+    } catch (error) {
+        console.error("Lỗi khi lấy danh sách loại sách:", error);
+        return reject({
+            err: 1,
+            msg: 'Lỗi khi lấy danh sách loại sách!',
+            error: error,
+        });
+    }
+})
+
+// thêm mới
 export const addBookTypeService = async ({ name, description }) => {
     try {
         // Thêm dữ liệu vào bảng

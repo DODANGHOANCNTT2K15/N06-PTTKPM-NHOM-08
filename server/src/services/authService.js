@@ -87,7 +87,7 @@ export const registerService = ({ user_name, email, pass_word, role }) => new Pr
                 user_name: user_name.trim(),
                 pass_word: hash(pass_word.trim()),
                 role: role ? 1 : 0,
-                status: 1,
+                status: 0,
             }
         });
 

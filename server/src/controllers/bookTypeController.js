@@ -1,5 +1,18 @@
 import * as bookTypeService from '../services/bookTypeService';
 
+//lấy toàn bộ tài khoản
+export const getAllBookTypeController = async (req, res) => {
+    try {
+        const rs = await bookTypeService.getAllBookTypeService();
+        return res.status(200).json(rs);
+
+    } catch (error) {
+        console.error('Error in getAllBookTypeController:', error);
+        return res.status(500).json(error);
+    }
+};
+
+
 // thêm loại sách
 export const addBookTypeController = async (req, res) => {
     const { name, description } = req.body;
