@@ -66,12 +66,9 @@ export default {
   name: 'HeaderComponent',
   setup() {
     const router = useRouter();
-    const authStore = useAuthStore();
 
-    // Khởi tạo trạng thái khi component được mount
-    onMounted(() => {
-      authStore.initializeAuth();
-    });
+    // Biến trạng thái giả lập đăng nhập (ban đầu là chưa đăng nhập)
+    const isLoggedIn = ref(false); // Sử dụng ref từ Vue
 
     const goToHome = () => {
       router.push('/');

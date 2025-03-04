@@ -93,6 +93,34 @@
           </div>
           <div id="products">
             <ProductCard
+              v-for="product in paginatedProducts"
+              :key="product.id"
+              :id="product.id"
+              image="Product_00.png"
+              :discountedPrice="product.discountedPrice"
+              :originalPrice="product.originalPrice"
+              :author="product.author"
+              :title="product.title"
+              :sold="product.sold"
+              :tags="product.tags"
+              @click="goToProductDetail(product.id)"
+            />
+          </div>
+          <div id="pagination">
+            <button :disabled="currentPage === 1" @click="currentPage--">Previous</button>
+            <span v-for="page in totalPages" :key="page" :class="{ 'active': currentPage === page }">
+              <button @click="currentPage = page">{{ page }}</button>
+            </span>
+            <button :disabled="currentPage === totalPages" @click="currentPage++">Next</button>
+          </div>
+        </div>
+      </div>
+      <div id="history">
+        <div>
+          <h1>Sản phẩm đã xem</h1>
+        </div>
+        <div>
+          <ProductCard
               :id="1"
               image="Product_00.png"
               :discountedPrice="600000"
@@ -103,50 +131,6 @@
               :tags="['khoahoc', '4Sao']"
               @click="goToProductDetail(1)"
             />
-            <ProductCard
-              :id="2"
-              image="Product_00.png"
-              :discountedPrice="350000"
-              :originalPrice="800000"
-              author="NGUYEN DU"
-              title="Truyện Kiều"
-              :sold="150"
-              :tags="['van hoc', '5Sao']"
-              @click="goToProductDetail(2)"
-            />
-            <ProductCard
-              :id="3"
-              image="Product_00.png"
-              :discountedPrice="250000"
-              :originalPrice="500000"
-              author="STEPHEN HAWKING"
-              title="Lược sử thời gian"
-              :sold="200"
-              :tags="['khoa hoc', '4Sao']"
-              @click="goToProductDetail(3)"
-            />
-          </div>
-          <div id="load_more">
-            <button>XEM THÊM</button>
-          </div>
-        </div>
-      </div>
-      <div id="history">
-        <div>
-          <h1>Sản phẩm đã xem</h1>
-        </div>
-        <div>
-          <ProductCard
-            :id="1"
-            image="Product_00.png"
-            :discountedPrice="600000"
-            :originalPrice="1600000"
-            author="DAISETZ TEITARO SUZUKI"
-            title="Thiền luận"
-            :sold="96"
-            :tags="['khoahoc', '4Sao']"
-            @click="goToProductDetail(1)"
-          />
         </div>
       </div>
     </main>
@@ -636,6 +620,34 @@ export default {
       }
     });
 
+    // Phân trang cho sản phẩm
+    const products = ref([
+      { id: 1, discountedPrice: 600000, originalPrice: 1600000, author: 'DAISETZ TEITARO SUZUKI', title: 'Thiền luận', sold: 96, tags: ['khoahoc', '4Sao'] },
+      { id: 2, discountedPrice: 350000, originalPrice: 800000, author: 'NGUYEN DU', title: 'Truyện Kiều', sold: 150, tags: ['van hoc', '5Sao'] },
+      { id: 3, discountedPrice: 250000, originalPrice: 500000, author: 'STEPHEN HAWKING', title: 'Lược sử thời gian', sold: 200, tags: ['khoa hoc', '4Sao'] },
+      { id: 3, discountedPrice: 250000, originalPrice: 500000, author: 'STEPHEN HAWKING', title: 'Lược sử thời gian', sold: 200, tags: ['khoa hoc', '4Sao'] },
+      { id: 3, discountedPrice: 250000, originalPrice: 500000, author: 'STEPHEN HAWKING', title: 'Lược sử thời gian', sold: 200, tags: ['khoa hoc', '4Sao'] },
+      { id: 3, discountedPrice: 250000, originalPrice: 500000, author: 'STEPHEN HAWKING', title: 'Lược sử thời gian', sold: 200, tags: ['khoa hoc', '4Sao'] },
+      { id: 3, discountedPrice: 250000, originalPrice: 500000, author: 'STEPHEN HAWKING', title: 'Lược sử thời gian', sold: 200, tags: ['khoa hoc', '4Sao'] },
+      { id: 3, discountedPrice: 250000, originalPrice: 500000, author: 'STEPHEN HAWKING', title: 'Lược sử thời gian', sold: 200, tags: ['khoa hoc', '4Sao'] },
+      { id: 3, discountedPrice: 250000, originalPrice: 500000, author: 'STEPHEN HAWKING', title: 'Lược sử thời gian', sold: 200, tags: ['khoa hoc', '4Sao'] },
+      { id: 3, discountedPrice: 250000, originalPrice: 500000, author: 'STEPHEN HAWKING', title: 'Lược sử thời gian', sold: 200, tags: ['khoa hoc', '4Sao'] },
+      { id: 3, discountedPrice: 250000, originalPrice: 500000, author: 'STEPHEN HAWKING', title: 'Lược sử thời gian', sold: 200, tags: ['khoa hoc', '4Sao'] },
+    ]);
+
+    const itemsPerPage = ref(10); // Số sản phẩm trên mỗi trang
+    const currentPage = ref(1); // Trang hiện tại
+
+    const paginatedProducts = computed(() => {
+      const start = (currentPage.value - 1) * itemsPerPage.value;
+      const end = start + itemsPerPage.value;
+      return products.value.slice(start, end);
+    });
+
+    const totalPages = computed(() => {
+      return Math.ceil(products.value.length / itemsPerPage.value);
+    });
+
     return {
       currentRouteName,
       showFilterPopup,
@@ -650,14 +662,6 @@ export default {
       currentBanner,
       nextBanner,
       prevBanner,
-      loginForm,
-      signupForm,
-      forgetPasswordForm,
-      errorMessage,
-      successMessage,
-      login,
-      signup,
-      forgetPassword,
     };
   },
 };
@@ -672,14 +676,4 @@ export default {
 @import "@/assets/css/Forget_Pass_popup.css";
 @import "@/assets/css/Signup_popup.css";
 @import "@/assets/css/BannerHome.css";
-
-.error-message {
-  color: red;
-  margin: 10px 0;
-}
-
-.success-message {
-  color: green;
-  margin: 10px 0;
-}
 </style>
