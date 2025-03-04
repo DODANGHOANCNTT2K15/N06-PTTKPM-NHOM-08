@@ -83,7 +83,6 @@ export const getBookByIdService = (book_id) =>
         }
     });
 
-
 // thêm sách
 export const addBookService = (req) =>
     new Promise(async (resolve, reject) => {
@@ -100,9 +99,11 @@ export const addBookService = (req) =>
             book_type_id,
         } = req.body;
 
+        let book; // Khai báo biến book ở phạm vi ngoài để sử dụng trong rollback
+
         try {
             // Kiểm tra và thêm sách mới
-            const [book, created] = await db.Book.findOrCreate({
+            const [newBook, created] = await db.Book.findOrCreate({
                 where: { title: title.trim() },
                 defaults: {
                     title: title.trim(),
@@ -125,11 +126,14 @@ export const addBookService = (req) =>
                 });
             }
 
+            book = newBook; // Gán giá trị để sử dụng trong rollback nếu cần
+
             // Upload hình ảnh lên Cloudinary
             const uploadResults = await cloudinaryService.uploadMultipleImagesService(req);
 
             if (!uploadResults || uploadResults.length === 0) {
-                book.destroy();
+                // Rollback: Xóa bản ghi sách nếu không upload được ảnh
+                await book.destroy();
                 return reject({
                     err: 2,
                     msg: 'Lỗi upload lên Cloudinary!',
@@ -137,15 +141,30 @@ export const addBookService = (req) =>
             }
 
             // Lưu thông tin hình ảnh vào cơ sở dữ liệu
-            await Promise.all(
-                uploadResults.map(async (image) => {
-                    await db.BookImage.create({
-                        book_id: book.book_id,
-                        image_public_id: image.image_public_id,
-                        image_path: image.image_path,
-                    });
-                })
-            );
+            try {
+                await Promise.all(
+                    uploadResults.map(async (image) => {
+                        await db.BookImage.create({
+                            book_id: book.book_id,
+                            image_public_id: image.image_public_id,
+                            image_path: image.image_path,
+                        });
+                    })
+                );
+            } catch (error) {
+                // Rollback: Xóa ảnh đã upload trên Cloudinary và bản ghi sách nếu lưu vào database thất bại
+                await Promise.all(
+                    uploadResults.map(async (image) => {
+                        await cloudinary.uploader.destroy(image.image_public_id);
+                    })
+                );
+                await book.destroy();
+                return reject({
+                    err: 2,
+                    msg: 'Lỗi lưu thông tin ảnh vào database!',
+                    error: error.message,
+                });
+            }
 
             // Trả về kết quả thành công
             resolve({
@@ -158,6 +177,12 @@ export const addBookService = (req) =>
             });
         } catch (error) {
             console.error('Lỗi khi thêm sách: ', error);
+
+            // Rollback trong trường hợp lỗi tổng quát (nếu book đã được tạo)
+            if (book) {
+                await book.destroy();
+            }
+
             reject({
                 err: 2,
                 msg: 'Đã xảy ra lỗi trong quá trình thêm sách!',

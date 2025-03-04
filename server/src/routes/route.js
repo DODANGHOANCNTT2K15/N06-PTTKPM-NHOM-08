@@ -31,8 +31,8 @@ router.post('/account/avatar', middleWare.authMiddleware, upload.single('avatar'
 router.get('/book', bookController.getAllBookController)
 router.post('/book/id', bookController.getBookByIdController)
 router.post('/book/add', upload.array('images', 10), bookController.addBookController)
-router.post('/book/update', bookController.updateBookController)
-router.post('/book/delete', bookController.deleteBookController)
+router.put('/book/update', bookController.updateBookController)
+router.delete('/book/delete', bookController.deleteBookController)
 
 // book image
 router.post('/bookimage/add', upload.array('images', 10), bookImageController.addBookImageController)
