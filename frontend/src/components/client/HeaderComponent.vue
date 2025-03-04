@@ -68,7 +68,7 @@ export default {
     const router = useRouter();
 
     // Biến trạng thái giả lập đăng nhập (ban đầu là chưa đăng nhập)
-    const isLoggedIn = ref(false); // Sử dụng ref từ Vue
+    const isLoggedIn = ref(true); // Sử dụng ref từ Vue
 
     const goToHome = () => {
       router.push('/');
