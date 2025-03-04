@@ -1,7 +1,9 @@
 <template>
   <div class="admin-layout">
     <div class="sidebar">
-      <h2>Admin Panel</h2>
+      <router-link to="/admin/dashboard" class="logo-link">
+        <img src="@\assets\images\Logo_00.png" alt="Admin Logo" class="logo" />
+      </router-link>
       <nav>
         <router-link to="/admin/dashboard" class="sidebar-item">
           <i class="fas fa-tachometer-alt"></i> Dashboard
@@ -74,33 +76,49 @@ export default {
   background-color: #2c3e50;
   color: white;
   padding: 20px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-.sidebar h2 {
+.logo-link {
+  display: block;
   padding: 20px;
-  margin: 0;
-  font-size: 20px;
   text-align: center;
   background-color: #34495e;
+  width: 100%;
+  text-decoration: none;
+}
+
+.logo {
+  max-width: 150px; /* Điều chỉnh kích thước logo */
+  height: auto;
 }
 
 .sidebar nav {
+  width: 100%;
   padding: 20px;
+  flex-grow: 1;
 }
 
 .sidebar-item {
-  display: block;
-  padding: 10px 15px;
+  display: flex;
+  align-items: center;
+  padding: 12px 15px;
   color: white;
   text-decoration: none;
   font-size: 16px;
+  transition: background-color 0.3s ease;
 }
 
 .sidebar-item i {
   margin-right: 10px;
+  width: 20px; /* Đảm bảo icon căn đều */
+  text-align: center;
 }
 
-.sidebar-item:hover, .sidebar-item.router-link-active {
+.sidebar-item:hover,
+.sidebar-item.router-link-active {
   background-color: #34495e;
   border-radius: 5px;
 }
@@ -129,7 +147,7 @@ export default {
 .user-info {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 15px;
 }
 
 .user-info span {
@@ -145,6 +163,7 @@ export default {
   border-radius: 5px;
   cursor: pointer;
   font-size: 14px;
+  transition: background-color 0.3s ease;
 }
 
 .user-info button:hover {

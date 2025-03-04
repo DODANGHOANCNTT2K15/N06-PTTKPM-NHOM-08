@@ -45,20 +45,28 @@
             <td>{{ book.author }}</td>
             <td>{{ formatPrice(book.price) }}</td>
             <td>
-              {{
-                book.discount_price ? formatPrice(book.discount_price) : "N/A"
-              }}
+              {{ book.discount_price ? `${book.discount_price}%` : "0" }}
             </td>
             <td>{{ book.stock_quantity }}</td>
             <td>
               <div class="book-images">
-                <img
+                <div
                   v-for="image in book.images"
                   :key="image.image_public_id"
-                  :src="image.image_path"
-                  alt="Book Image"
-                  class="book-image"
-                />
+                  class="image-container"
+                >
+                  <img
+                    :src="image.image_path"
+                    alt="Book Image"
+                    class="book-image"
+                  />
+                  <button
+                    @click="deleteImage(book.book_id, image.image_public_id)"
+                    class="delete-image-btn"
+                  >
+                    ×
+                  </button>
+                </div>
               </div>
             </td>
             <td>
@@ -67,6 +75,12 @@
                 class="action-btn edit-btn"
               >
                 <i class="fas fa-pencil-alt"></i>
+              </button>
+              <button
+                @click="addImage(book.book_id)"
+                class="action-btn add-image-btn"
+              >
+                <i class="fas fa-image"></i>
               </button>
               <button
                 @click="deleteBook(book.book_id)"
@@ -132,7 +146,7 @@
                 <input v-model="newBook.price" type="number" required />
               </div>
               <div class="form-group">
-                <label>Giá giảm (nếu có):</label>
+                <label>Khuyến mãi(%) (nếu có):</label>
                 <input v-model="newBook.discount_price" type="number" />
               </div>
               <div class="form-group">
@@ -197,15 +211,6 @@
           <div class="form-columns">
             <div class="form-column">
               <div class="form-group">
-                <label>Book ID:</label>
-                <input
-                  v-model="editedBook.book_id"
-                  type="text"
-                  required
-                  disabled
-                />
-              </div>
-              <div class="form-group">
                 <label>Tiêu đề:</label>
                 <input v-model="editedBook.title" type="text" required />
               </div>
@@ -217,8 +222,6 @@
                 <label>Nhà xuất bản:</label>
                 <input v-model="editedBook.publisher" type="text" required />
               </div>
-            </div>
-            <div class="form-column">
               <div class="form-group">
                 <label>Ngày xuất bản:</label>
                 <input
@@ -227,12 +230,14 @@
                   required
                 />
               </div>
+            </div>
+            <div class="form-column">
               <div class="form-group">
                 <label>Giá:</label>
                 <input v-model="editedBook.price" type="number" required />
               </div>
               <div class="form-group">
-                <label>Giá giảm (nếu có):</label>
+                <label>Khuyến mãi(%) (nếu có):</label>
                 <input v-model="editedBook.discount_price" type="number" />
               </div>
               <div class="form-group">
@@ -265,13 +270,25 @@
           <div class="form-group full-width">
             <label>Ảnh hiện tại:</label>
             <div class="book-images">
-              <img
+              <div
                 v-for="image in editedBook.images"
                 :key="image.image_public_id"
-                :src="image.image_path"
-                alt="Book Image"
-                class="preview-image"
-              />
+                class="image-container"
+              >
+                <img
+                  :src="image.image_path"
+                  alt="Book Image"
+                  class="preview-image"
+                />
+                <button
+                  @click="
+                    deleteImage(editedBook.book_id, image.image_public_id)
+                  "
+                  class="delete-image-btn"
+                >
+                  ×
+                </button>
+              </div>
             </div>
           </div>
           <div class="modal-actions">
@@ -281,16 +298,50 @@
         </form>
       </div>
     </div>
+
+    <!-- Popup Thêm Ảnh -->
+    <div v-if="addImagePopup" class="modal">
+      <div class="modal-content">
+        <h2>Thêm Ảnh cho Sách</h2>
+        <form @submit.prevent="saveNewImages">
+          <div class="form-group full-width">
+            <label>Chọn ảnh:</label>
+            <input
+              type="file"
+              multiple
+              @change="handleAddImages"
+              accept="image/*"
+              ref="imageInput"
+            />
+            <div class="image-preview" v-if="newImages.length > 0">
+              <img
+                v-for="(image, index) in newImages"
+                :key="index"
+                :src="getImageUrl(image)"
+                alt="Preview"
+                class="preview-image"
+              />
+            </div>
+          </div>
+          <div class="modal-actions">
+            <button type="submit">Lưu</button>
+            <button @click="cancelAddImage">Hủy</button>
+          </div>
+        </form>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
-import { ref, onMounted, computed } from "vue";
+import { ref, onMounted, computed, onUnmounted } from "vue";
 import {
   apiGetAllBooks,
   apiAddBook,
   apiEditBook,
   apiDeleteBook,
+  apiDeleteImageBook,
+  apiAddBookImages,
 } from "@/services/admin/BookService";
 import { apiGetAllBookTypes } from "@/services/admin/TagBooksService";
 
@@ -304,6 +355,11 @@ export default {
     const sortOrder = ref("asc");
     const showAddBookPopup = ref(false);
     const showEditBookPopup = ref(false);
+    const addImagePopup = ref(false);
+    const selectedBookId = ref(null);
+    const newImages = ref([]);
+    const imagePreviews = ref([]); // Để lưu trữ URL tạm thời cho ảnh mới
+
     const newBook = ref({
       title: "",
       author: "",
@@ -314,13 +370,13 @@ export default {
       stock_quantity: 0,
       description: null,
       book_type_id: "",
-      images: [], // Khởi tạo mặc định là mảng rỗng
-      imagePreviews: [], // Mảng để chứa bản xem trước của ảnh
+      images: [],
+      imagePreviews: [],
     });
     const editedBook = ref({});
     const currentPage = ref(1);
     const itemsPerPage = ref(10);
-    const errorMessage = ref(""); // Thêm biến để lưu thông báo lỗi
+    const errorMessage = ref("");
 
     const fetchBookTypes = async () => {
       try {
@@ -354,10 +410,22 @@ export default {
 
     const handleNewImages = (event) => {
       const files = event.target.files ? Array.from(event.target.files) : [];
-      newBook.value.images = files; // Gán mảng file vào images
-      newBook.value.imagePreviews = files.map((file) =>
-        URL.createObjectURL(file)
-      ); // Tạo bản xem trước
+      newBook.value.images = files.filter((file) => file instanceof File);
+      newBook.value.imagePreviews = newBook.value.images
+        .map((file) => (file ? URL.createObjectURL(file) : null))
+        .filter(Boolean);
+    };
+
+    const handleAddImages = (event) => {
+      const files = event.target.files ? Array.from(event.target.files) : [];
+      newImages.value = files.filter((file) => file instanceof File);
+      imagePreviews.value = newImages.value
+        .map((file) => (file ? URL.createObjectURL(file) : null))
+        .filter(Boolean);
+    };
+
+    const getImageUrl = (image) => {
+      return image instanceof File ? URL.createObjectURL(image) : "";
     };
 
     const addBook = async () => {
@@ -375,13 +443,10 @@ export default {
           formData.append("description", newBook.value.description);
         formData.append("book_type_id", newBook.value.book_type_id);
 
-        // Thêm từng file ảnh vào FormData với field name 'images'
         if (newBook.value.images.length > 0) {
           newBook.value.images.forEach((file) => {
             formData.append("images", file);
           });
-        } else {
-          console.warn("Không có ảnh nào được chọn để upload.");
         }
 
         const response = await apiAddBook(formData, {
@@ -394,12 +459,10 @@ export default {
           await fetchBooks();
           resetNewBook();
           showAddBookPopup.value = false;
-          errorMessage.value = ""; // Xóa thông báo lỗi nếu thành công
-          console.log("Thêm sách thành công:", response.data);
+          errorMessage.value = "";
         } else {
           errorMessage.value =
             response.data.msg || "Lỗi không xác định từ server!";
-          console.error("Lỗi từ server:", response.data);
         }
       } catch (error) {
         errorMessage.value =
@@ -437,7 +500,6 @@ export default {
         if (response.data && response.data.err === 0) {
           await fetchBooks();
           showEditBookPopup.value = false;
-          console.log("Cập nhật sách thành công:", response.data);
         }
       } catch (error) {
         console.error("Lỗi khi cập nhật sách:", error);
@@ -450,14 +512,70 @@ export default {
         const response = await apiDeleteBook(payload);
         if (response.data && response.data.err === 0) {
           await fetchBooks();
-          console.log(`Xóa sách ID: ${book_id} thành công`);
         }
       } catch (error) {
         console.error("Lỗi khi xóa sách:", error);
       }
     };
 
+    const deleteImage = async (bookId, imageId) => {
+      if (confirm("Bạn có chắc muốn xóa ảnh này?")) {
+        try {
+          const response = await apiDeleteImageBook({
+            book_id: bookId,
+            image_public_id: imageId,
+          });
+          if (response.data && response.data.err === 0) {
+            await fetchBooks();
+            if (showEditBookPopup.value) {
+              editedBook.value.images = editedBook.value.images.filter(
+                (img) => img.image_public_id !== imageId
+              );
+            }
+          }
+        } catch (error) {
+          console.error("Lỗi khi xóa ảnh:", error);
+        }
+      }
+    };
+
+    const addImage = (bookId) => {
+      selectedBookId.value = bookId;
+      newImages.value = [];
+      imagePreviews.value = [];
+      addImagePopup.value = true;
+    };
+
+    const saveNewImages = async () => {
+      try {
+        const formData = new FormData();
+        formData.append("book_id", selectedBookId.value);
+        newImages.value.forEach((file) => {
+          if (file instanceof File) {
+            formData.append("images", file);
+          }
+        });
+
+        const response = await apiAddBookImages(formData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        });
+
+        if (response.data && response.data.err === 0) {
+          await fetchBooks();
+          addImagePopup.value = false;
+          newImages.value = [];
+          imagePreviews.value.forEach((url) => URL.revokeObjectURL(url));
+          imagePreviews.value = [];
+        }
+      } catch (error) {
+        console.error("Lỗi khi thêm ảnh:", error);
+      }
+    };
+
     const resetNewBook = () => {
+      newBook.value.imagePreviews.forEach((url) => URL.revokeObjectURL(url));
       newBook.value = {
         title: "",
         author: "",
@@ -476,12 +594,19 @@ export default {
     const cancelAddBook = () => {
       resetNewBook();
       showAddBookPopup.value = false;
-      errorMessage.value = ""; // Xóa thông báo lỗi khi hủy
+      errorMessage.value = "";
     };
 
     const cancelEditBook = () => {
       editedBook.value = {};
       showEditBookPopup.value = false;
+    };
+
+    const cancelAddImage = () => {
+      imagePreviews.value.forEach((url) => URL.revokeObjectURL(url));
+      newImages.value = [];
+      imagePreviews.value = [];
+      addImagePopup.value = false;
     };
 
     const filteredAndSortedBooks = computed(() => {
@@ -522,7 +647,9 @@ export default {
 
     const getSortIcon = (key) => {
       if (sortKey.value === key) {
-        return sortOrder.value === "asc" ? "fas fa-sort-up" : "fas fa-sort-down";
+        return sortOrder.value === "asc"
+          ? "fas fa-sort-up"
+          : "fas fa-sort-down";
       }
       return "fas fa-sort";
     };
@@ -551,19 +678,30 @@ export default {
       fetchBookTypes();
     });
 
+    onUnmounted(() => {
+      newBook.value.imagePreviews.forEach((url) => URL.revokeObjectURL(url));
+      imagePreviews.value.forEach((url) => URL.revokeObjectURL(url));
+    });
+
     return {
       books,
       bookTypes,
       searchQuery,
       showAddBookPopup,
       showEditBookPopup,
+      addImagePopup,
       newBook,
       editedBook,
+      newImages,
       editBook,
       deleteBook,
       addBook,
       updateBook,
       handleNewImages,
+      handleAddImages,
+      addImage,
+      deleteImage,
+      saveNewImages,
       filteredAndSortedBooks,
       sort,
       getSortIcon,
@@ -574,22 +712,15 @@ export default {
       formatPrice,
       cancelAddBook,
       cancelEditBook,
-      errorMessage, // Trả về errorMessage để hiển thị nếu cần
+      cancelAddImage,
+      getImageUrl,
+      errorMessage,
     };
   },
 };
 </script>
 
 <style scoped>
-/* Giữ nguyên style cũ, thêm style cho thông báo lỗi nếu cần */
-.error-message {
-  color: #dc3545;
-  font-size: 14px;
-  margin-top: 10px;
-  text-align: center;
-}
-
-/* Các style khác giữ nguyên */
 .admin-books {
   background-color: white;
   padding: 20px;
@@ -717,11 +848,21 @@ export default {
   font-size: 16px;
 }
 
+.book-table .add-image-btn i {
+  color: #28a745;
+  font-size: 16px;
+}
+
 .book-images,
 .image-preview {
   display: flex;
   flex-wrap: wrap;
   gap: 5px;
+}
+
+.image-container {
+  position: relative;
+  display: inline-block;
 }
 
 .book-image,
@@ -732,7 +873,28 @@ export default {
   border-radius: 4px;
 }
 
-/* Modal Styles */
+.delete-image-btn {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 16px;
+  height: 16px;
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 12px;
+  line-height: 16px;
+  padding: 0;
+  opacity: 0.8;
+  transition: opacity 0.2s;
+}
+
+.delete-image-btn:hover {
+  opacity: 1;
+}
+
 .modal {
   position: fixed;
   top: 0;
@@ -845,7 +1007,6 @@ export default {
   background-color: #c0392b;
 }
 
-/* Pagination */
 .pagination {
   padding: 10px 16px;
   display: flex;

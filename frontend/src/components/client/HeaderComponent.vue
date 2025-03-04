@@ -16,7 +16,7 @@
               <button type="submit">Tìm kiếm</button>
             </form>
             <div class="header-actions">
-              <div v-if="!isLoggedIn" class="login-button">
+              <div v-if="!authStore.isLoggedIn" class="login-button">
                 <button type="button" @click="gotoLogin">
                   <i class="fa fa-user"></i> Đăng nhập
                 </button>
@@ -30,7 +30,7 @@
                   <button @click="goToOrders">Đơn hàng</button>
                   <button @click="goToLikes">Yêu thích</button>
                   <button @click="goToHistory">Lịch sử</button>
-                  <button @click="logout">Đăng xuất</button>
+                  <button @click="authStore.logout()">Đăng xuất</button>
                 </div>
               </div>
               <div id="div_cart">
@@ -58,17 +58,20 @@
 </template>
 
 <script>
-// Import ref từ Vue, không phải từ vue-router
-import { ref } from 'vue'; // Thay thế import từ vue-router bằng import từ vue
+import { useAuthStore } from '@/stores/auth'; // Điều chỉnh đường dẫn theo cấu trúc dự án
+import { onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 
 export default {
   name: 'HeaderComponent',
   setup() {
     const router = useRouter();
+    const authStore = useAuthStore();
 
-    // Biến trạng thái giả lập đăng nhập (ban đầu là chưa đăng nhập)
-    const isLoggedIn = ref(false); // Sử dụng ref từ Vue
+    // Khởi tạo trạng thái khi component được mount
+    onMounted(() => {
+      authStore.initializeAuth();
+    });
 
     const goToHome = () => {
       router.push('/');
@@ -78,19 +81,12 @@ export default {
       router.push('/login');
     };
 
-    const logout = () => {
-      // Logic đăng xuất (ví dụ: xóa token, reset trạng thái, v.v.)
-      console.log('Đăng xuất');
-      isLoggedIn.value = false; // Đặt lại trạng thái chưa đăng nhập
-      router.push('/'); // Chuyển về trang chủ sau khi đăng xuất
-    };
-
     const goToUserInfo = () => {
       router.push('/user/info');
     };
 
     const goToOrders = () => {
-      router.push('/user/orders'); // Giả định route cho đơn hàng
+      router.push('/user/orders');
     };
 
     const goToLikes = () => {
@@ -102,10 +98,9 @@ export default {
     };
 
     return {
+      authStore,
       goToHome,
       gotoLogin,
-      logout,
-      isLoggedIn,
       goToUserInfo,
       goToOrders,
       goToLikes,
@@ -116,6 +111,7 @@ export default {
 </script>
 
 <style scoped>
+/* Giữ nguyên style như trước */
 header {
   font-family: Arial, sans-serif;
 }

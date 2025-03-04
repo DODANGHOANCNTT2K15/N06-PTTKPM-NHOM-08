@@ -39,8 +39,16 @@
         </div>
         <div id="content">
           <div id="banner">
-            <div class="div_banner" v-for="(banner, index) in banners" :key="index" :class="{ 'active': index === currentBanner }">
-              <img :src="require(`@/assets/images/${banner}`)" :alt="`Banner ${index + 1}`">
+            <div
+              class="div_banner"
+              v-for="(banner, index) in banners"
+              :key="index"
+              :class="{ active: index === currentBanner }"
+            >
+              <img
+                :src="require(`@/assets/images/${banner}`)"
+                :alt="`Banner ${index + 1}`"
+              />
             </div>
             <div id="arrow_left" class="arrow_banner" @click="prevBanner">
               <i class="fas fa-chevron-left"></i>
@@ -68,7 +76,11 @@
             </div>
             <div>
               <div>
-                <label for="sort-options" style="font-size: 0.9em; opacity: 0.8; margin-right: 10px;">Sắp xếp</label>
+                <label
+                  for="sort-options"
+                  style="font-size: 0.9em; opacity: 0.8; margin-right: 10px"
+                  >Sắp xếp</label
+                >
                 <select id="sort-options">
                   <option value="popular">Phổ biến</option>
                   <option value="best-seller">Bán chạy nhất</option>
@@ -125,39 +137,54 @@
         </div>
         <div>
           <ProductCard
-              :id="1"
-              image="Product_00.png"
-              :discountedPrice="600000"
-              :originalPrice="1600000"
-              author="DAISETZ TEITARO SUZUKI"
-              title="Thiền luận"
-              :sold="96"
-              :tags="['khoahoc', '4Sao']"
-              @click="goToProductDetail(1)"
-            />
+            :id="1"
+            image="Product_00.png"
+            :discountedPrice="600000"
+            :originalPrice="1600000"
+            author="DAISETZ TEITARO SUZUKI"
+            title="Thiền luận"
+            :sold="96"
+            :tags="['khoahoc', '4Sao']"
+            @click="goToProductDetail(1)"
+          />
         </div>
       </div>
     </main>
 
     <!-- Popup Login -->
-    <div :class="{ 'hidden': currentRouteName !== 'Login' }" id="login_popup">
+    <div :class="{ hidden: currentRouteName !== 'Login' }" id="login_popup">
       <div>
         <div>
           <h1>Xin chào,</h1>
           <p>Đăng nhập để trải nghiệm tốt nhất từ PlayBook</p>
-          <input type="text" placeholder="Email hoặc số điện thoại">
-          <input type="text" placeholder="Mật khẩu">
-          <p id="forget_password"><router-link to="/forget-password">Quên mật khẩu?</router-link></p>
-          <button>Đăng nhập</button>
+          <input
+            v-model="loginForm.email"
+            type="text"
+            placeholder="Email hoặc số điện thoại"
+          />
+          <input
+            v-model="loginForm.pass_word"
+            type="password"
+            placeholder="Mật khẩu"
+          />
+          <p v-if="errorMessage" class="error-message">{{ errorMessage }}</p>
+          <p v-if="successMessage" class="success-message">
+            {{ successMessage }}
+          </p>
+          <p id="forget_password">
+            <router-link to="/forget-password">Quên mật khẩu?</router-link>
+          </p>
+          <button @click="login">Đăng nhập</button>
           <div id="social_login">
-            <img src="@/assets/images/Social_00.png" alt="">
+            <img src="@/assets/images/Social_00.png" alt="" />
           </div>
           <div id="login_popup_footer">
-            <span>Chưa có tài khoản?</span><span @click="$router.push('/signup')">Tạo tài khoản</span>
+            <span>Chưa có tài khoản?</span
+            ><span @click="$router.push('/signup')">Tạo tài khoản</span>
           </div>
         </div>
         <div>
-          <img src="@/assets/images/image_00.png" alt="">
+          <img src="@/assets/images/image_00.png" alt="" />
           <div>
             <h1>HELLO</h1>
             <p>Trở thành viên của PlayBook</p>
@@ -170,24 +197,34 @@
     </div>
 
     <!-- Popup Forget Password -->
-    <div :class="{ 'hidden': currentRouteName !== 'ForgetPassword' }" id="Forget_Pass_popup">
+    <div
+      :class="{ hidden: currentRouteName !== 'ForgetPassword' }"
+      id="Forget_Pass_popup"
+    >
       <div>
         <div>
           <h1>Oh,</h1>
           <p>Bạn quên mật khẩu?</p>
-          <input type="text" placeholder="Email hoặc số điện thoại">
-          <button>Gửi mã</button>
-          <input type="text" placeholder="Mã xác minh">
-          <button>Đổi mật khẩu</button>
+          <input
+            v-model="forgetPasswordForm.email"
+            type="text"
+            placeholder="Email hoặc số điện thoại"
+          />
+          <p v-if="errorMessage" class="error-message">{{ errorMessage }}</p>
+          <p v-if="successMessage" class="success-message">
+            {{ successMessage }}
+          </p>
+          <button @click="forgetPassword">Gửi mã</button>
           <div id="social_login">
-            <img src="@/assets/images/Social_00.png" alt="">
+            <img src="@/assets/images/Social_00.png" alt="" />
           </div>
           <div id="login_popup_footer">
-            <span>Bạn đã có tài khoản?</span><span @click="$router.push('/login')">Đăng nhập</span>
+            <span>Bạn đã có tài khoản?</span
+            ><span @click="$router.push('/login')">Đăng nhập</span>
           </div>
         </div>
         <div>
-          <img src="@/assets/images/image_00.png" alt="">
+          <img src="@/assets/images/image_00.png" alt="" />
           <div>
             <h1>HELLO</h1>
             <p>Trở thành viên của PlayBook</p>
@@ -200,24 +237,41 @@
     </div>
 
     <!-- Popup Signup -->
-    <div :class="{ 'hidden': currentRouteName !== 'Signup' }" id="Signup_popup">
+    <div :class="{ hidden: currentRouteName !== 'Signup' }" id="Signup_popup">
       <div>
         <div>
           <h1>Đăng ký</h1>
           <p>Tham gia PlayBook ngay hôm nay!</p>
-          <input type="text" placeholder="Họ và tên">
-          <input type="text" placeholder="Email hoặc số điện thoại">
-          <input type="password" placeholder="Mật khẩu">
-          <button>Đăng ký</button>
+          <input
+            v-model="signupForm.user_name"
+            type="text"
+            placeholder="Họ và tên"
+          />
+          <input
+            v-model="signupForm.email"
+            type="text"
+            placeholder="Email hoặc số điện thoại"
+          />
+          <input
+            v-model="signupForm.pass_word"
+            type="password"
+            placeholder="Mật khẩu"
+          />
+          <p v-if="errorMessage" class="error-message">{{ errorMessage }}</p>
+          <p v-if="successMessage" class="success-message">
+            {{ successMessage }}
+          </p>
+          <button @click="signup">Đăng ký</button>
           <div id="social_login">
-            <img src="@/assets/images/Social_00.png" alt="">
+            <img src="@/assets/images/Social_00.png" alt="" />
           </div>
           <div id="login_popup_footer">
-            <span>Bạn đã có tài khoản?</span><span @click="$router.push('/login')">Đăng nhập</span>
+            <span>Bạn đã có tài khoản?</span
+            ><span @click="$router.push('/login')">Đăng nhập</span>
           </div>
         </div>
         <div>
-          <img src="@/assets/images/image_00.png" alt="">
+          <img src="@/assets/images/image_00.png" alt="" />
           <div>
             <h1>HELLO</h1>
             <p>Trở thành viên của PlayBook</p>
@@ -230,17 +284,21 @@
     </div>
 
     <!-- Popup Filter -->
-    <div :class="{ 'hidden': !showFilterPopup }" id="filter_popup">
+    <div :class="{ hidden: !showFilterPopup }" id="filter_popup">
       <div>
         <div>
           <h1>Tất cả bộ lọc</h1>
         </div>
         <div>
-          <div class="filter_group_cover" style="border: none;">
+          <div class="filter_group_cover" style="border: none">
             <h1>Dịch vụ</h1>
             <div>
               <div>
-                <input type="checkbox" v-model="filters.freeShipping" id="freeShipping">
+                <input
+                  type="checkbox"
+                  v-model="filters.freeShipping"
+                  id="freeShipping"
+                />
                 <label for="freeShipping">Giao hàng miễn phí</label>
               </div>
             </div>
@@ -249,23 +307,43 @@
             <h1>Đánh giá</h1>
             <div>
               <div class="checkbox_cover">
-                <input type="checkbox" v-model="filters.ratings['1']" id="rating1">
+                <input
+                  type="checkbox"
+                  v-model="filters.ratings['1']"
+                  id="rating1"
+                />
                 <label for="rating1">⭐ 1 Sao</label>
               </div>
               <div class="checkbox_cover">
-                <input type="checkbox" v-model="filters.ratings['2']" id="rating2">
+                <input
+                  type="checkbox"
+                  v-model="filters.ratings['2']"
+                  id="rating2"
+                />
                 <label for="rating2">⭐⭐ 2 Sao</label>
               </div>
               <div class="checkbox_cover">
-                <input type="checkbox" v-model="filters.ratings['3']" id="rating3">
+                <input
+                  type="checkbox"
+                  v-model="filters.ratings['3']"
+                  id="rating3"
+                />
                 <label for="rating3">⭐⭐⭐ 3 Sao</label>
               </div>
               <div class="checkbox_cover">
-                <input type="checkbox" v-model="filters.ratings['4']" id="rating4">
+                <input
+                  type="checkbox"
+                  v-model="filters.ratings['4']"
+                  id="rating4"
+                />
                 <label for="rating4">⭐⭐⭐⭐ 4 Sao</label>
               </div>
               <div class="checkbox_cover">
-                <input type="checkbox" v-model="filters.ratings['5']" id="rating5">
+                <input
+                  type="checkbox"
+                  v-model="filters.ratings['5']"
+                  id="rating5"
+                />
                 <label for="rating5">⭐⭐⭐⭐⭐ 5 Sao</label>
               </div>
             </div>
@@ -274,39 +352,72 @@
             <h1>Giá</h1>
             <div>
               <div class="checkbox_cover">
-                <input type="checkbox" v-model="filters.priceRanges['under100k']" id="under100k">
+                <input
+                  type="checkbox"
+                  v-model="filters.priceRanges['under100k']"
+                  id="under100k"
+                />
                 <label for="under100k">Dưới 100.000₫</label>
               </div>
               <div class="checkbox_cover">
-                <input type="checkbox" v-model="filters.priceRanges['100k-200k']" id="100k-200k">
+                <input
+                  type="checkbox"
+                  v-model="filters.priceRanges['100k-200k']"
+                  id="100k-200k"
+                />
                 <label for="100k-200k">100.000₫ - 200.000₫</label>
               </div>
               <div class="checkbox_cover">
-                <input type="checkbox" v-model="filters.priceRanges['200k-500k']" id="200k-500k">
+                <input
+                  type="checkbox"
+                  v-model="filters.priceRanges['200k-500k']"
+                  id="200k-500k"
+                />
                 <label for="200k-500k">200.000₫ - 500.000₫</label>
               </div>
               <div class="checkbox_cover">
-                <input type="checkbox" v-model="filters.priceRanges['500k-1m']" id="500k-1m">
+                <input
+                  type="checkbox"
+                  v-model="filters.priceRanges['500k-1m']"
+                  id="500k-1m"
+                />
                 <label for="500k-1m">500.000₫ - 1.000.000₫</label>
               </div>
               <div class="checkbox_cover">
-                <input type="checkbox" v-model="filters.priceRanges['1m-2m']" id="1m-2m">
+                <input
+                  type="checkbox"
+                  v-model="filters.priceRanges['1m-2m']"
+                  id="1m-2m"
+                />
                 <label for="1m-2m">1.000.000₫ - 2.000.000₫</label>
               </div>
               <div class="checkbox_cover">
-                <input type="checkbox" v-model="filters.priceRanges['over2m']" id="over2m">
+                <input
+                  type="checkbox"
+                  v-model="filters.priceRanges['over2m']"
+                  id="over2m"
+                />
                 <label for="over2m">Trên 2.000.000₫</label>
               </div>
             </div>
-            <!-- Hiển thị "Tự nhập khoảng giá" chỉ khi không có checkbox "Giá" nào được tích -->
             <div v-if="!hasPriceRangeSelected">
               <h1>Tự nhập khoảng giá</h1>
               <div>
                 <div id="about_price">
-                  <input type="text" v-model="customPriceRange.from" placeholder="Từ">
+                  <input
+                    type="text"
+                    v-model="customPriceRange.from"
+                    placeholder="Từ"
+                  />
                   <span>_</span>
-                  <input type="text" v-model="customPriceRange.to" placeholder="Đến">
-                  <button type="button" @click="clearCustomPriceRange">Xóa</button>
+                  <input
+                    type="text"
+                    v-model="customPriceRange.to"
+                    placeholder="Đến"
+                  />
+                  <button type="button" @click="clearCustomPriceRange">
+                    Xóa
+                  </button>
                 </div>
               </div>
             </div>
@@ -321,14 +432,19 @@
         </div>
       </div>
     </div>
-
   </div>
 </template>
 
 <script>
 import ProductCard from "@/components/client/ProductCard.vue";
-import { computed, ref, onMounted, onUnmounted } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import { computed, ref, onMounted, onUnmounted } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import { useAuthStore } from "@/stores/auth";
+import {
+  apiLogin,
+  apiRegister,
+  apiForgotPass,
+} from "@/services/client/AuthService";
 
 export default {
   name: "HomePage",
@@ -336,83 +452,182 @@ export default {
   setup() {
     const route = useRoute();
     const router = useRouter();
+    const authStore = useAuthStore();
 
     const currentRouteName = computed(() => route.name);
     const showFilterPopup = ref(false);
+    const banners = ref(["Banner_00.png", "Banner_01.jpg"]);
+    const currentBanner = ref(0);
+    let autoSlideInterval = null;
 
-    // Dữ liệu mẫu: nhân bản Banner_00.png thành 5 lần
-    const banners = ref(['Banner_00.png', 'Banner_01.jpg']);
-    const currentBanner = ref(0); // Index của banner hiện tại
-    let autoSlideInterval = null; // Biến để lưu interval tự động chạy
+    // State cho form
+    const loginForm = ref({
+      email: "",
+      pass_word: "",
+    });
 
-    const goToFilter = () => {
-      router.push('/filter');
+    const signupForm = ref({
+      user_name: "",
+      email: "",
+      pass_word: "",
+    });
+
+    const forgetPasswordForm = ref({
+      email: "",
+    });
+
+    const errorMessage = ref("");
+    const successMessage = ref("");
+
+    // Hàm đăng nhập
+    const login = async () => {
+      try {
+        const response = await apiLogin({
+          email: loginForm.value.email,
+          pass_word: loginForm.value.pass_word,
+        });
+        if (response.status == 200 && response.data.err == 0) {
+          localStorage.setItem("token", response.data.token);
+          authStore.login();
+          successMessage.value = "Đăng nhập thành công!";
+          errorMessage.value = "";
+
+          loginForm.value = { email: "", pass_word: "" };
+
+          setTimeout(() => {
+            router.push("/");
+          }, 1000);
+        } else {
+          errorMessage.value = response.data.msg;
+        }
+      } catch (error) {
+        errorMessage.value =
+          error.response?.data?.message || "Đăng nhập thất bại!";
+        successMessage.value = "";
+      }
+    };
+
+    // Hàm đăng ký
+    const signup = async () => {
+      try {
+        const response = await apiRegister({
+          user_name: signupForm.value.user_name,
+          email: signupForm.value.email,
+          pass_word: signupForm.value.pass_word,
+        });
+
+        if (response.status == 200 && response.data.err == 0) {
+          localStorage.setItem("token", response.data.token);
+          authStore.login();
+          successMessage.value = "Đăng ký thành công!. Đang chuyển hướng về trang chủ...";
+          errorMessage.value = "";
+
+          signupForm.value = { user_name: "", email: "", pass_word: "" };
+
+          setTimeout(() => {
+            router.push("/");
+          }, 1000);
+        } else {
+          successMessage.value = "";
+          errorMessage.value = response.data.msg;
+        }
+      } catch (error) {
+        errorMessage.value =
+          error.response?.data?.message || "Đăng ký thất bại!";
+        successMessage.value = "";
+      }
+    };
+
+    // Hàm quên mật khẩu
+    const forgetPassword = async () => {
+      try {
+        const response = await apiForgotPass({
+          email: forgetPasswordForm.value.email,
+        });
+
+        if (response.status == 200 && response.data.err == 0) {
+          successMessage.value = "Mật khẩu mới đã được gửi tới email của bạn. Vui lòng kiểm tra và đổi mật khẩu sớm nhất có thể!";
+          errorMessage.value = "";
+
+          setTimeout(() => {
+            router.push("/login");
+          }, 1000);
+
+          forgetPasswordForm.value = { email: "" };
+        } else {
+          successMessage.value = "";
+          errorMessage.value = response.data.msg;
+        }
+      } catch (error) {
+        errorMessage.value =
+          error.response?.data?.message || "Không thể gửi mã xác nhận!";
+        successMessage.value = "";
+      }
     };
 
     const goToProductDetail = (id) => {
       router.push(`/product/${id}`);
     };
 
-    // Khởi tạo trạng thái cho các bộ lọc (nếu cần, giữ nguyên từ trước)
     const filters = ref({
       freeShipping: false,
-      ratings: { '1': false, '2': false, '3': false, '4': false, '5': false },
+      ratings: { 1: false, 2: false, 3: false, 4: false, 5: false },
       priceRanges: {
         under100k: false,
-        '100k-200k': false,
-        '200k-500k': false,
-        '500k-1m': false,
-        '1m-2m': false,
+        "100k-200k": false,
+        "200k-500k": false,
+        "500k-1m": false,
+        "1m-2m": false,
         over2m: false,
       },
     });
 
-    const customPriceRange = ref({ from: '', to: '' });
+    const customPriceRange = ref({ from: "", to: "" });
 
-    // Kiểm tra xem có checkbox "Giá" nào được tích không
     const hasPriceRangeSelected = computed(() => {
-      return Object.values(filters.value.priceRanges).some(value => value === true);
+      return Object.values(filters.value.priceRanges).some(
+        (value) => value === true
+      );
     });
 
-    // Xóa nội dung trong "Tự nhập khoảng giá"
     const clearCustomPriceRange = () => {
-      customPriceRange.value = { from: '', to: '' };
+      customPriceRange.value = { from: "", to: "" };
     };
 
-    // Xóa tất cả bộ lọc (checkbox và nội dung khoảng giá)
     const clearAllFilters = () => {
       filters.value.freeShipping = false;
-      Object.keys(filters.value.ratings).forEach(key => filters.value.ratings[key] = false);
-      Object.keys(filters.value.priceRanges).forEach(key => filters.value.priceRanges[key] = false);
-      customPriceRange.value = { from: '', to: '' };
+      Object.keys(filters.value.ratings).forEach(
+        (key) => (filters.value.ratings[key] = false)
+      );
+      Object.keys(filters.value.priceRanges).forEach(
+        (key) => (filters.value.priceRanges[key] = false)
+      );
+      clearCustomPriceRange();
     };
 
-    // Hiển thị kết quả sau 2 giây (giả lập xử lý, không tác động gì)
     const showResults = () => {
-      console.log('Applying filters:', filters.value, customPriceRange.value);
+      console.log("Applying filters:", filters.value, customPriceRange.value);
       setTimeout(() => {
-        router.push('/filter-results'); // Chuyển hướng đến trang kết quả sau 2 giây
+        router.push("/filter-results");
       }, 10000);
     };
 
-    // Chuyển đến banner tiếp theo
     const nextBanner = () => {
       currentBanner.value = (currentBanner.value + 1) % banners.value.length;
     };
 
-    // Chuyển đến banner trước đó
     const prevBanner = () => {
-      currentBanner.value = (currentBanner.value - 1 + banners.value.length) % banners.value.length;
+      currentBanner.value =
+        (currentBanner.value - 1 + banners.value.length) % banners.value.length;
     };
 
-    // Tự động chạy banner (3 giây mỗi lần)
     const startAutoSlide = () => {
       autoSlideInterval = setInterval(nextBanner, 10000);
     };
 
-    // Dừng tự động chạy khi component bị hủy
     onMounted(() => {
       startAutoSlide();
+      authStore.initializeAuth();
     });
 
     onUnmounted(() => {
@@ -423,7 +638,6 @@ export default {
 
     return {
       currentRouteName,
-      goToFilter,
       showFilterPopup,
       filters,
       customPriceRange,
@@ -436,13 +650,20 @@ export default {
       currentBanner,
       nextBanner,
       prevBanner,
+      loginForm,
+      signupForm,
+      forgetPasswordForm,
+      errorMessage,
+      successMessage,
+      login,
+      signup,
+      forgetPassword,
     };
   },
 };
 </script>
 
 <style>
-/* Bỏ scoped để áp dụng CSS global, nhưng giữ import các file CSS */
 @import "@/assets/css/Address_popup.css";
 @import "@/assets/css/AppHome.css";
 @import "@/assets/css/Filter_popup.css";
@@ -451,4 +672,14 @@ export default {
 @import "@/assets/css/Forget_Pass_popup.css";
 @import "@/assets/css/Signup_popup.css";
 @import "@/assets/css/BannerHome.css";
+
+.error-message {
+  color: red;
+  margin: 10px 0;
+}
+
+.success-message {
+  color: green;
+  margin: 10px 0;
+}
 </style>

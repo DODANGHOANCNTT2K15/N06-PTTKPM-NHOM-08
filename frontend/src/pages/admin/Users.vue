@@ -31,7 +31,7 @@
               <button @click="changePopup(user.id)" class="action-btn password-btn">
                 <i class="fas fa-key"></i>
               </button>
-              <button @click="deleteUser(user.id)" class="action-btn delete-btn">
+              <button @click="deleteUser(user.email)" class="action-btn delete-btn">
                 <i class="fas fa-trash"></i>
               </button>
             </td>
@@ -106,10 +106,6 @@
           <div class="form-group">
             <label>Email:</label>
             <input v-model="editedUser.email" type="email" required />
-          </div>
-          <div class="form-group">
-            <label>Mật khẩu:</label>
-            <input v-model="editedUser.pass_word" type="password" required />
           </div>
           <div class="form-group">
             <label>Role:</label>
@@ -224,13 +220,13 @@ export default {
       }
     };
 
-    const deleteUser = async (id) => {
+    const deleteUser = async (email) => {
       try {
-        const payload = { id };
+        const payload = { email };
         const response = await apiDeleteUser(payload);
         if (response.data) {
           await fetchUsers();
-          console.log(`Xóa người dùng ID: ${id} thành công`);
+          console.log(`Xóa người dùng : ${email} thành công`);
         }
       } catch (error) {
         console.error('Lỗi khi xóa người dùng:', error);

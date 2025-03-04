@@ -14,6 +14,7 @@ export const apiGetAllBooks = (payload) => new Promise((resolve, reject) => {
     }
 })
 
+// thêm sách
 export const apiAddBook = (payload) => new Promise((resolve, reject) => {
     try {
         const response = axiosConfig({
@@ -49,6 +50,37 @@ export const apiDeleteBook = (payload) => new Promise((resolve, reject) => {
         const response = axiosConfig({
             method: 'delete',
             url: 'api/v1/book/delete',
+            data: payload
+        })
+        resolve(response)
+    } catch (error) {
+        reject(error)
+    }
+})
+
+// thêm ảnh cho sách
+export const apiAddBookImages = (payload) => new Promise((resolve, reject) => {
+    try {
+        const response = axiosConfig({
+            method: 'post',
+            url: 'api/v1/bookimage/add', 
+            data: payload,
+            headers: {
+                'Content-Type': 'multipart/form-data', // Ghi đè header mặc định
+            },
+        });
+        resolve(response);
+    } catch (error) {
+        reject(error);
+    }
+})
+
+// xóa ảnh
+export const apiDeleteImageBook = (payload) => new Promise((resolve, reject) => {
+    try {
+        const response = axiosConfig({
+            method: 'delete',
+            url: 'api/v1/bookimage/delete',
             data: payload
         })
         resolve(response)
