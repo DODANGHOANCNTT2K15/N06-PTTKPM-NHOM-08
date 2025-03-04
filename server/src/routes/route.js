@@ -16,7 +16,7 @@ import { upload } from "../middleware/multerMiddleWare";
 const router = express.Router()
 
 // auth route
-router.post('/auth/login', authController.loginController)  
+router.post('/auth/login', authController.loginController)
 router.post('/auth/register', authController.registerController)
 
 // account route
@@ -41,8 +41,8 @@ router.post('/bookimage/delete', bookImageController.deleteBookImageController)
 // bookType route
 router.get('/booktype', bookTypeController.getAllBookTypeController)
 router.post('/booktype/add', bookTypeController.addBookTypeController)
-router.post('/booktype/update', bookTypeController.updateBookTypeController)
-router.post('/booktype/delete', bookTypeController.deleteBookTypeController)
+router.put('/booktype/update', bookTypeController.updateBookTypeController)
+router.delete('/booktype/delete', bookTypeController.deleteBookTypeController)
 
 // review route
 router.post('/review/add', reviewController.addReviewController)

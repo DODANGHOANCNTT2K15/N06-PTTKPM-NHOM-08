@@ -38,9 +38,9 @@ export const addBookTypeController = async (req, res) => {
 
 // sửa loại sách
 export const updateBookTypeController = async (req, res) => {
-    const { id, name, description } = req.body;
+    const { book_type_id, name, description } = req.body;
     try {
-        if (!id || (!name && !description)) {
+        if (!book_type_id || (!name && !description)) {
             return res.status(400).json({
                 err: 1,
                 msg: 'Thiếu dữ liệu đầu vào!',
@@ -61,9 +61,9 @@ export const updateBookTypeController = async (req, res) => {
 
 // xóa loại sách
 export const deleteBookTypeController = async (req, res) => {
-    const { id } = req.body;
+    const { book_type_id } = req.body;
     try {
-        if (!id) {
+        if (!book_type_id) {
             return res.status(400).json({
                 err: 1,
                 msg: 'Thiếu ID loại sách cần xóa!',

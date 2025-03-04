@@ -45,11 +45,11 @@ export const addBookTypeService = async ({ name, description }) => {
 };
 
 // chinh sửa loại sách 
-export const updateBookTypeService = async ({ id, name, description }) => {
+export const updateBookTypeService = async ({ book_type_id, name, description }) => {
     try {
         // Tìm bản ghi cần sửa
         const bookType = await db.BookType.findOne({
-            where: { book_type_id: id },
+            where: { book_type_id: book_type_id },
         });
 
         if (!bookType) {
@@ -79,11 +79,11 @@ export const updateBookTypeService = async ({ id, name, description }) => {
 
 
 // xóa loại sách
-export const deleteBookTypeService = async ({ id }) => {
+export const deleteBookTypeService = async ({ book_type_id }) => {
     try {
         // Tìm bản ghi cần xóa
         const bookType = await db.BookType.findOne({
-            where: { book_type_id: id },
+            where: { book_type_id: book_type_id },
         });
 
         if (!bookType) {
