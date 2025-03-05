@@ -107,11 +107,22 @@
             />
           </div>
           <div id="pagination">
-            <button :disabled="currentPage === 1" @click="currentPage--">Previous</button>
-            <span v-for="page in totalPages" :key="page" :class="{ 'active': currentPage === page }">
+            <button :disabled="currentPage === 1" @click="currentPage--">
+              Previous
+            </button>
+            <span
+              v-for="page in totalPages"
+              :key="page"
+              :class="{ active: currentPage === page }"
+            >
               <button @click="currentPage = page">{{ page }}</button>
             </span>
-            <button :disabled="currentPage === totalPages" @click="currentPage++">Next</button>
+            <button
+              :disabled="currentPage === totalPages"
+              @click="currentPage++"
+            >
+              Next
+            </button>
           </div>
         </div>
       </div>
@@ -121,16 +132,16 @@
         </div>
         <div>
           <ProductCard
-              :id="1"
-              image="Product_00.png"
-              :discountedPrice="600000"
-              :originalPrice="1600000"
-              author="DAISETZ TEITARO SUZUKI"
-              title="Thiền luận"
-              :sold="96"
-              :tags="['khoahoc', '4Sao']"
-              @click="goToProductDetail(1)"
-            />
+            :id="1"
+            image="Product_00.png"
+            :discountedPrice="600000"
+            :originalPrice="1600000"
+            author="DAISETZ TEITARO SUZUKI"
+            title="Thiền luận"
+            :sold="96"
+            :tags="['khoahoc', '4Sao']"
+            @click="goToProductDetail(1)"
+          />
         </div>
       </div>
     </main>
@@ -470,7 +481,7 @@ export default {
           email: loginForm.value.email,
           pass_word: loginForm.value.pass_word,
         });
-        if (response.status == 200 && response.data.err == 0) {
+        if (response.status === 200 && response.data.err === 0) {
           localStorage.setItem("token", response.data.token);
           authStore.login();
           successMessage.value = "Đăng nhập thành công!";
@@ -500,10 +511,11 @@ export default {
           pass_word: signupForm.value.pass_word,
         });
 
-        if (response.status == 200 && response.data.err == 0) {
+        if (response.status === 200 && response.data.err === 0) {
           localStorage.setItem("token", response.data.token);
           authStore.login();
-          successMessage.value = "Đăng ký thành công!. Đang chuyển hướng về trang chủ...";
+          successMessage.value =
+            "Đăng ký thành công! Đang chuyển hướng về trang chủ...";
           errorMessage.value = "";
 
           signupForm.value = { user_name: "", email: "", pass_word: "" };
@@ -529,8 +541,9 @@ export default {
           email: forgetPasswordForm.value.email,
         });
 
-        if (response.status == 200 && response.data.err == 0) {
-          successMessage.value = "Mật khẩu mới đã được gửi tới email của bạn. Vui lòng kiểm tra và đổi mật khẩu sớm nhất có thể!";
+        if (response.status === 200 && response.data.err === 0) {
+          successMessage.value =
+            "Mật khẩu mới đã được gửi tới email của bạn. Vui lòng kiểm tra và đổi mật khẩu sớm nhất có thể!";
           errorMessage.value = "";
 
           setTimeout(() => {
@@ -609,30 +622,19 @@ export default {
       autoSlideInterval = setInterval(nextBanner, 10000);
     };
 
-    onMounted(() => {
-      startAutoSlide();
-      authStore.initializeAuth();
-    });
-
-    onUnmounted(() => {
-      if (autoSlideInterval) {
-        clearInterval(autoSlideInterval);
-      }
-    });
-
     // Phân trang cho sản phẩm
     const products = ref([
       { id: 1, discountedPrice: 600000, originalPrice: 1600000, author: 'DAISETZ TEITARO SUZUKI', title: 'Thiền luận', sold: 96, tags: ['khoahoc', '4Sao'] },
       { id: 2, discountedPrice: 350000, originalPrice: 800000, author: 'NGUYEN DU', title: 'Truyện Kiều', sold: 150, tags: ['van hoc', '5Sao'] },
       { id: 3, discountedPrice: 250000, originalPrice: 500000, author: 'STEPHEN HAWKING', title: 'Lược sử thời gian', sold: 200, tags: ['khoa hoc', '4Sao'] },
-      { id: 3, discountedPrice: 250000, originalPrice: 500000, author: 'STEPHEN HAWKING', title: 'Lược sử thời gian', sold: 200, tags: ['khoa hoc', '4Sao'] },
-      { id: 3, discountedPrice: 250000, originalPrice: 500000, author: 'STEPHEN HAWKING', title: 'Lược sử thời gian', sold: 200, tags: ['khoa hoc', '4Sao'] },
-      { id: 3, discountedPrice: 250000, originalPrice: 500000, author: 'STEPHEN HAWKING', title: 'Lược sử thời gian', sold: 200, tags: ['khoa hoc', '4Sao'] },
-      { id: 3, discountedPrice: 250000, originalPrice: 500000, author: 'STEPHEN HAWKING', title: 'Lược sử thời gian', sold: 200, tags: ['khoa hoc', '4Sao'] },
-      { id: 3, discountedPrice: 250000, originalPrice: 500000, author: 'STEPHEN HAWKING', title: 'Lược sử thời gian', sold: 200, tags: ['khoa hoc', '4Sao'] },
-      { id: 3, discountedPrice: 250000, originalPrice: 500000, author: 'STEPHEN HAWKING', title: 'Lược sử thời gian', sold: 200, tags: ['khoa hoc', '4Sao'] },
-      { id: 3, discountedPrice: 250000, originalPrice: 500000, author: 'STEPHEN HAWKING', title: 'Lược sử thời gian', sold: 200, tags: ['khoa hoc', '4Sao'] },
-      { id: 3, discountedPrice: 250000, originalPrice: 500000, author: 'STEPHEN HAWKING', title: 'Lược sử thời gian', sold: 200, tags: ['khoa hoc', '4Sao'] },
+      { id: 4, discountedPrice: 250000, originalPrice: 500000, author: 'STEPHEN HAWKING', title: 'Lược sử thời gian', sold: 200, tags: ['khoa hoc', '4Sao'] },
+      { id: 5, discountedPrice: 250000, originalPrice: 500000, author: 'STEPHEN HAWKING', title: 'Lược sử thời gian', sold: 200, tags: ['khoa hoc', '4Sao'] },
+      { id: 6, discountedPrice: 250000, originalPrice: 500000, author: 'STEPHEN HAWKING', title: 'Lược sử thời gian', sold: 200, tags: ['khoa hoc', '4Sao'] },
+      { id: 7, discountedPrice: 250000, originalPrice: 500000, author: 'STEPHEN HAWKING', title: 'Lược sử thời gian', sold: 200, tags: ['khoa hoc', '4Sao'] },
+      { id: 8, discountedPrice: 250000, originalPrice: 500000, author: 'STEPHEN HAWKING', title: 'Lược sử thời gian', sold: 200, tags: ['khoa hoc', '4Sao'] },
+      { id: 9, discountedPrice: 250000, originalPrice: 500000, author: 'STEPHEN HAWKING', title: 'Lược sử thời gian', sold: 200, tags: ['khoa hoc', '4Sao'] },
+      { id: 10, discountedPrice: 250000, originalPrice: 500000, author: 'STEPHEN HAWKING', title: 'Lược sử thời gian', sold: 200, tags: ['khoa hoc', '4Sao'] },
+      { id: 11, discountedPrice: 250000, originalPrice: 500000, author: 'STEPHEN HAWKING', title: 'Lược sử thời gian', sold: 200, tags: ['khoa hoc', '4Sao'] },
     ]);
 
     const itemsPerPage = ref(10); // Số sản phẩm trên mỗi trang
@@ -646,6 +648,17 @@ export default {
 
     const totalPages = computed(() => {
       return Math.ceil(products.value.length / itemsPerPage.value);
+    });
+
+    onMounted(() => {
+      startAutoSlide();
+      authStore.initializeAuth();
+    });
+
+    onUnmounted(() => {
+      if (autoSlideInterval) {
+        clearInterval(autoSlideInterval);
+      }
     });
 
     return {
@@ -662,6 +675,17 @@ export default {
       currentBanner,
       nextBanner,
       prevBanner,
+      loginForm,
+      signupForm,
+      forgetPasswordForm,
+      errorMessage,
+      successMessage,
+      login,
+      signup,
+      forgetPassword,
+      paginatedProducts,
+      currentPage,
+      totalPages,
     };
   },
 };
@@ -676,4 +700,40 @@ export default {
 @import "@/assets/css/Forget_Pass_popup.css";
 @import "@/assets/css/Signup_popup.css";
 @import "@/assets/css/BannerHome.css";
+
+.error-message {
+  color: red;
+  margin: 10px 0;
+}
+
+.success-message {
+  color: green;
+  margin: 10px 0;
+}
+
+#pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+#pagination button {
+  padding: 5px 10px;
+  border: 1px solid #ccc;
+  background-color: white;
+  cursor: pointer;
+}
+
+#pagination button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+#pagination .active button {
+  background-color: rgba(74, 141, 176, 1);
+  color: white;
+  border-color: rgba(74, 141, 176, 1);
+}
 </style>

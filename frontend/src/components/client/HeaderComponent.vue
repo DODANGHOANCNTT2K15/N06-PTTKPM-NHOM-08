@@ -5,14 +5,14 @@
     </div>
     <div>
       <div @click="goToHome">
-        <img src="@/assets/images/Logo_00.png" alt="PlayBook Logo">
+        <img src="@/assets/images/Logo_00.png" alt="PlayBook Logo" />
       </div>
       <div>
         <div>
           <div>
             <form action="" class="search-container">
               <i class="fa fa-search"></i>
-              <input type="text" placeholder="Tìm kiếm">
+              <input type="text" placeholder="Tìm kiếm" />
               <button type="submit">Tìm kiếm</button>
             </form>
             <div class="header-actions">
@@ -30,7 +30,14 @@
                   <button @click="goToOrders">Đơn hàng</button>
                   <button @click="goToLikes">Yêu thích</button>
                   <button @click="goToHistory">Lịch sử</button>
-                  <button @click="authStore.logout()">Đăng xuất</button>
+                  <button
+                    @click="
+                      authStore.logout();
+                      $router.push('/');
+                    "
+                  >
+                    Đăng xuất
+                  </button>
                 </div>
               </div>
               <div id="div_cart">
@@ -48,7 +55,9 @@
             </div>
             <div>
               <i class="fas fa-map-marker-alt"></i>
-              <a id="location_text">Thị trấn Hương Sơn, Phú Bình, Thái Nguyên</a>
+              <a id="location_text"
+                >Thị trấn Hương Sơn, Phú Bình, Thái Nguyên</a
+              >
             </div>
           </div>
         </div>
@@ -58,40 +67,43 @@
 </template>
 
 <script>
-import { useAuthStore } from '@/stores/auth'; // Điều chỉnh đường dẫn theo cấu trúc dự án
-import { onMounted } from 'vue';
-import { useRouter } from 'vue-router';
+import { useAuthStore } from "@/stores/auth";
+import { onMounted } from "vue";
+import { useRouter } from "vue-router";
 
 export default {
-  name: 'HeaderComponent',
+  name: "HeaderComponent",
   setup() {
     const router = useRouter();
+    const authStore = useAuthStore();
 
-    // Biến trạng thái giả lập đăng nhập (ban đầu là chưa đăng nhập)
-    const isLoggedIn = ref(false); // Sử dụng ref từ Vue
+    // Khởi tạo trạng thái từ localStorage khi component được mount
+    onMounted(() => {
+      authStore.initializeAuth();
+    });
 
     const goToHome = () => {
-      router.push('/');
+      router.push("/");
     };
 
     const gotoLogin = () => {
-      router.push('/login');
+      router.push("/login");
     };
 
     const goToUserInfo = () => {
-      router.push('/user/info');
+      router.push("/user/info");
     };
 
     const goToOrders = () => {
-      router.push('/user/orders');
+      router.push("/user/orders");
     };
 
     const goToLikes = () => {
-      router.push('/user/like');
+      router.push("/user/like");
     };
 
     const goToHistory = () => {
-      router.push('/user/history');
+      router.push("/user/history");
     };
 
     return {
@@ -108,7 +120,6 @@ export default {
 </script>
 
 <style scoped>
-/* Giữ nguyên style như trước */
 header {
   font-family: Arial, sans-serif;
 }
