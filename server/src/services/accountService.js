@@ -21,6 +21,29 @@ export const getAllAccountService = () => new Promise(async (resolve, reject) =>
     }
 })
 
+export const getAccountService = ({ user_id }) =>
+    new Promise(async (resolve, reject) => {
+        try {
+            const user = await db.User.findOne({
+                where: { user_id },
+                attributes: ['user_name', 'email'] // Chỉ lấy các trường cần thiết
+            });
+
+            return resolve({
+                err: user ? 0 : 2,
+                msg: user ? 'Lấy thông tin người dùng thành công!' : 'Không tìm thấy người dùng.',
+                data: user
+            });
+        } catch (error) {
+            console.error("Lỗi khi lấy thông tin người dùng:", error);
+            return reject({
+                err: 1,
+                msg: 'Đã xảy ra lỗi khi lấy thông tin người dùng!',
+                error: error.message,
+            });
+        }
+    });
+
 
 // sửa
 export const updateAccountService = ({ email, role, status, user_name }) =>

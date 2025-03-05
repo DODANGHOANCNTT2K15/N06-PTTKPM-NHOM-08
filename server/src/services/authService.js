@@ -8,7 +8,7 @@ export const loginService = ({ email, pass_word }) => new Promise(async (resolve
     try {
         // Tìm account theo email
         const account = await db.User.findOne({
-            where: { email : email.trim() },
+            where: { email: email.trim() },
             include: [
                 {
                     model: db.Avatar,
@@ -38,7 +38,7 @@ export const loginService = ({ email, pass_word }) => new Promise(async (resolve
         }
 
         // Kiểm tra trạng thái tài khoản
-        if (!account?.status) {
+        if (account?.status === 1) {
             return resolve({
                 err: 1,
                 msg: 'Tài khoản của bạn đã bị khóa. Vui lòng liên hệ với QTV để được hỗ trợ.',
@@ -52,7 +52,7 @@ export const loginService = ({ email, pass_word }) => new Promise(async (resolve
                 user_id: account.user_id,
                 user_name: account.user_name,
                 email: account.email,
-                avatar: account.avatar.avatar_path,
+                avatar: account.avatar ? account.avatar.avatar_path : "",
                 role: account.role,
             },
             process.env.SECRET_KEY || 'khongcokeygihet',
@@ -77,45 +77,71 @@ export const loginService = ({ email, pass_word }) => new Promise(async (resolve
 
 // đăng ký
 const hash = password => bcrypt.hashSync(password, bcrypt.genSaltSync(10));
-export const registerService = ({ user_name, email, pass_word, role }) => new Promise(async (resolve, reject) => {
-    try {
-        // Tạo tài khoản mới nếu chưa tồn tại 
-        const [account, created] = await db.User.findOrCreate({
-            where: { email },
-            defaults: {
-                email : email.trim(),
+
+export const registerService = ({ user_name, email, pass_word, role }) => 
+    new Promise(async (resolve, reject) => {
+        try {
+            // Chuẩn hóa dữ liệu đầu vào
+            const trimmedData = {
+                email: email.trim(),
                 user_name: user_name.trim(),
-                pass_word: hash(pass_word.trim()),
-                role: role ? 1 : 0,
-                status: 0,
+                pass_word: pass_word.trim()
+            };
+
+            // Kiểm tra email đã tồn tại chưa
+            const existingUser = await db.User.findOne({
+                where: { email: trimmedData.email }
+            });
+
+            if (existingUser) {
+                return resolve({
+                    err: 2,
+                    msg: 'Email đã được sử dụng.',
+                    token: null
+                });
             }
-        });
 
-        // Tạo token nếu tài khoản mới được tạo thành công
-        const token = created && jwt.sign(
-            {
-                id: account.id,
-                user_name: account.user_name,
-                email: account.email,
-                role: account.role,
-            },
-            process.env.JWT_SECRET || 'khongcokeygihet',
-            { expiresIn: '1h' }
-        );
+            // Tạo tài khoản mới
+            const newUser = await db.User.create({
+                email: trimmedData.email,
+                user_name: trimmedData.user_name,
+                pass_word: hash(trimmedData.pass_word),
+                role: role ? 1 : 0,
+                status: 0
+            });
 
-        // trả về kết quả
-        return resolve({
-            err: token ? 0 : 2,
-            msg: token ? 'Tạo tài khoản thành công!' : 'Nhân viên đã có tài khoản.',
-            token: token || null
-        });
-    } catch (error) {
-        console.log(error);
-        return reject({
-            err: 1,
-            msg: 'Lỗi khi tạo tài khoản!',
-            error: error
-        });
-    }
-});
+            // Tạo thông tin khách hàng
+            await db.Customer.create({
+                user_id: newUser.user_id
+            });
+
+            // Tạo JWT token
+            const token = jwt.sign(
+                {
+                    user_id: newUser.user_id,
+                    user_name: newUser.user_name,
+                    email: newUser.email,
+                    avatar: newUser.avatar?.avatar_path || "",
+                    role: newUser.role
+                },
+                process.env.JWT_SECRET || 'khongcokeygihet',
+                { expiresIn: '1h' }
+            );
+
+            // Trả về kết quả thành công
+            resolve({
+                err: 0,
+                msg: 'Tạo tài khoản thành công!',
+                token: token
+            });
+
+        } catch (error) {
+            console.error('Registration error:', error);
+            reject({
+                err: 1,
+                msg: 'Đã xảy ra lỗi khi tạo tài khoản!',
+                error: error.message
+            });
+        }
+    });
 

@@ -18,14 +18,14 @@ module.exports = (sequelize) => {
     },
     full_name: {
       type: DataTypes.STRING,
-      allowNull: false
+      allowNull: true
     },
     dob: {
       type: DataTypes.DATE,
       allowNull: true
     },
     gender: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.INTEGER, // 0: male, 1: female
       allowNull: true
     },
     address: {
@@ -38,7 +38,7 @@ module.exports = (sequelize) => {
     },
     user_id: {
       type: DataTypes.BIGINT,
-      allowNull: true
+      allowNull: false
     }
   }, {
     sequelize,

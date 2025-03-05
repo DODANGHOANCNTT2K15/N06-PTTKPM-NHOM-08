@@ -10,7 +10,7 @@ module.exports = {
       },
       full_name: {
         type: Sequelize.STRING,
-        allowNull: false
+        allowNull: true
       },
       dob: {
         type: Sequelize.DATE,
@@ -30,7 +30,7 @@ module.exports = {
       },
       user_id: {
         type: Sequelize.BIGINT,
-        allowNull: true
+        allowNull: false
       },
       createdAt: {
         type: Sequelize.DATE,

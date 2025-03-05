@@ -2,15 +2,16 @@ import * as customerService from "../services/customerService"
 
 // lấy thông tin khách hàng
 export const getCustomerController = async (req, res) => {
-    const { customer_id } = req.body;
+    const { user_id } = req.body;
     try {
-        if (!customer_id) {
+        if (!user_id) {
             return res.status(400).json({
                 err: 1,
-                msg: "Thiếu customer_id.",
+                msg: "Thiếu user_id.",
             });
         }
-        const rs = await customerService.getCustomerService(customer_id);
+        console.log(user_id )
+        const rs = await customerService.getCustomerService(user_id);
         return res.status(200).json(rs);
     } catch (error) {
         return res.status(500).json({

@@ -13,6 +13,25 @@ export const getAllAccountController = async (req, res) => {
     }
 };
 
+//lấy toàn bộ tài khoản
+export const getAccountController = async (req, res) => {
+    const { user_id } = req.body; 
+    try {
+        if (!user_id) {
+            return res.status(400).json({
+                err: 1,
+                msg: "Thiếu dữ liệu đầu vào."
+            })
+        }
+        const rs = await accountService.getAccountService(req.body);
+        return res.status(200).json(rs);
+
+    } catch (error) {
+        console.error('Error in getAccountController:', error);
+        return res.status(500).json(error);
+    }
+};
+
 
 // đổi mật khẩu
 export const changePassWordController = async (req, res) => {
@@ -60,7 +79,7 @@ export const forgotPassWordController = async (req, res) => {
 export const updateAccountController = async (req, res) => {
     const { email, role, status, user_name } = req.body;
     try {
-        if (!email || !role || !status || !user_name) {
+        if (!email || role == undefined || status == undefined || !user_name) {
             return res.status(400).json({
                 err: 1,
                 msg: "Thiếu dữ liệu đầu vào."
