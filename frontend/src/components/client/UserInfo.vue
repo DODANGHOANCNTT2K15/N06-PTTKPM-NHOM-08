@@ -365,6 +365,7 @@
     border: none;
     border-radius: 5px;
     cursor: pointer;
+    margin-top: 10px;
   }
   
   .copy-btn:hover {

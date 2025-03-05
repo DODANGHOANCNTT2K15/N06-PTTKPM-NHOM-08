@@ -12,6 +12,7 @@ import Orders from '@/pages/admin/Orders.vue';
 import NotFound from '@/pages/client/NotFound.vue';
 import Banners from '@/pages/admin/Banners.vue';
 import Tags from '@/pages/admin/Tags.vue';
+import Promotions from '@/pages/admin/Promotions.vue';
 
 const routes = [
     {
@@ -128,6 +129,11 @@ const routes = [
             path: 'tags', 
             name: 'AdminTags', 
             component: Tags 
+          },
+          { 
+            path: 'promotions', 
+            component: Promotions, 
+            name: 'AdminPromotions' 
           },
         ],
       },

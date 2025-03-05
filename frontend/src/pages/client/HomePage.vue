@@ -700,6 +700,7 @@ export default {
 @import "@/assets/css/Forget_Pass_popup.css";
 @import "@/assets/css/Signup_popup.css";
 @import "@/assets/css/BannerHome.css";
+@import "@/assets/css/PaginationHome.css";
 
 .error-message {
   color: red;

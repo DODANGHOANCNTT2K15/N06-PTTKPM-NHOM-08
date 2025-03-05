@@ -23,6 +23,9 @@
         <router-link to="/admin/tags" class="sidebar-item">
           <i class="fas fa-tags"></i> Quản lý Tag Book
         </router-link>
+        <router-link to="/admin/promotions" class="sidebar-item">
+          <i class="fas fa-gift"></i> Quản lý Khuyến mại
+        </router-link>
       </nav>
     </div>
 
