@@ -20,7 +20,10 @@ export const apiUpdateAvatar = (payload) => new Promise((resolve, reject) => {
         const response = axiosConfig({
             method: 'post',
             url: 'api/v1/account/avatar',
-            data: payload
+            data: payload,
+            headers: {
+                "Content-Type": "multipart/form-data",
+            },
         })
         resolve(response)
     } catch (error) {
@@ -28,6 +31,19 @@ export const apiUpdateAvatar = (payload) => new Promise((resolve, reject) => {
     }
 })
 
+// cập nhật thông tin
+export const apiUpdateInfor = (payload) => new Promise((resolve, reject) => {
+    try {
+        const response = axiosConfig({
+            method: 'put',
+            url: 'api/v1/account/update',
+            data: payload,
+        })
+        resolve(response)
+    } catch (error) {
+        reject(error)
+    }
+})
 
 // đổi mật khẩu
 export const apiChangePassword = (payload) => new Promise((resolve, reject) => {

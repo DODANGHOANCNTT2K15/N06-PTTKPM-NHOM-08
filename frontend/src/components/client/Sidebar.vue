@@ -7,7 +7,7 @@
         <i class="fas fa-shopping-cart"></i> Giỏ hàng
       </div>
       <div class="sidebar-item" @click="$router.push('/user/address')">
-        <i class="fas fa-map-marker-alt"></i> Địa chỉ
+        <i class="fas fa-map-marker-alt"></i> Thông tin giao hàng
       </div>
       <div class="sidebar-item" @click="$router.push('/user/like')">
         <i class="fas fa-heart"></i> Sản phẩm yêu thích

@@ -90,12 +90,12 @@
 
 <script>
 import { ref, onMounted } from "vue";
-import axios from "axios";
 import {
   apiGetUserInfor,
   apiUpdateAvatar,
   apiChangePassword,
-} from "@/services/client/UserService";
+  apiUpdateInfor
+} from "@/services/client/UserInforService";
 
 export default {
   name: "UserInfo",
@@ -142,8 +142,9 @@ export default {
         if (response.status == 200 && response.data.err === 0) {
           userInfo.value.fullName = response.data.data.user_name;
           email.value = response.data.data.email;
-          avatarSrc.value = response.data.data.avatar
-            ? `${response.data.data.avatar}`
+          console.log(response.data.data.avatar_path)
+          avatarSrc.value = response.data.data.avatar.avatar_path
+            ? `${response.data.data.avatar.avatar_path}`
             : null; // Sử dụng avatar làm path
         } else {
           console.log("Lỗi khi tải dữ liệu: " + response.data.msg);
@@ -159,22 +160,10 @@ export default {
     });
 
     const saveChanges = async () => {
-      if (!userId.value) {
-        console.log("Không thể lưu thay đổi: user_id không hợp lệ");
-        return;
-      }
       try {
-        const response = await axios.post(
-          "/api/user/update",
-          { user_name: userInfo.value.fullName },
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          }
-        );
+        const response = await apiUpdateInfor({ user_name: userInfo.value.fullName, email : email.value})
         // { user_name: userInfo.value.fullName }
-        if (response.data.err === 0) {
+        if (response.status == 200 && response.data.err === 0) {
           alert("Thông tin đã được lưu thành công!");
         } else {
           alert("Lỗi: " + response.data.msg);
@@ -197,19 +186,29 @@ export default {
         console.log("Không thể upload avatar: user_id hoặc ảnh không hợp lệ");
         return;
       }
-      const formData = new FormData();
+
       const fileInput = document.querySelector(".file-input");
-      formData.append("avatar", fileInput.files[0]);
+      const file = fileInput.files[0];
+      if (!file) {
+        console.log("Không có file được chọn!");
+        alert("Vui lòng chọn một file ảnh!");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("avatar", file);
       formData.append("user_id", userId.value);
 
+      // Debug FormData để kiểm tra
+      console.log("FormData contents:");
+      for (let pair of formData.entries()) {
+        console.log(`${pair[0]}: ${pair[1]}`);
+      }
+
       try {
-        const response = await apiUpdateAvatar(formData,{
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        });
+        const response = await apiUpdateAvatar(formData);
         if (response.status == 200 && response.data.err === 0) {
-          avatarSrc.value = response.data.data.avatar || previewImage.value; // Cập nhật avatar từ response hoặc preview
+          avatarSrc.value = response.data.data.avatar_path || previewImage.value;
           alert("Ảnh đại diện đã được cập nhật!");
         } else {
           alert("Lỗi: " + response.data.msg);
@@ -235,8 +234,8 @@ export default {
       try {
         const response = await apiChangePassword({
           email: email.value,
-          old_password: oldPassword.value,
-          new_password: newPassword.value,
+          old_pass_word: oldPassword.value,
+          new_pass_word: newPassword.value,
         });
         if (response.status == 200 && response.data.err === 0) {
           alert("Mật khẩu đã được thay đổi!");
