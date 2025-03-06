@@ -25,15 +25,15 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="(banner, index) in filteredBanners" :key="banner.id">
-            <td><input type="checkbox" v-model="selectedBanners" :value="banner.id" /></td>
+          <tr v-for="(banner, index) in filteredBanners" :key="banner.banner_id">
+            <td><input type="checkbox" v-model="selectedBanners" :value="banner.banner_id" /></td>
             <td>{{ index + 1 }}</td>
             <td>
-              <img :src="banner.image" alt="Banner Image" class="banner-image" />
+              <img :src="banner.banner_path" alt="Banner Image" class="banner-image" />
             </td>
-            <td>{{ banner.name }}</td>
+            <td>{{ banner.banner_name }}</td>
             <td>
-              <button @click="deleteBanner(banner.id, banner.public_id)" class="action-btn delete-btn">
+              <button @click="deleteBanner(banner.banner_id, banner.banner_public_id)" class="action-btn delete-btn">
                 <i class="fas fa-trash"></i>
               </button>
             </td>
@@ -122,21 +122,21 @@ export default {
         const formData = new FormData();
         formData.append('banner_name', bannerForm.value.name);
         if (bannerForm.value.image) {
-          formData.append('banner', bannerForm.value.image); // Giả định backend xử lý file với key 'banner_image'
+          formData.append('banner', bannerForm.value.image); // Key 'banner' phải khớp với backend
         }
 
         const response = await apiAddBanner(formData);
         if (response.data.err === 0) {
           const newBanner = {
-            id: response.data.data.id,
-            name: response.data.data.name || bannerForm.value.name,
-            image: response.data.data.image || bannerForm.value.imagePreview,
-            public_id: response.data.data.public_id, // Lưu public_id để dùng cho xóa
-            status: 'active',
+            banner_id: response.data.data.banner_id,
+            banner_name: response.data.data.banner_name || bannerForm.value.name,
+            banner_path: response.data.data.banner_path || bannerForm.value.imagePreview,
+            banner_public_id: response.data.data.banner_public_id,
           };
           banners.value.push(newBanner);
           closeModal();
           alert('Thêm banner thành công!');
+          await fetchBanners(); // Tải lại danh sách banner thay vì refresh trang
         } else {
           alert('Thêm banner thất bại: ' + response.data.msg);
         }
@@ -146,14 +146,24 @@ export default {
       }
     };
 
-    const deleteBanner = async (id, public_id) => {
+    const deleteBanner = async (banner_id, banner_public_id) => {
+      if (!banner_id || !banner_public_id) {
+        alert('Không thể xóa banner do thiếu thông tin banner_id hoặc banner_public_id!');
+        return;
+      }
+
       if (confirm('Bạn có chắc muốn xóa banner này?')) {
         try {
-          const response = await apiDeleteBanner({ banner_id: id, banner_public_id: public_id });
+          const payload = {
+            banner_id: banner_id,
+            banner_public_id: banner_public_id,
+          };
+          const response = await apiDeleteBanner(payload);
           if (response.data.err === 0) {
-            banners.value = banners.value.filter(b => b.id !== id);
-            selectedBanners.value = selectedBanners.value.filter(sid => sid !== id);
+            banners.value = banners.value.filter(b => b.banner_id !== banner_id);
+            selectedBanners.value = selectedBanners.value.filter(sid => sid !== banner_id);
             alert('Xóa banner thành công!');
+            await fetchBanners(); // Tải lại danh sách banner sau khi xóa
           } else {
             alert('Xóa banner thất bại: ' + response.data.msg);
           }
@@ -166,7 +176,7 @@ export default {
 
     const toggleSelectAll = () => {
       if (selectAll.value) {
-        selectedBanners.value = filteredBanners.value.map(b => b.id);
+        selectedBanners.value = filteredBanners.value.map(b => b.banner_id);
       } else {
         selectedBanners.value = [];
       }
@@ -188,7 +198,7 @@ export default {
       let result = [...banners.value];
       if (searchQuery.value) {
         result = result.filter(banner =>
-          banner.name.toLowerCase().includes(searchQuery.value.toLowerCase())
+          banner.banner_name.toLowerCase().includes(searchQuery.value.toLowerCase())
         );
       }
       const start = (currentPage.value - 1) * itemsPerPage.value;

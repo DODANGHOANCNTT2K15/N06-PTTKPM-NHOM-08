@@ -151,6 +151,8 @@ import { ref, computed, onMounted } from "vue";
 import {
   apiGetCartByUserId,
   apiUpdateCartItem,
+  apiDeleteCartItem,
+  apiGetCountProductOfCart,
 } from "@/services/client/CartService";
 import { apiGetCustomerInfor } from "@/services/client/UserAddressService";
 import { apiGetAllDiscounts } from "@/services/client/DiscountService";
@@ -326,13 +328,38 @@ export default {
       });
     };
 
-    const removeCartItem = (id) => {
-      const index = cartItems.value.findIndex((item) => item.id === id);
-      if (index !== -1) {
-        cartItems.value.splice(index, 1);
-        if (paginatedCartItems.value.length === 0 && currentPage.value > 1) {
-          currentPage.value--;
+    const removeCartItem = async (id) => {
+      const item = cartItems.value.find((item) => item.id === id);
+      if (!item) return;
+
+      try {
+        const response = await apiDeleteCartItem({ cart_id: item.cart_id });
+        if (response.status === 200 && response.data.err === 0) {
+          // Xóa sản phẩm khỏi danh sách local
+          const index = cartItems.value.findIndex((i) => i.id === id);
+          if (index !== -1) {
+            cartItems.value.splice(index, 1);
+            if (paginatedCartItems.value.length === 0 && currentPage.value > 1) {
+              currentPage.value--;
+            }
+          }
+          // Cập nhật số lượng sản phẩm trên header
+          const userId = getUserIdFromToken();
+          if (userId) {
+            const countResponse = await apiGetCountProductOfCart({ user_id: userId });
+            if (countResponse.data.err === 0) {
+              cartStore.updatetotal_product_type(countResponse.data.total_product_types || 0);
+            } else {
+              cartStore.updatetotal_product_type(cartItems.value.length);
+            }
+          }
+          alert("Xóa sản phẩm khỏi giỏ hàng thành công!");
+        } else {
+          alert("Xóa sản phẩm thất bại: " + response.data.msg);
         }
+      } catch (error) {
+        console.error("Lỗi khi xóa sản phẩm khỏi giỏ hàng:", error);
+        alert("Có lỗi xảy ra khi xóa sản phẩm!");
       }
     };
 
@@ -381,7 +408,6 @@ export default {
           cartStore.updatetotal_product_type(response.data.data.count);
           await fetchCartItems(); // Fetch lại dữ liệu giỏ hàng sau khi thanh toán
           alert("Đặt hàng thành công!");
-          // Reset giao diện sau khi thanh toán thành công
           selectAll.value = false;
           selectedPromotion.value = "";
           paymentMethod.value = "";

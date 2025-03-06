@@ -34,7 +34,7 @@ export const apiAddBanner = (payload) => new Promise((resolve, reject) => {
 export const apiDeleteBanner = (payload) => new Promise((resolve, reject) => {
     try {
         const response = axiosConfig({
-            method: 'post', // Dùng POST theo cấu trúc route của bạn
+            method: 'delete', // Dùng POST theo cấu trúc route của bạn
             url: 'api/v1/banner/delete',
             data: payload, // Payload chứa banner_id và banner_public_id
         });
