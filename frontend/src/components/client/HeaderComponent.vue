@@ -48,14 +48,7 @@
             <button @click="goToOrders">Đơn hàng</button>
             <button @click="goToLikes">Yêu thích</button>
             <button @click="goToHistory">Lịch sử</button>
-            <button
-              @click="
-                authStore.logout();
-                $router.push('/');
-              "
-            >
-              Đăng xuất
-            </button>
+            <button @click="handleLogout">Đăng xuất</button>
           </div>
         </div>
         <div id="div_cart">
@@ -84,42 +77,45 @@ export default {
     const router = useRouter();
     const authStore = useAuthStore();
     const cartStore = useCartStore();
-    const showOverlay = ref(false); // Quản lý trạng thái overlay
-    const searchQuery = ref(""); // Giá trị ô tìm kiếm
+    const showOverlay = ref(false);
+    const searchQuery = ref("");
 
     onMounted(() => {
       authStore.initializeAuth();
       cartStore.initializeCart();
-      fetchCountOfCart(); // Gọi API khi component được mount
+      fetchCountOfCart();
     });
 
     const goToHome = () => {
       router.push("/");
     };
+
     const gotoLogin = () => {
       router.push("/login");
     };
+
     const goToUserInfo = () => {
       router.push("/user/info");
     };
+
     const goToOrders = () => {
       router.push("/user/orders");
     };
+
     const goToLikes = () => {
       router.push("/user/like");
     };
+
     const goToHistory = () => {
       router.push("/user/history");
     };
 
-    // Đóng overlay với độ trễ để tránh xung đột với click
     const hideOverlayWithDelay = () => {
       setTimeout(() => {
         showOverlay.value = false;
       }, 200);
     };
 
-    // Xử lý tìm kiếm và truyền query qua router
     const handleSearch = () => {
       if (searchQuery.value.trim()) {
         router.push({
@@ -130,7 +126,6 @@ export default {
       }
     };
 
-    // Hàm giải mã JWT token để lấy user_id
     const getUserIdFromToken = () => {
       const token = localStorage.getItem("token");
       if (!token) {
@@ -146,35 +141,39 @@ export default {
       }
     };
 
-    // Hàm gọi API lấy count of cart
     const fetchCountOfCart = async () => {
       try {
         const userId = getUserIdFromToken();
         if (userId) {
           const response = await apiGetCountProductOfCart({ user_id: userId });
           if (response.data.err === 0) {
-            // Giả sử API trả về count trong response.data.count
             const count = response.data.total_product_types || 0;
             cartStore.updatetotal_product_type(count);
           } else {
             console.error("Lỗi từ API:", response.data.msg);
-            cartStore.updatetotal_product_type(0); // Đặt về 0 nếu có lỗi
+            cartStore.updatetotal_product_type(0);
           }
         } else {
-          cartStore.updatetotal_product_type(0); // Nếu không có userId
+          cartStore.updatetotal_product_type(0);
         }
       } catch (error) {
         console.error("Không thể lấy dữ liệu count of cart:", error);
-        cartStore.updatetotal_product_type(0); // Đặt về 0 nếu có lỗi
+        cartStore.updatetotal_product_type(0);
       }
     };
 
-    // Watch khi đăng nhập/đăng xuất để cập nhật lại số lượng giỏ hàng
+    const handleLogout = () => {
+      authStore.logout(); // Gọi hàm logout từ authStore
+      cartStore.updatetotal_product_type(0); // Reset số lượng giỏ hàng
+      alert("Đăng xuất thành công!"); // Hiển thị thông báo
+      router.push("/"); // Chuyển hướng về trang chủ
+    };
+
     authStore.$subscribe((mutation, state) => {
       if (state.isLoggedIn) {
-        fetchCountOfCart(); // Gọi lại khi đăng nhập
+        fetchCountOfCart();
       } else {
-        cartStore.updatetotal_product_type(0); // Reset khi đăng xuất
+        cartStore.updatetotal_product_type(0);
       }
     });
 
@@ -191,6 +190,7 @@ export default {
       searchQuery,
       hideOverlayWithDelay,
       handleSearch,
+      handleLogout,
     };
   },
 };
@@ -204,7 +204,6 @@ header {
   position: relative;
 }
 
-/* Phần tiêu đề trên cùng */
 .header-top {
   background-color: #2c3e50;
   color: white;
@@ -217,7 +216,6 @@ header {
   letter-spacing: 1px;
 }
 
-/* Phần chính của header */
 .header-main {
   height: 120px;
   display: flex;
@@ -228,14 +226,12 @@ header {
   gap: 20px;
 }
 
-/* Logo */
 .logo img {
   height: 80px;
   cursor: pointer;
   margin-right: 100px;
 }
 
-/* Phần tìm kiếm và tag */
 .search-section {
   flex: 1;
   display: flex;
@@ -248,7 +244,7 @@ header {
   position: relative;
   width: 100%;
   max-width: 600px;
-  z-index: 1000; /* Đảm bảo ô tìm kiếm ở trên overlay */
+  z-index: 1000;
 }
 
 .search-container > input {
@@ -266,7 +262,7 @@ header {
 .search-container > input:focus {
   border-color: #9ac2ec;
   outline: none;
-  box-shadow: 0 0 10px rgba(0, 123, 255, 0.5); /* Làm sáng ô tìm kiếm khi focus */
+  box-shadow: 0 0 10px rgba(0, 123, 255, 0.5);
 }
 
 .search-container > button {
@@ -321,7 +317,6 @@ header {
   color: white;
 }
 
-/* Overlay */
 .overlay {
   position: fixed;
   top: 0;
@@ -329,20 +324,19 @@ header {
   width: 100%;
   height: 100%;
   background-color: rgba(0, 0, 0, 0.5);
-  z-index: 998; /* Dưới ô tìm kiếm và gợi ý */
+  z-index: 998;
 }
 
-/* Gợi ý tìm kiếm */
 .search-suggestions {
   position: absolute;
-  top: 50px; /* Dưới ô tìm kiếm */
+  top: 50px;
   left: 0;
   width: 100%;
   max-width: 600px;
   background-color: #fff;
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  z-index: 999; /* Trên overlay */
+  z-index: 999;
   padding: 10px 0;
 }
 
@@ -358,14 +352,12 @@ header {
   background-color: #f5f5f5;
 }
 
-/* Phần hành động (login, cart) */
 .header-actions {
   display: flex;
   align-items: center;
   gap: 20px;
 }
 
-/* Nút đăng nhập */
 .login-button button {
   color: #2c3e50;
   border: 1px solid #e0e0e0;
@@ -388,7 +380,6 @@ header {
   border-color: #007bff;
 }
 
-/* Dropdown tài khoản */
 .account-dropdown {
   position: relative;
 }
@@ -450,7 +441,6 @@ header {
   display: block;
 }
 
-/* Giỏ hàng */
 #div_cart {
   position: relative;
 }

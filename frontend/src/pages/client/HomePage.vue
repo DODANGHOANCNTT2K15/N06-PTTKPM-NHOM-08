@@ -791,6 +791,7 @@ export default {
       if (autoSlideInterval) clearInterval(autoSlideInterval);
     });
 
+
     return {
       currentRouteName,
       showFilterPopup,

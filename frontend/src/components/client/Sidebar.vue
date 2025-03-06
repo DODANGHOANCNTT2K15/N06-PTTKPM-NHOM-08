@@ -3,17 +3,14 @@
       <div class="sidebar-item" @click="$router.push('/user/info')">
         <i class="fas fa-user"></i> Thông tin tài khoản
       </div>
-      <div class="sidebar-item" @click="$router.push('/user/cart')">
-        <i class="fas fa-shopping-cart"></i> Giỏ hàng
+      <div class="sidebar-item" @click="$router.push('/user/orders')">
+        <i class="fas fa-shopping-cart"></i> Đơn hàng của tôi
       </div>
       <div class="sidebar-item" @click="$router.push('/user/address')">
         <i class="fas fa-map-marker-alt"></i> Thông tin giao hàng
       </div>
       <div class="sidebar-item" @click="$router.push('/user/like')">
         <i class="fas fa-heart"></i> Sản phẩm yêu thích
-      </div>
-      <div class="sidebar-item" @click="$router.push('/user/history')">
-        <i class="fas fa-eye"></i> Lịch sử sản phẩm
       </div>
     </div>
   </template>

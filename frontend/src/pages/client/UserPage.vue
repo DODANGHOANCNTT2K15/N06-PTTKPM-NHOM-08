@@ -10,10 +10,9 @@
       <Sidebar />
       <div class="user-profile">
         <UserInfo v-if="currentRouteName === 'UserInfo'" />
-        <UserCart v-if="currentRouteName === 'UserCart'" />
+        <UserCart v-if="currentRouteName === 'UserOrders'" />
         <UserAddress v-if="currentRouteName === 'UserAddress'" />
         <UserLike v-if="currentRouteName === 'UserLike'" />
-        <UserHistory v-if="currentRouteName === 'UserHistory'" />
       </div>
     </div>
   </div>
@@ -24,10 +23,9 @@ import { computed } from 'vue';
 import { useRoute } from 'vue-router';
 import Sidebar from '@/components/client/Sidebar.vue';
 import UserInfo from '@/components/client/UserInfo.vue';
-import UserCart from '@/components/client/UserCart.vue';
+import UserCart from '@/components/client/UserOrders.vue';
 import UserAddress from '@/components/client/UserAddress.vue';
 import UserLike from '@/components/client/UserLike.vue';
-import UserHistory from '@/components/client/UserHistory.vue';
 
 export default {
   name: 'UserPage',
@@ -37,7 +35,6 @@ export default {
     UserCart,
     UserAddress,
     UserLike,
-    UserHistory,
   },
   setup() {
     const route = useRoute();
