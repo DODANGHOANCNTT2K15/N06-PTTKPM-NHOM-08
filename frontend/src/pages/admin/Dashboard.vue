@@ -74,7 +74,7 @@ export default {
     // Dữ liệu mẫu (sẽ được cập nhật từ API)
     const totalBooks = ref(0); // Khởi tạo 0, sẽ cập nhật từ API
     const totalUsers = ref(0); // Khởi tạo 0, sẽ cập nhật từ API
-    const totalOrders = ref(300);
+    const totalOrders = ref(10);
     const banners = ref([
       { id: 1, name: 'Ưu đãi Tết 2025', status: 'active' },
       { id: 2, name: 'Sách Mới', status: 'active' },
