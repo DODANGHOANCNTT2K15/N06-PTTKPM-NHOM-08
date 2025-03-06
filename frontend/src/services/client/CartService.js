@@ -29,6 +29,20 @@ export const apiAddToCart = (payload) => new Promise((resolve, reject) => {
 })
 
 // Thêm vào giỏ hàng
+export const apiUpdateCartItem = (payload) => new Promise((resolve, reject) => {
+    try {
+        const response = axiosConfig({
+            method: 'put',
+            url: 'api/v1/cart/update',
+            data: payload
+        })
+        resolve(response)
+    } catch (error) {
+        reject(error)
+    }
+})
+
+// Thêm vào giỏ hàng
 export const apiGetCountProductOfCart = (payload) => new Promise((resolve, reject) => {
     try {
         const response = axiosConfig({

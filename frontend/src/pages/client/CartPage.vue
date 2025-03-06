@@ -6,7 +6,13 @@
         <table class="cart-table">
           <thead>
             <tr>
-              <th><input type="checkbox" v-model="selectAll" @change="toggleSelectAll" /></th>
+              <th>
+                <input
+                  type="checkbox"
+                  v-model="selectAll"
+                  @change="toggleSelectAll"
+                />
+              </th>
               <th>STT</th>
               <th>Hình ảnh</th>
               <th>Tên sách</th>
@@ -20,19 +26,30 @@
               <td><input type="checkbox" v-model="item.selected" /></td>
               <td>{{ (currentPage - 1) * itemsPerPage + index + 1 }}</td>
               <td>
-                <img :src="require(`@/assets/images/${item.image}`)" alt="Product" class="item-image" />
+                <img
+                  :src="item.book.images[0].image_path"
+                  alt="Product"
+                  class="item-image"
+                />
               </td>
-              <td>{{ item.name }}</td>
-              <td>{{ formatPrice(item.price) }}</td>
+              <td>{{ item.book.title }}</td>
+              <td>{{ formatPrice(item.all_price) }}</td>
               <td>
                 <div class="item-quantity">
                   <button @click="decreaseQuantity(item)">-</button>
-                  <input type="number" v-model="item.quantity" min="1" @change="updateQuantity(item)" />
+                  <input
+                    type="number"
+                    v-model="item.quantity"
+                    min="1"
+                    @change="updateQuantity(item)"
+                  />
                   <button @click="increaseQuantity(item)">+</button>
                 </div>
               </td>
               <td>
-                <button class="remove-btn" @click="removeCartItem(item.id)">🗑️</button>
+                <button class="remove-btn" @click="removeCartItem(item.id)">
+                  🗑️
+                </button>
               </td>
             </tr>
           </tbody>
@@ -61,16 +78,37 @@
       <div class="cart-summary">
         <h2>Giá tổng</h2>
         <div class="summary-details">
-          <p>Đỗ Đình Hoàn | 0335546276</p>
-          <p>nhà số 12, ngách 25/24, ngõ 24 đường Ngõ, Phường Văn Phú, quận Hà Đông, Hà Nội</p>
+          <p
+            v-if="
+              address && (address.name || address.phone || address.fullAddress)
+            "
+          >
+            {{ address.name }} | {{ address.phone }}
+          </p>
+          <p v-if="address && address.fullAddress">
+            {{ address.fullAddress }}
+          </p>
+          <p
+            v-if="
+              !address ||
+              (!address.name && !address.phone && !address.fullAddress)
+            "
+          >
+            Không có thông tin. Vui lòng cập nhật !!
+          </p>
         </div>
         <div class="payment-options">
           <h3>Khuyến mãi</h3>
-          <p>Có thể chọn 2</p>
+          <p>Có thể chọn 1</p>
           <select v-model="selectedPromotion">
             <option value="">Chọn khuyến mãi</option>
-            <option value="discount10">Giảm 10%</option>
-            <option value="discount20">Giảm 20%</option>
+            <option
+              v-for="promo in promotions"
+              :key="promo.id"
+              :value="promo.code"
+            >
+              {{ promo.name }} (Giảm {{ promo.discount }}%)
+            </option>
           </select>
         </div>
         <div class="payment-methods">
@@ -79,16 +117,24 @@
             <input type="radio" v-model="paymentMethod" value="momo" /> MoMo
           </label>
           <label>
-            <input type="radio" v-model="paymentMethod" value="bank" /> Thẻ ngân hàng
+            <input type="radio" v-model="paymentMethod" value="bank" /> Thẻ ngân
+            hàng
           </label>
           <label>
-            <input type="radio" v-model="paymentMethod" value="cod" /> Thanh toán sau khi giao hàng
+            <input type="radio" v-model="paymentMethod" value="cod" /> Thanh
+            toán sau khi giao hàng
           </label>
         </div>
         <div class="payment-amounts">
-          <p>Tạm tính: <span>{{ formatPrice(subtotal) }}</span></p>
-          <p>Giảm giá: <span>{{ formatPrice(discount) }}</span></p>
-          <p>Tổng tiền thanh toán: <span>{{ formatPrice(totalPayment) }}</span></p>
+          <p>
+            Tạm tính: <span>{{ formatPrice(subtotal) }}</span>
+          </p>
+          <p>
+            Giảm giá: <span>{{ formatPrice(discount) }}</span>
+          </p>
+          <p>
+            Tổng tiền thanh toán: <span>{{ formatPrice(totalPayment) }}</span>
+          </p>
         </div>
         <button class="checkout-btn" @click="checkout">THANH TOÁN</button>
       </div>
@@ -97,128 +143,164 @@
 </template>
 
 <script>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from "vue";
+import {
+  apiGetCartByUserId,
+  apiUpdateCartItem,
+} from "@/services/client/CartService";
+import { apiGetCustomerInfor } from "@/services/client/UserAddressService";
 
 export default {
-  name: 'CartPage',
+  name: "CartPage",
   setup() {
-    const cartItems = ref([
-      {
-        id: 1,
-        name: 'Thiên Tài Bên Trái, Kẻ Điên Bên Phải (Tái Bản)',
-        image: 'Product_00.png',
-        price: 111023,
-        quantity: 1,
-        selected: false,
-      },
-      {
-        id: 2,
-        name: 'Thiên Tài Bên Trái, Kẻ Điên Bên Phải (Tái Bản)',
-        image: 'Product_00.png',
-        price: 111023,
-        quantity: 1,
-        selected: false,
-      },
-      {
-        id: 3,
-        name: 'Thiên Tài Bên Trái, Kẻ Điên Bên Phải (Tái Bản)',
-        image: 'Product_00.png',
-        price: 111023,
-        quantity: 1,
-        selected: false,
-      },
-      {
-        id: 5,
-        name: 'Thiên Tài Bên Trái, Kẻ Điên Bên Phải (Tái Bản)',
-        image: 'Product_00.png',
-        price: 111023,
-        quantity: 1,
-        selected: false,
-      },
-      {
-        id: 6,
-        name: 'Thiên Tài Bên Trái, Kẻ Điên Bên Phải (Tái Bản)',
-        image: 'Product_00.png',
-        price: 111023,
-        quantity: 1,
-        selected: false,
-      },
-      {
-        id: 7,
-        name: 'Thiên Tài Bên Trái, Kẻ Điên Bên Phải (Tái Bản)',
-        image: 'Product_00.png',
-        price: 111023,
-        quantity: 1,
-        selected: false,
-      },
-    ]);
-
+    const cartItems = ref([]);
+    const address = ref({ name: "", phone: "", fullAddress: "" });
+    const promotions = ref([]);
     const selectAll = ref(false);
-    const itemsPerPage = ref(5); // Tối đa 5 sản phẩm mỗi trang
+    const itemsPerPage = ref(5);
     const currentPage = ref(1);
-    const selectedPromotion = ref(''); // Khuyến mãi được chọn
-    const paymentMethod = ref(''); // Phương thức thanh toán
+    const selectedPromotion = ref("");
+    const paymentMethod = ref("");
 
-    // Tính tổng số trang
+    onMounted(async () => {
+      await fetchCartItems();
+      await fetchAddress();
+      await fetchPromotions();
+    });
+
+    const getUserIdFromToken = () => {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        console.log("Không tìm thấy token trong localStorage");
+        return null;
+      }
+      try {
+        const payload = JSON.parse(atob(token.split(".")[1]));
+        return payload.user_id || payload.id;
+      } catch (error) {
+        console.log("Lỗi khi giải mã token:", error);
+        return null;
+      }
+    };
+    // lấy thông tin giỏ hàng
+    const fetchCartItems = async () => {
+      const userId = getUserIdFromToken();
+      try {
+        const response = await apiGetCartByUserId({ user_id: userId });
+        if (response.status === 200 && response.data.err === 0) {
+          const data = response.data.data;
+          cartItems.value = data.map((item) => ({
+            ...item,
+            selected: false,
+          }));
+        }
+      } catch (error) {
+        console.error("Lỗi khi lấy dữ liệu giỏ hàng:", error);
+      }
+    };
+    // lấy thông tin customer
+    const fetchAddress = async () => {
+      const userId = getUserIdFromToken();
+      try {
+        const response = await apiGetCustomerInfor({ user_id: userId });
+        if (response.status === 200 && response.data.err === 0) {
+          address.value = response.data.data;
+        } else {
+          address.value = null;
+        }
+      } catch (error) {
+        console.error("Lỗi khi lấy địa chỉ:", error);
+      }
+    };
+
+    const fetchPromotions = async () => {
+      try {
+        const response = await fetch("/api/promotions");
+        const data = await response.json();
+        promotions.value = data;
+      } catch (error) {
+        console.error("Lỗi khi lấy danh sách khuyến mãi:", error);
+      }
+    };
+
+    const updateAllPrice = (item) => {
+      item.all_price = item?.book?.price * item?.quantity;
+    };
+
+    // cập nhật lại số lượng
+    const updateCartInDatabase = async (item) => {
+      try {
+        const response = await apiUpdateCartItem({
+          cart_id: item.cart_id,
+          quantity: item.quantity,
+          all_price: item.all_price,
+        });
+        console.log("Cập nhật giỏ hàng thành công:", response.data);
+      } catch (error) {
+        console.error("Lỗi khi cập nhật giỏ hàng:", error);
+      }
+    };
+
     const totalPages = computed(() =>
       Math.ceil(cartItems.value.length / itemsPerPage.value)
     );
 
-    // Lấy danh sách sản phẩm cho trang hiện tại
     const paginatedCartItems = computed(() => {
       const start = (currentPage.value - 1) * itemsPerPage.value;
       const end = start + itemsPerPage.value;
       return cartItems.value.slice(start, end);
     });
 
-    // Format giá tiền
     const formatPrice = (price) => {
-      return new Intl.NumberFormat('vi-VN', {
-        style: 'currency',
-        currency: 'VND',
+      return new Intl.NumberFormat("vi-VN", {
+        style: "currency",
+        currency: "VND",
       }).format(price);
     };
 
-    // Tính tạm tính (subtotal)
     const subtotal = computed(() =>
-      cartItems.value.reduce((sum, item) => sum + item.price * item.quantity, 0)
+      cartItems.value
+        .filter((item) => item.selected)
+        .reduce((sum, item) => sum + item.all_price, 0)
     );
 
-    // Tính giảm giá (discount) dựa trên khuyến mãi
     const discount = computed(() => {
-      if (selectedPromotion.value === 'discount10') return subtotal.value * 0.1;
-      if (selectedPromotion.value === 'discount20') return subtotal.value * 0.2;
-      return 0;
+      const selectedPromo = promotions.value.find(
+        (promo) => promo.code === selectedPromotion.value
+      );
+      return selectedPromo
+        ? subtotal.value * (selectedPromo.discount / 100)
+        : 0;
     });
 
-    // Tính tổng tiền thanh toán
     const totalPayment = computed(() => subtotal.value - discount.value);
 
-    // Giảm số lượng
-    const decreaseQuantity = (item) => {
+    const decreaseQuantity = async (item) => {
       if (item.quantity > 1) {
         item.quantity--;
+        updateAllPrice(item);
+        await updateCartInDatabase(item);
       }
     };
 
-    // Tăng số lượng
-    const increaseQuantity = (item) => {
+    const increaseQuantity = async (item) => {
       item.quantity++;
+      updateAllPrice(item);
+      await updateCartInDatabase(item);
     };
 
-    // Cập nhật số lượng
-    const updateQuantity = (item) => {
+    const updateQuantity = async (item) => {
       if (item.quantity < 1) item.quantity = 1;
+      updateAllPrice(item);
+      await updateCartInDatabase(item);
     };
 
-    // Chọn hoặc bỏ chọn tất cả trên trang hiện tại
     const toggleSelectAll = () => {
       paginatedCartItems.value.forEach((item) => {
         item.selected = selectAll.value;
       });
     };
 
-    // Xóa sản phẩm
     const removeCartItem = (id) => {
       const index = cartItems.value.findIndex((item) => item.id === id);
       if (index !== -1) {
@@ -229,24 +311,31 @@ export default {
       }
     };
 
-    // Thanh toán
+    // thanh toán
     const checkout = () => {
       if (!paymentMethod.value) {
-        alert('Vui lòng chọn phương thức thanh toán!');
+        alert("Vui lòng chọn phương thức thanh toán!");
         return;
       }
-      console.log('Thanh toán:', {
-        cartItems: cartItems.value,
+      const selectedItems = cartItems.value.filter((item) => item.selected);
+      if (selectedItems.length === 0) {
+        alert("Vui lòng chọn ít nhất một sản phẩm để thanh toán!");
+        return;
+      }
+      console.log("Thanh toán:", {
+        cartItems: selectedItems,
         subtotal: subtotal.value,
         discount: discount.value,
         total: totalPayment.value,
         paymentMethod: paymentMethod.value,
       });
-      alert('Đã gửi yêu cầu thanh toán!');
+      alert("Đã gửi yêu cầu thanh toán!");
     };
 
     return {
       cartItems,
+      address,
+      promotions,
       selectAll,
       itemsPerPage,
       currentPage,
