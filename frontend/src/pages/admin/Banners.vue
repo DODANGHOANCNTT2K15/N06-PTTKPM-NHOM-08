@@ -33,10 +33,7 @@
             </td>
             <td>{{ banner.name }}</td>
             <td>
-              <button @click="editBanner(banner.id)" class="action-btn edit-btn">
-                <i class="fas fa-pencil-alt"></i>
-              </button>
-              <button @click="deleteBanner(banner.id)" class="action-btn delete-btn">
+              <button @click="deleteBanner(banner.id, banner.public_id)" class="action-btn delete-btn">
                 <i class="fas fa-trash"></i>
               </button>
             </td>
@@ -45,10 +42,10 @@
       </table>
     </div>
 
-    <!-- Popup Thêm/Sửa Banner -->
+    <!-- Popup Thêm Banner -->
     <div v-if="showAddBannerPopup" class="modal">
       <div class="modal-content">
-        <h2>{{ editingBanner ? 'Sửa Banner' : 'Thêm Banner' }}</h2>
+        <h2>Thêm Banner</h2>
         <form @submit.prevent="saveBanner" enctype="multipart/form-data">
           <div class="form-group">
             <label>Tên Banner:</label>
@@ -61,22 +58,21 @@
               @change="handleImageUpload"
               accept="image/*"
               required
-              :disabled="editingBanner && !allowImageChange"
             />
             <p v-if="bannerForm.imagePreview" class="image-preview">
               <img :src="bannerForm.imagePreview" alt="Preview" class="preview-image" />
             </p>
           </div>
           <div class="modal-actions">
-            <button type="submit">{{ editingBanner ? 'Cập nhật' : 'Lưu' }}</button>
+            <button type="submit">Lưu</button>
             <button @click="closeModal">Hủy</button>
           </div>
         </form>
       </div>
     </div>
 
-    <!-- Phân trang (nếu cần) -->
-    <div class="pagination" v-if="banners.length > 10">
+    <!-- Phân trang -->
+    <div class="pagination" v-if="banners.length > itemsPerPage">
       <span>Hiển thị trang {{ currentPage }} / {{ totalPages }} - {{ filteredBanners.length }} kết quả</span>
       <div>
         <button @click="prevPage" :disabled="currentPage === 1" class="pagination-btn">
@@ -92,81 +88,87 @@
 
 <script>
 import { ref, onMounted, computed } from 'vue';
+import { apiGetAllBanners, apiAddBanner, apiDeleteBanner } from '@/services/admin/BannerService';
 
 export default {
   name: 'BannersAdmin',
   setup() {
-    // Dữ liệu mẫu cho danh sách banner
-    const banners = ref([
-      { id: 1, name: 'Ưu đãi Tết 2025', image: 'https://via.placeholder.com/150', status: 'active' },
-      { id: 2, name: 'Sách Mới', image: 'https://via.placeholder.com/150', status: 'active' },
-      { id: 3, name: 'Giảm giá 50%', image: 'https://via.placeholder.com/150', status: 'inactive' },
-    ]);
-
+    const banners = ref([]);
     const searchQuery = ref('');
     const showAddBannerPopup = ref(false);
-    const editingBanner = ref(null);
     const bannerForm = ref({ name: '', image: null, imagePreview: '' });
     const selectedBanners = ref([]);
     const selectAll = ref(false);
     const currentPage = ref(1);
     const itemsPerPage = ref(10);
-    const allowImageChange = ref(false);
 
-    const fetchBanners = () => {
-      // Trong thực tế, gọi API để lấy danh sách banner
-    };
-
-    const saveBanner = () => {
-      if (editingBanner.value) {
-        const index = banners.value.findIndex(b => b.id === editingBanner.value.id);
-        if (index !== -1) {
-          banners.value[index] = {
-            ...editingBanner.value,
-            name: bannerForm.value.name,
-            image: bannerForm.value.image || editingBanner.value.image,
-          };
+    const fetchBanners = async () => {
+      try {
+        const response = await apiGetAllBanners();
+        if (response.data.err === 0) {
+          banners.value = response.data.data || [];
+        } else {
+          console.error('Lỗi khi lấy danh sách banner:', response.data.msg);
+          banners.value = [];
         }
-      } else {
-        const newBanner = {
-          id: Date.now(),
-          name: bannerForm.value.name,
-          image: bannerForm.value.imagePreview,
-          status: 'active',
-        };
-        banners.value.push(newBanner);
+      } catch (error) {
+        console.error('Lỗi khi gọi API lấy banner:', error);
+        banners.value = [];
       }
-      closeModal();
     };
 
-    const editBanner = (id) => {
-      const banner = banners.value.find(b => b.id === id);
-      editingBanner.value = { ...banner };
-      bannerForm.value = { name: banner.name, image: null, imagePreview: banner.image };
-      allowImageChange.value = false;
-      showAddBannerPopup.value = true;
+    const saveBanner = async () => {
+      try {
+        const formData = new FormData();
+        formData.append('banner_name', bannerForm.value.name);
+        if (bannerForm.value.image) {
+          formData.append('banner_image', bannerForm.value.image); // Giả định backend xử lý file với key 'banner_image'
+        }
+
+        const response = await apiAddBanner(formData);
+        if (response.data.err === 0) {
+          const newBanner = {
+            id: response.data.data.id,
+            name: response.data.data.name || bannerForm.value.name,
+            image: response.data.data.image || bannerForm.value.imagePreview,
+            public_id: response.data.data.public_id, // Lưu public_id để dùng cho xóa
+            status: 'active',
+          };
+          banners.value.push(newBanner);
+          closeModal();
+          alert('Thêm banner thành công!');
+        } else {
+          alert('Thêm banner thất bại: ' + response.data.msg);
+        }
+      } catch (error) {
+        console.error('Lỗi khi thêm banner:', error);
+        alert('Có lỗi xảy ra khi thêm banner!');
+      }
     };
 
-    const deleteBanner = (id) => {
+    const deleteBanner = async (id, public_id) => {
       if (confirm('Bạn có chắc muốn xóa banner này?')) {
-        banners.value = banners.value.filter(b => b.id !== id);
-        selectedBanners.value = selectedBanners.value.filter(sid => sid !== id);
+        try {
+          const response = await apiDeleteBanner({ banner_id: id, banner_public_id: public_id });
+          if (response.data.err === 0) {
+            banners.value = banners.value.filter(b => b.id !== id);
+            selectedBanners.value = selectedBanners.value.filter(sid => sid !== id);
+            alert('Xóa banner thành công!');
+          } else {
+            alert('Xóa banner thất bại: ' + response.data.msg);
+          }
+        } catch (error) {
+          console.error('Lỗi khi xóa banner:', error);
+          alert('Có lỗi xảy ra khi xóa banner!');
+        }
       }
     };
 
     const toggleSelectAll = () => {
       if (selectAll.value) {
-        selectedBanners.value = banners.value.map(b => b.id);
+        selectedBanners.value = filteredBanners.value.map(b => b.id);
       } else {
         selectedBanners.value = [];
-      }
-    };
-
-    const deleteSelectedBanners = () => {
-      if (selectedBanners.value.length && confirm('Bạn có chắc muốn xóa các banner đã chọn?')) {
-        banners.value = banners.value.filter(b => !selectedBanners.value.includes(b.id));
-        selectedBanners.value = [];
-        selectAll.value = false;
       }
     };
 
@@ -179,7 +181,6 @@ export default {
           bannerForm.value.imagePreview = e.target.result;
         };
         reader.readAsDataURL(file);
-        allowImageChange.value = true;
       }
     };
 
@@ -209,9 +210,7 @@ export default {
 
     const closeModal = () => {
       showAddBannerPopup.value = false;
-      editingBanner.value = null;
       bannerForm.value = { name: '', image: null, imagePreview: '' };
-      allowImageChange.value = false;
     };
 
     onMounted(fetchBanners);
@@ -220,15 +219,12 @@ export default {
       banners,
       searchQuery,
       showAddBannerPopup,
-      editingBanner,
       bannerForm,
       selectedBanners,
       selectAll,
       saveBanner,
-      editBanner,
       deleteBanner,
       toggleSelectAll,
-      deleteSelectedBanners,
       handleImageUpload,
       filteredBanners,
       currentPage,
@@ -236,6 +232,7 @@ export default {
       prevPage,
       nextPage,
       closeModal,
+      itemsPerPage,
     };
   },
 };
@@ -371,11 +368,6 @@ export default {
 
 .banner-table button.action-btn:hover {
   opacity: 0.8;
-}
-
-.banner-table .edit-btn i {
-  color: #007bff;
-  font-size: 16px;
 }
 
 .banner-table .delete-btn i {

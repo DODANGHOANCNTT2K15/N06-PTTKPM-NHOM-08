@@ -64,13 +64,14 @@
 <script>
 import { ref, onMounted, computed } from 'vue';
 import Chart from 'chart.js/auto';
+import { apiGetAllUsers } from '@/services/admin/UserService'; // Import API
 
 export default {
   name: 'AdminDashboard',
   setup() {
-    // Dữ liệu mẫu (trong thực tế, lấy từ API)
+    // Dữ liệu mẫu (sẽ được cập nhật từ API)
     const totalBooks = ref(150);
-    const totalUsers = ref(500);
+    const totalUsers = ref(0); // Khởi tạo 0, sẽ cập nhật từ API
     const totalOrders = ref(300);
     const banners = ref([
       { id: 1, name: 'Ưu đãi Tết 2025', status: 'active' },
@@ -189,16 +190,34 @@ export default {
       });
     };
 
-    onMounted(() => {
-      fetchStats(); // Trong thực tế, gọi API để lấy dữ liệu
-      createBarChart();
+    // Hàm lấy dữ liệu từ API
+    const fetchStats = async () => {
+      try {
+        const usersResponse = await apiGetAllUsers(); // Gọi API lấy danh sách người dùng
+        if (usersResponse.data.err === 0) {
+          totalUsers.value = usersResponse.data.data.length; // Cập nhật số lượng người dùng
+        } else {
+          console.error('Lỗi khi lấy danh sách người dùng:', usersResponse.data.msg);
+          totalUsers.value = 0;
+        }
+
+        // Trong thực tế, bạn cũng cần gọi các API khác để lấy totalBooks, totalOrders, banners, promotions
+        // Ví dụ:
+        // const booksResponse = await apiGetAllBooks();
+        // totalBooks.value = booksResponse.data.length;
+        // const ordersResponse = await apiGetAllOrders();
+        // totalOrders.value = ordersResponse.data.length;
+      } catch (error) {
+        console.error('Lỗi khi lấy dữ liệu thống kê:', error);
+        totalUsers.value = 0; // Reset về 0 nếu có lỗi
+      }
+    };
+
+    onMounted(async () => {
+      await fetchStats(); // Gọi API để lấy dữ liệu
+      createBarChart(); // Tạo biểu đồ sau khi có dữ liệu
       createPieChart();
     });
-
-    // Hàm giả lập lấy dữ liệu (thay bằng API)
-    const fetchStats = () => {
-      // Ví dụ: await apiGetStats();
-    };
 
     return {
       totalBooks,
