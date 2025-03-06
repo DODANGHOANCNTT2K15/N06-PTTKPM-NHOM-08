@@ -122,7 +122,7 @@ export default {
         const formData = new FormData();
         formData.append('banner_name', bannerForm.value.name);
         if (bannerForm.value.image) {
-          formData.append('banner_image', bannerForm.value.image); // Giả định backend xử lý file với key 'banner_image'
+          formData.append('banner', bannerForm.value.image); // Giả định backend xử lý file với key 'banner_image'
         }
 
         const response = await apiAddBanner(formData);

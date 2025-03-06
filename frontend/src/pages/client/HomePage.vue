@@ -452,6 +452,7 @@ import ProductCard from "@/components/client/ProductCard.vue";
 import { computed, ref, onMounted, onUnmounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
+import { useAvatarStore } from "@/stores/avatar";
 import {
   apiLogin,
   apiRegister,
@@ -466,6 +467,7 @@ export default {
     const route = useRoute();
     const router = useRouter();
     const authStore = useAuthStore();
+    const avatarStore = useAvatarStore();
 
     const currentRouteName = computed(() => route.name);
     const showFilterPopup = ref(false);
@@ -784,6 +786,7 @@ export default {
     onMounted(() => {
       startAutoSlide();
       authStore.initializeAuth();
+      avatarStore.initializeAvatar();
       fetchBooks();
     });
 
