@@ -70,13 +70,13 @@ export const addBannerService = (banner_name, req) =>
             }
 
             // Lưu public_id để rollback nếu cần
-            uploadedImagePublicId = uploadResult.banner_public_id;
+            uploadedImagePublicId = uploadResult.id;
 
             // Cập nhật bản ghi banner với đường dẫn và public_id từ Cloudinary
             await bannerRecord.update(
                 {
                     banner_path: uploadResult.url,
-                    banner_public_id: uploadResult.banner_public_id,
+                    banner_public_id: uploadResult.id,
                 },
                 { transaction }
             );
