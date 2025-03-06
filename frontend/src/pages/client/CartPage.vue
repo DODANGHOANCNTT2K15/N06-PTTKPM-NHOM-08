@@ -80,18 +80,19 @@
         <div class="summary-details">
           <p
             v-if="
-              address && (address.name || address.phone || address.fullAddress)
+              customer &&
+              (customer.full_name || customer.phone || customer.address)
             "
           >
-            {{ address.name }} | {{ address.phone }}
+            {{ customer.full_name }} | {{ customer.phone }}
           </p>
-          <p v-if="address && address.fullAddress">
-            {{ address.fullAddress }}
+          <p v-if="customer && customer.address">
+            {{ customer.address }}
           </p>
           <p
             v-if="
-              !address ||
-              (!address.name && !address.phone && !address.fullAddress)
+              !customer ||
+              (!customer.full_name && !customer.phone && !customer.address)
             "
           >
             Không có thông tin. Vui lòng cập nhật !!
@@ -104,30 +105,33 @@
             <option value="">Chọn khuyến mãi</option>
             <option
               v-for="promo in promotions"
-              :key="promo.id"
-              :value="promo.code"
+              :key="promo.discount_id"
+              :value="promo.discount_id"
             >
-              {{ promo.name }} (Giảm {{ promo.discount }}%)
+              {{ promo.discount_name }} (Giảm {{ promo.percent_discount }}%)
             </option>
           </select>
         </div>
         <div class="payment-methods">
           <h3>Phương thức thanh toán</h3>
           <label>
-            <input type="radio" v-model="paymentMethod" value="momo" /> MoMo
+            <input type="radio" v-model="paymentMethod" value="0" /> MoMo
           </label>
           <label>
-            <input type="radio" v-model="paymentMethod" value="bank" /> Thẻ ngân
+            <input type="radio" v-model="paymentMethod" value="1" /> Thẻ ngân
             hàng
           </label>
           <label>
-            <input type="radio" v-model="paymentMethod" value="cod" /> Thanh
-            toán sau khi giao hàng
+            <input type="radio" v-model="paymentMethod" value="2" /> Thanh toán
+            sau khi giao hàng
           </label>
         </div>
         <div class="payment-amounts">
           <p>
             Tạm tính: <span>{{ formatPrice(subtotal) }}</span>
+          </p>
+          <p>
+            Phí vận chuyển: <span>{{ formatPrice(deliveryPrice) }}</span>
           </p>
           <p>
             Giảm giá: <span>{{ formatPrice(discount) }}</span>
@@ -149,23 +153,30 @@ import {
   apiUpdateCartItem,
 } from "@/services/client/CartService";
 import { apiGetCustomerInfor } from "@/services/client/UserAddressService";
+import { apiGetAllDiscounts } from "@/services/client/DiscountService";
+import { addOrderService } from "@/services/client/OrderService";
+import { useCartStore } from "@/stores/cart";
+import router from "@/router";
 
 export default {
   name: "CartPage",
   setup() {
     const cartItems = ref([]);
-    const address = ref({ name: "", phone: "", fullAddress: "" });
+    const customer = ref({ customer_id: 0, name: "", phone: "", address: "" });
     const promotions = ref([]);
     const selectAll = ref(false);
     const itemsPerPage = ref(5);
     const currentPage = ref(1);
     const selectedPromotion = ref("");
     const paymentMethod = ref("");
+    const cartStore = useCartStore();
 
     onMounted(async () => {
-      await fetchCartItems();
-      await fetchAddress();
-      await fetchPromotions();
+      await Promise.all([
+        fetchCartItems(),
+        fetchCustomer(),
+        fetchPromotions(),
+      ]);
     });
 
     const getUserIdFromToken = () => {
@@ -182,31 +193,34 @@ export default {
         return null;
       }
     };
-    // lấy thông tin giỏ hàng
+
     const fetchCartItems = async () => {
       const userId = getUserIdFromToken();
+      if (!userId) return;
       try {
         const response = await apiGetCartByUserId({ user_id: userId });
-        if (response.status === 200 && response.data.err === 0) {
-          const data = response.data.data;
-          cartItems.value = data.map((item) => ({
+        if (response.status === 200 && response.data.err !== 2) {
+          cartItems.value = response.data.data.map((item) => ({
             ...item,
             selected: false,
           }));
+        } else {
+          console.error("Lỗi từ server:", response.data.msg);
         }
       } catch (error) {
         console.error("Lỗi khi lấy dữ liệu giỏ hàng:", error);
       }
     };
-    // lấy thông tin customer
-    const fetchAddress = async () => {
+
+    const fetchCustomer = async () => {
       const userId = getUserIdFromToken();
+      if (!userId) return;
       try {
         const response = await apiGetCustomerInfor({ user_id: userId });
         if (response.status === 200 && response.data.err === 0) {
-          address.value = response.data.data;
+          customer.value = response.data.data;
         } else {
-          address.value = null;
+          customer.value = null;
         }
       } catch (error) {
         console.error("Lỗi khi lấy địa chỉ:", error);
@@ -215,9 +229,12 @@ export default {
 
     const fetchPromotions = async () => {
       try {
-        const response = await fetch("/api/promotions");
-        const data = await response.json();
-        promotions.value = data;
+        const response = await apiGetAllDiscounts();
+        if (response.status === 200 && response.data.err === 0) {
+          promotions.value = response.data.data;
+        } else {
+          console.error("Lỗi khi lấy thông tin giảm giá:", response.data.msg);
+        }
       } catch (error) {
         console.error("Lỗi khi lấy danh sách khuyến mãi:", error);
       }
@@ -227,7 +244,6 @@ export default {
       item.all_price = item?.book?.price * item?.quantity;
     };
 
-    // cập nhật lại số lượng
     const updateCartInDatabase = async (item) => {
       try {
         const response = await apiUpdateCartItem({
@@ -235,7 +251,9 @@ export default {
           quantity: item.quantity,
           all_price: item.all_price,
         });
-        console.log("Cập nhật giỏ hàng thành công:", response.data);
+        if (response.status === 200 && response.data.err === 0) {
+          console.log("Cập nhật giỏ hàng thành công:", response.data);
+        }
       } catch (error) {
         console.error("Lỗi khi cập nhật giỏ hàng:", error);
       }
@@ -264,16 +282,23 @@ export default {
         .reduce((sum, item) => sum + item.all_price, 0)
     );
 
+    const deliveryPrice = computed(() => {
+      return subtotal.value > 500000 ? 30000 : 50000;
+    });
+
     const discount = computed(() => {
+      if (!selectedPromotion.value) return 0;
       const selectedPromo = promotions.value.find(
-        (promo) => promo.code === selectedPromotion.value
+        (promo) => promo.discount_id === selectedPromotion.value
       );
       return selectedPromo
-        ? subtotal.value * (selectedPromo.discount / 100)
+        ? subtotal.value * (selectedPromo.percent_discount / 100)
         : 0;
     });
 
-    const totalPayment = computed(() => subtotal.value - discount.value);
+    const totalPayment = computed(() => {
+      return subtotal.value + deliveryPrice.value - discount.value;
+    });
 
     const decreaseQuantity = async (item) => {
       if (item.quantity > 1) {
@@ -311,30 +336,68 @@ export default {
       }
     };
 
-    // thanh toán
-    const checkout = () => {
-      if (!paymentMethod.value) {
-        alert("Vui lòng chọn phương thức thanh toán!");
-        return;
-      }
+    const checkout = async () => {
       const selectedItems = cartItems.value.filter((item) => item.selected);
       if (selectedItems.length === 0) {
         alert("Vui lòng chọn ít nhất một sản phẩm để thanh toán!");
         return;
       }
-      console.log("Thanh toán:", {
-        cartItems: selectedItems,
-        subtotal: subtotal.value,
-        discount: discount.value,
-        total: totalPayment.value,
-        paymentMethod: paymentMethod.value,
-      });
-      alert("Đã gửi yêu cầu thanh toán!");
+      if (!paymentMethod.value) {
+        alert("Vui lòng chọn phương thức thanh toán!");
+        return;
+      }
+      if (!customer.value) {
+        alert("Vui lòng cập nhật thông tin trước khi thanh toán!!");
+        router.push("/user/address");
+        return;
+      }
+
+      const selectedPromo = promotions.value.find(
+        (promo) => promo.discount_id === selectedPromotion.value
+      );
+
+      const orderData = {
+        user_id: getUserIdFromToken(),
+        customer_id: customer.value.customer_id,
+        order_date: new Date().toISOString().split("T")[0],
+        delivery_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+          .toISOString()
+          .split("T")[0],
+        delivery_price: deliveryPrice.value,
+        total_price: totalPayment.value,
+        discount_id: selectedPromo ? selectedPromo.discount_id : null,
+        payment_method_id: parseInt(paymentMethod.value),
+        payment_status: 0,
+        order_details: selectedItems.map((item) => ({
+          book_id: item.book.book_id || item.book.id,
+          quantity: item.quantity,
+          price: item.book.price,
+        })),
+      };
+
+      try {
+        const response = await addOrderService(orderData);
+        if (response.status === 200 && response.data.err === 0) {
+          cartStore.updatetotal_product_type(response.data.data.count);
+          await fetchCartItems(); // Fetch lại dữ liệu giỏ hàng sau khi thanh toán
+          alert("Đặt hàng thành công!");
+          // Reset giao diện sau khi thanh toán thành công
+          selectAll.value = false;
+          selectedPromotion.value = "";
+          paymentMethod.value = "";
+          currentPage.value = 1;
+        } else {
+          alert("Đã xảy ra lỗi khi đặt hàng: " + response.data.msg);
+        }
+      } catch (error) {
+        console.error("Checkout error:", error);
+        alert("Đã xảy ra lỗi khi xử lý thanh toán!");
+      }
     };
 
     return {
       cartItems,
-      address,
+      customer,
       promotions,
       selectAll,
       itemsPerPage,
@@ -344,6 +407,7 @@ export default {
       selectedPromotion,
       paymentMethod,
       subtotal,
+      deliveryPrice,
       discount,
       totalPayment,
       formatPrice,
