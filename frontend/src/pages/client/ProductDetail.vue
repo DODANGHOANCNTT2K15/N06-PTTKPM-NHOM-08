@@ -1,4 +1,5 @@
 <template>
+  <!-- Template remains unchanged -->
   <div class="product-detail-container">
     <div class="product-header">
       <nav class="nav-tabs">
@@ -49,15 +50,18 @@
           ({{ book.reviews.length || 0 }} đánh giá)
         </div>
         <div class="price">
-          <span class="current-price">{{
-            formatPrice(book.price * (1 - book.discount_price / 100))
-          }} VNĐ</span>
-          <span class="original-price">~{{ formatPrice(book.price) }} VNĐ</span>
+          <span class="current-price">{{ formatPrice(totalPrice) }} VNĐ</span>
+          <span class="original-price">~{{ formatPrice(book.price * quantity) }} VNĐ</span>
         </div>
 
         <div class="quantity">
           <label>Số lượng</label>
-          <input type="number" min="1" v-model="quantity" />
+          <input 
+            type="number" 
+            min="1" 
+            v-model.number="quantity"
+            @input="updateQuantity"
+          />
         </div>
 
         <div class="actions">
@@ -69,7 +73,9 @@
         </div>
 
         <div class="shipping-info">
-          <p><i class="fas fa-map-marker-alt"></i> Hoàn Kiếm, Hà Đông, Hà Nội</p>
+          <p>
+            <i class="fas fa-map-marker-alt"></i> Hoàn Kiếm, Hà Đông, Hà Nội
+          </p>
           <p><i class="fas fa-truck"></i> Giao phí chỉ từ 10k cho đơn từ 45k</p>
         </div>
 
@@ -118,12 +124,12 @@
         <ReviewItem
           v-for="review in paginatedReviews"
           :key="review.id"
-          :user-name="review.userName"
-          :purchase-time="review.purchaseTime"
+          :user-name="review.user.user_name"
+          :purchase-time="formatDate(review.createdAt)"
           :rating="review.rating"
-          :review-text="review.reviewText"
-          :can-delete="review.user_id === currentUserId"
-          @delete-review="deleteReview(review.id)"
+          :review-text="review.comment"
+          :can-delete="review.user.user_id === currentUserId"
+          @delete-review="deleteReview(review.review_id)"
         />
       </div>
       <div class="pagination">
@@ -146,11 +152,11 @@
         <div class="rating-input">
           <label>Đánh giá (1-5 sao):</label>
           <select v-model="newReview.rating">
-            <option value="1">1 sao</option>
-            <option value="2">2 sao</option>
-            <option value="3">3 sao</option>
-            <option value="4">4 sao</option>
             <option value="5">5 sao</option>
+            <option value="4">4 sao</option>
+            <option value="3">3 sao</option>
+            <option value="2">2 sao</option>
+            <option value="1">1 sao</option>
           </select>
         </div>
         <div class="comment-input">
@@ -172,7 +178,9 @@
 <script>
 import ReviewItem from "@/components/client/ReviewItem.vue";
 import { apiGetAllBookByID } from "@/services/client/BookService";
-import axios from "axios";
+import { apiAddReview, apiDeleteReview } from "@/services/client/ReviewService";
+import { apiAddToCart, apiGetCountProductOfCart } from "@/services/client/CartService";
+import { useCartStore } from "@/stores/cart";
 
 export default {
   name: "ProductPage",
@@ -198,7 +206,7 @@ export default {
       mainImage: "",
       reviews: [],
       newReview: {
-        rating: 1,
+        rating: 5,
         reviewText: "",
       },
       itemsPerPage: 2,
@@ -207,6 +215,11 @@ export default {
     };
   },
   computed: {
+    totalPrice() {
+      const basePrice = this.book.price * this.quantity;
+      const discount = this.book.discount_price / 100;
+      return basePrice * (1 - discount);
+    },
     paginatedReviews() {
       const start = (this.currentPage - 1) * this.itemsPerPage;
       const end = start + this.itemsPerPage;
@@ -220,8 +233,11 @@ export default {
     this.fetchBookData();
     this.loadCurrentUser();
   },
+  setup() {
+    const cartStore = useCartStore();
+    return { cartStore };
+  },
   methods: {
-    // Hàm giải mã JWT token để lấy user_id
     getUserIdFromToken() {
       const token = localStorage.getItem("token");
       if (!token) {
@@ -229,9 +245,8 @@ export default {
         return null;
       }
       try {
-        const payload = JSON.parse(atob(token.split(".")[1])); // Giải mã phần payload của JWT
-        console.log(payload.user_id); // Giả định user_id nằm trong payload
-        return payload.user_id || payload.id; // Trả về user_id hoặc id tùy backend
+        const payload = JSON.parse(atob(token.split(".")[1]));
+        return payload.user_id || payload.id;
       } catch (error) {
         console.log("Lỗi khi giải mã token:", error);
         return null;
@@ -268,27 +283,11 @@ export default {
       };
 
       try {
-        const response = await axios.post(
-          "http://your-api-url/api/reviews",
-          reviewData,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          }
-        );
-
-        if (response.data.err === 0) {
-          this.reviews.push({
-            id: response.data.data.id, // Giả sử API trả về id
-            userName: "Bạn",
-            purchaseTime: "Vừa xong",
-            rating: reviewData.rating,
-            reviewText: reviewData.comment,
-            user_id: this.currentUserId,
-          });
+        const response = await apiAddReview(reviewData);
+        if (response.status === 200 && response.data.err === 0) {
+          this.fetchBookData();
           this.newReview.reviewText = "";
-          this.newReview.rating = 1;
+          this.newReview.rating = 5;
           this.currentPage = Math.ceil(this.reviews.length / this.itemsPerPage);
         } else {
           alert(response.data.msg);
@@ -298,15 +297,26 @@ export default {
         alert("Có lỗi xảy ra khi gửi đánh giá.");
       }
     },
-    deleteReview(reviewId) {
-      this.reviews = this.reviews.filter((review) => review.id !== reviewId);
-      // Nếu cần xóa trên server:
-      // await axios.delete(`http://your-api-url/api/reviews/${reviewId}`, {
-      //   headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-      // });
+    async deleteReview(reviewId) {
+      try {
+        const response = await apiDeleteReview({ review_id: reviewId });
+        if (response.status === 200 && response.data.err === 0) {
+          this.fetchBookData();
+        } else {
+          alert(response.data.msg);
+        }
+      } catch (error) {
+        console.error("Lỗi khi xóa đánh giá:", error);
+        alert("Có lỗi xảy ra khi xóa đánh giá.");
+      }
+    },
+    updateQuantity() {
+      if (this.quantity < 1 || isNaN(this.quantity)) {
+        this.quantity = 1;
+      }
     },
     formatPrice(price) {
-      return price.toLocaleString("vi-VN");
+      return Math.round(price).toLocaleString("vi-VN");
     },
     formatDate(date) {
       return new Date(date).toLocaleDateString("vi-VN");
@@ -314,8 +324,52 @@ export default {
     buyNow() {
       console.log("Mua ngay:", this.quantity, "sách:", this.book.title);
     },
-    addToCart() {
-      console.log("Thêm vào giỏ:", this.quantity, "sách:", this.book.title);
+    async addToCart() {
+      if (!this.currentUserId) {
+        alert("Vui lòng đăng nhập để thêm vào giỏ hàng!");
+        this.$router.push("/login");
+        return;
+      }
+
+      const bookId = this.$route.params.id;
+      const cartItem = {
+        book_id: bookId,
+        user_id: this.currentUserId,
+        quantity: this.quantity,
+        all_price: this.totalPrice
+      };
+
+      try {
+        const response = await apiAddToCart(cartItem);
+        if (response.status === 200 && response.data.err === 0) {
+          alert('Đã thêm vào giỏ hàng thành công!');
+          // Cập nhật số lượng trong cartStore
+          await this.updateCartCount();
+        } else {
+          alert(response.data.msg || 'Lỗi khi thêm vào giỏ hàng');
+        }
+      } catch (error) {
+        console.error("Lỗi khi thêm vào giỏ hàng:", error);
+        alert("Có lỗi xảy ra khi thêm vào giỏ hàng.");
+      }
+    },
+    async updateCartCount() {
+      try {
+        const userId = this.getUserIdFromToken();
+        if (userId) {
+          const response = await apiGetCountProductOfCart({ user_id: userId });
+          if (response.data.err === 0) {
+            const count = response.data.total_product_types || 0;
+            this.cartStore.updatetotal_product_type(count);
+          } else {
+            console.error("Lỗi từ API khi lấy số lượng giỏ hàng:", response.data.msg);
+            this.cartStore.updatetotal_product_type(0);
+          }
+        }
+      } catch (error) {
+        console.error("Không thể cập nhật số lượng giỏ hàng:", error);
+        this.cartStore.updatetotal_product_type(0);
+      }
     },
     toggleFavorite() {
       this.isFavorite = !this.isFavorite;
@@ -344,8 +398,8 @@ export default {
 };
 </script>
 
+<!-- Style remains unchanged -->
 <style scoped>
-/* Import CSS global */
 @import "@/assets/css/ProductDetail.css";
 @import "@/assets/css/General.css";
 
@@ -484,6 +538,7 @@ export default {
   padding: 5px;
   border: 1px solid #ddd;
   border-radius: 5px;
+  text-align: center;
 }
 
 .actions {

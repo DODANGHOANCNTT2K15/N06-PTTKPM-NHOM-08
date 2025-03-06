@@ -61,9 +61,9 @@
             <div><h1>Tất cả sản phẩm</h1></div>
             <div>
               <div id="filter_tag_cover">
-                <div 
-                  class="filter_tag" 
-                  v-for="tag in filterTags" 
+                <div
+                  class="filter_tag"
+                  v-for="tag in filterTags"
                   :key="tag"
                   @click="toggleTag(tag)"
                   :class="{ active: selectedTags.includes(tag) }"
@@ -87,7 +87,11 @@
                   style="font-size: 0.9em; opacity: 0.8; margin-right: 10px"
                   >Sắp xếp</label
                 >
-                <select id="sort-options" v-model="sortOption" @change="sortProducts">
+                <select
+                  id="sort-options"
+                  v-model="sortOption"
+                  @change="sortProducts"
+                >
                   <option value="popular">Phổ biến</option>
                   <option value="best-seller">Bán chạy nhất</option>
                   <option value="low-to-high">Giá thấp đến cao</option>
@@ -446,9 +450,7 @@ import {
   apiRegister,
   apiForgotPass,
 } from "@/services/client/AuthService";
-import {
-  apiGetAllBooks
-} from "@/services/client/BookService";
+import { apiGetAllBooks } from "@/services/client/BookService";
 
 export default {
   name: "HomePage",
@@ -493,7 +495,8 @@ export default {
           errorMessage.value = response.data.msg;
         }
       } catch (error) {
-        errorMessage.value = error.response?.data?.message || "Đăng nhập thất bại!";
+        errorMessage.value =
+          error.response?.data?.message || "Đăng nhập thất bại!";
         successMessage.value = "";
       }
     };
@@ -518,7 +521,8 @@ export default {
           errorMessage.value = response.data.msg;
         }
       } catch (error) {
-        errorMessage.value = error.response?.data?.message || "Đăng ký thất bại!";
+        errorMessage.value =
+          error.response?.data?.message || "Đăng ký thất bại!";
         successMessage.value = "";
       }
     };
@@ -539,7 +543,8 @@ export default {
           errorMessage.value = response.data.msg;
         }
       } catch (error) {
-        errorMessage.value = error.response?.data?.message || "Không thể gửi mã!";
+        errorMessage.value =
+          error.response?.data?.message || "Không thể gửi mã!";
         successMessage.value = "";
       }
     };

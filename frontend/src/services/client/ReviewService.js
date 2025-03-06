@@ -1,26 +1,11 @@
 import axiosConfig from "../../axiosConfig";
 
-// lấy toàn bộ review theo id sách
-export const apiGetAllReviewsOfBook = (payload) => new Promise((resolve, reject) => {
-    try {
-        const response = axiosConfig({
-            method: 'get',
-            url: 'api/v1/book',
-            data: payload
-        })
-        resolve(response)
-    } catch (error) {
-        reject(error)
-    }
-})
-
-
-// tạo 
+// tạo review
 export const apiAddReview = (payload) => new Promise((resolve, reject) => {
     try {
         const response = axiosConfig({
             method: 'post',
-            url: 'api/v1/book/id',
+            url: 'api/v1/review/add',
             data: payload
         })
         resolve(response)
@@ -29,5 +14,17 @@ export const apiAddReview = (payload) => new Promise((resolve, reject) => {
     }
 })
 
-
+// xóa commnet theo id
+export const apiDeleteReview = (payload) => new Promise((resolve, reject) => {
+    try {
+        const response = axiosConfig({
+            method: 'post',
+            url: 'api/v1/review/delete',
+            data: payload
+        })
+        resolve(response)
+    } catch (error) {
+        reject(error)
+    }
+})
 

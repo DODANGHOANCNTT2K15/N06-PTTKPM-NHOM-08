@@ -10,12 +10,12 @@
       <div class="search-section">
         <form action="" class="search-container" @submit.prevent="handleSearch">
           <i class="fa fa-search"></i>
-          <input 
-            type="text" 
-            placeholder="Tìm kiếm" 
-            v-model="searchQuery" 
-            @focus="showOverlay = true" 
-            @blur="hideOverlayWithDelay" 
+          <input
+            type="text"
+            placeholder="Tìm kiếm"
+            v-model="searchQuery"
+            @focus="showOverlay = true"
+            @blur="hideOverlayWithDelay"
           />
           <button type="submit">Tìm kiếm</button>
         </form>
@@ -25,7 +25,9 @@
         </div>
         <!-- Gợi ý tìm kiếm -->
         <div v-if="showOverlay" class="search-suggestions">
-          <div v-if="searchQuery" class="suggestion-item">Kết quả cho "{{ searchQuery }}"</div>
+          <div v-if="searchQuery" class="suggestion-item">
+            Kết quả cho "{{ searchQuery }}"
+          </div>
           <div class="suggestion-item">Truyện tranh nổi bật</div>
           <div class="suggestion-item">Tiểu thuyết lãng mạn</div>
           <div class="suggestion-item">Sách kỹ năng sống</div>
@@ -46,14 +48,21 @@
             <button @click="goToOrders">Đơn hàng</button>
             <button @click="goToLikes">Yêu thích</button>
             <button @click="goToHistory">Lịch sử</button>
-            <button @click="authStore.logout(); $router.push('/');">Đăng xuất</button>
+            <button
+              @click="
+                authStore.logout();
+                $router.push('/');
+              "
+            >
+              Đăng xuất
+            </button>
           </div>
         </div>
         <div id="div_cart">
           <button @click="$router.push('/cart')">
             <i class="fas fa-shopping-basket"></i>
           </button>
-          <div>0</div>
+          <div>{{ cartStore.total_product_type }}</div>
         </div>
       </div>
     </div>
@@ -66,25 +75,42 @@
 import { useAuthStore } from "@/stores/auth";
 import { onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
+import { useCartStore } from "@/stores/cart";
+import { apiGetCountProductOfCart } from "@/services/client/CartService";
 
 export default {
   name: "HeaderComponent",
   setup() {
     const router = useRouter();
     const authStore = useAuthStore();
+    const cartStore = useCartStore();
     const showOverlay = ref(false); // Quản lý trạng thái overlay
     const searchQuery = ref(""); // Giá trị ô tìm kiếm
 
     onMounted(() => {
       authStore.initializeAuth();
+      cartStore.initializeCart();
+      fetchCountOfCart(); // Gọi API khi component được mount
     });
 
-    const goToHome = () => { router.push("/"); };
-    const gotoLogin = () => { router.push("/login"); };
-    const goToUserInfo = () => { router.push("/user/info"); };
-    const goToOrders = () => { router.push("/user/orders"); };
-    const goToLikes = () => { router.push("/user/like"); };
-    const goToHistory = () => { router.push("/user/history"); };
+    const goToHome = () => {
+      router.push("/");
+    };
+    const gotoLogin = () => {
+      router.push("/login");
+    };
+    const goToUserInfo = () => {
+      router.push("/user/info");
+    };
+    const goToOrders = () => {
+      router.push("/user/orders");
+    };
+    const goToLikes = () => {
+      router.push("/user/like");
+    };
+    const goToHistory = () => {
+      router.push("/user/history");
+    };
 
     // Đóng overlay với độ trễ để tránh xung đột với click
     const hideOverlayWithDelay = () => {
@@ -95,17 +121,66 @@ export default {
 
     // Xử lý tìm kiếm và truyền query qua router
     const handleSearch = () => {
-      if (searchQuery.value.trim()) { // Kiểm tra nếu searchQuery không rỗng
+      if (searchQuery.value.trim()) {
         router.push({
           path: "/search",
-          query: { q: searchQuery.value.trim() }
+          query: { q: searchQuery.value.trim() },
         });
-        showOverlay.value = false; // Đóng overlay sau khi tìm kiếm
+        showOverlay.value = false;
       }
     };
 
+    // Hàm giải mã JWT token để lấy user_id
+    const getUserIdFromToken = () => {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        console.log("Không tìm thấy token trong localStorage");
+        return null;
+      }
+      try {
+        const payload = JSON.parse(atob(token.split(".")[1]));
+        return payload.user_id || payload.id;
+      } catch (error) {
+        console.log("Lỗi khi giải mã token:", error);
+        return null;
+      }
+    };
+
+    // Hàm gọi API lấy count of cart
+    const fetchCountOfCart = async () => {
+      try {
+        const userId = getUserIdFromToken();
+        if (userId) {
+          const response = await apiGetCountProductOfCart({ user_id: userId });
+          if (response.data.err === 0) {
+            // Giả sử API trả về count trong response.data.count
+            const count = response.data.total_product_types || 0;
+            cartStore.updatetotal_product_type(count);
+          } else {
+            console.error("Lỗi từ API:", response.data.msg);
+            cartStore.updatetotal_product_type(0); // Đặt về 0 nếu có lỗi
+          }
+        } else {
+          cartStore.updatetotal_product_type(0); // Nếu không có userId
+        }
+      } catch (error) {
+        console.error("Không thể lấy dữ liệu count of cart:", error);
+        cartStore.updatetotal_product_type(0); // Đặt về 0 nếu có lỗi
+      }
+    };
+
+    // Watch khi đăng nhập/đăng xuất để cập nhật lại số lượng giỏ hàng
+    authStore.$subscribe((mutation, state) => {
+      if (state.isLoggedIn) {
+        fetchCountOfCart(); // Gọi lại khi đăng nhập
+      } else {
+        cartStore.updatetotal_product_type(0); // Reset khi đăng xuất
+      }
+    });
+
     return {
       authStore,
+      cartStore,
       goToHome,
       gotoLogin,
       goToUserInfo,
@@ -123,7 +198,7 @@ export default {
 
 <style scoped>
 header {
-  font-family: 'Arial', sans-serif;
+  font-family: "Arial", sans-serif;
   background-color: #fff;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
   position: relative;
