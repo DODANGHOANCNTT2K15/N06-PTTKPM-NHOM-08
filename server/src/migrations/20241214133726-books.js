@@ -36,10 +36,6 @@ module.exports = {
         type: Sequelize.BIGINT,
         allowNull: true
       },
-      stock_quantity: {
-        type: Sequelize.BIGINT,
-        allowNull: false
-      },
       description: {
         type: Sequelize.STRING,
         allowNull: true

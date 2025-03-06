@@ -106,14 +106,14 @@ export const registerService = ({ user_name, email, pass_word, role }) =>
                 email: trimmedData.email,
                 user_name: trimmedData.user_name,
                 pass_word: hash(trimmedData.pass_word),
-                role: role ? 1 : 0,
+                role: role === 1 ? 1 : 0,
                 status: 0
             });
 
-            // Tạo thông tin khách hàng
-            await db.Customer.create({
-                user_id: newUser.user_id
-            });
+            // // Tạo thông tin khách hàng
+            // await db.Customer.create({
+            //     user_id: newUser.user_id
+            // });
 
             // Tạo JWT token
             const token = jwt.sign(

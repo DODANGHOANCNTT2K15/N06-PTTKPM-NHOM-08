@@ -10,7 +10,7 @@ export const getCustomerController = async (req, res) => {
                 msg: "Thiếu user_id.",
             });
         }
-        console.log(user_id )
+        console.log(user_id)
         const rs = await customerService.getCustomerService(user_id);
         return res.status(200).json(rs);
     } catch (error) {
@@ -47,18 +47,18 @@ export const addCustomerController = async (req, res) => {
 
 // cập nhật thông tin khách hàng
 export const updateCustomerController = async (req, res) => {
-    const { customer_id, full_name, dob, gender, address, phone, user_id } = req.body;
+    const { full_name, dob, gender, address, phone, user_id } = req.body;
 
     try {
         // Kiểm tra nếu không có dữ liệu cần cập nhật
-        if (!customer_id || !full_name && !dob && !gender && !address && !phone && !user_id) {
+        if (!full_name && !dob && !gender && !address && !phone && !user_id) {
             return res.status(400).json({
                 err: 1,
                 msg: 'Không có dữ liệu cần cập nhật!',
             });
         }
 
-        const rs = await customerService.updateCustomerService(customer_id, req.body);
+        const rs = await customerService.updateCustomerService(req.body);
         return res.status(200).json(rs);
 
     } catch (error) {
@@ -69,18 +69,18 @@ export const updateCustomerController = async (req, res) => {
 
 // xóa thông tin
 export const deleteCustomerController = async (req, res) => {
-    const { customer_id } = req.body;
+    const { user_id } = req.body;
 
     try {
-        // Kiểm tra nếu thiếu customer_id
-        if (!customer_id) {
+        // Kiểm tra nếu thiếu user_id
+        if (!user_id) {
             return res.status(400).json({
                 err: 1,
-                msg: 'Thiếu customer_id!',
+                msg: 'Thiếu user_id!',
             });
         }
 
-        const rs = await customerService.deleteCustomerService(customer_id);
+        const rs = await customerService.deleteCustomerService(user_id);
         return res.status(200).json(rs);
 
     } catch (error) {

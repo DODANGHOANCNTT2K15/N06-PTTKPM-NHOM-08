@@ -58,7 +58,7 @@ export const uploadImageService = (req, avatar_public_id) => {
             reject({
                 err: 3,
                 msg: 'Lỗi server!',
-                error: error.message,
+                error: error.message,cd
             });
         }
     });

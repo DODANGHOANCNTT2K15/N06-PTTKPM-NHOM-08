@@ -6,6 +6,7 @@ module.exports = (sequelize) => {
     static associate(models) {
       Book.belongsTo(models.BookType, { foreignKey: 'book_type_id', as: 'bookType' });
       Book.hasMany(models.Review, { foreignKey: 'book_id', as: 'reviews' });
+      Book.hasMany(models.WareHouse, { foreignKey: 'book_id', as: 'warehouses' });
       Book.hasMany(models.OrderDetail, { foreignKey: 'book_id', as: 'orderDetails' });
       Book.hasMany(models.BookImage, { foreignKey: 'book_id', as: 'images' });
     }
@@ -45,10 +46,6 @@ module.exports = (sequelize) => {
     discount_price: {
       type: DataTypes.BIGINT,
       allowNull: true
-    },
-    stock_quantity: {
-      type: DataTypes.BIGINT,
-      allowNull: false
     },
     description: {
       type: DataTypes.STRING,

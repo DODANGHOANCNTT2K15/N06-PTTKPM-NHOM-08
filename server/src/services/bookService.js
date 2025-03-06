@@ -12,6 +12,11 @@ export const getAllBooksService = () =>
                         as: "images",
                         attributes: ['image_public_id', 'image_path'],
                     },
+                    {
+                        model: db.WareHouse,
+                        as: "warehouses",
+                        attributes: ['stock_quantity', 'sold_quantity'],
+                    },
                 ],
                 order: [['published_date', 'DESC']],
             });
@@ -86,109 +91,137 @@ export const getBookByIdService = (book_id) =>
 // thêm sách
 export const addBookService = (req) =>
     new Promise(async (resolve, reject) => {
-        const {
-            title,
-            author,
-            publisher,
-            published_date,
-            price,
-            rating_avg,
-            discount_price,
-            stock_quantity,
-            description,
-            book_type_id,
-        } = req.body;
-
-        let book; // Khai báo biến book ở phạm vi ngoài để sử dụng trong rollback
-
-        try {
-            // Kiểm tra và thêm sách mới
-            const [newBook, created] = await db.Book.findOrCreate({
-                where: { title: title.trim() },
-                defaults: {
-                    title: title.trim(),
-                    author: author.trim(),
-                    publisher: publisher.trim(),
-                    published_date: new Date(published_date),
-                    price: price,
-                    rating_avg: rating_avg ? rating_avg : 5,
-                    discount_price: discount_price || null,
-                    stock_quantity: stock_quantity,
-                    description: description?.trim() || null,
-                    book_type_id: book_type_id,
-                },
-            });
-
-            if (!created) {
-                return reject({
-                    err: 2,
-                    msg: 'Sách đã tồn tại!',
-                });
-            }
-
-            book = newBook; // Gán giá trị để sử dụng trong rollback nếu cần
-
-            // Upload hình ảnh lên Cloudinary
-            const uploadResults = await cloudinaryService.uploadMultipleImagesService(req);
-
-            if (!uploadResults || uploadResults.length === 0) {
-                // Rollback: Xóa bản ghi sách nếu không upload được ảnh
-                await book.destroy();
-                return reject({
-                    err: 2,
-                    msg: 'Lỗi upload lên Cloudinary!',
-                });
-            }
-
-            // Lưu thông tin hình ảnh vào cơ sở dữ liệu
-            try {
-                await Promise.all(
-                    uploadResults.map(async (image) => {
-                        await db.BookImage.create({
-                            book_id: book.book_id,
-                            image_public_id: image.image_public_id,
-                            image_path: image.image_path,
-                        });
-                    })
-                );
-            } catch (error) {
-                // Rollback: Xóa ảnh đã upload trên Cloudinary và bản ghi sách nếu lưu vào database thất bại
-                await Promise.all(
-                    uploadResults.map(async (image) => {
-                        await cloudinary.uploader.destroy(image.image_public_id);
-                    })
-                );
-                await book.destroy();
-                return reject({
-                    err: 2,
-                    msg: 'Lỗi lưu thông tin ảnh vào database!',
-                    error: error.message,
-                });
-            }
-
-            // Trả về kết quả thành công
-            resolve({
-                err: 0,
-                msg: 'Thêm sách và upload hình ảnh thành công!',
-                data: {
-                    book,
-                    images: uploadResults,
-                },
-            });
-        } catch (error) {
-            console.error('Lỗi khi thêm sách: ', error);
-
-            // Rollback trong trường hợp lỗi tổng quát (nếu book đã được tạo)
-            if (book) {
-                await book.destroy();
-            }
-
-            reject({
-                err: 2,
-                msg: 'Đã xảy ra lỗi trong quá trình thêm sách!',
-                error: error.message,
-            });
+      const {
+        title,
+        author,
+        publisher,
+        published_date,
+        price,
+        rating_avg,
+        discount_price,
+        stock_quantity,
+        description,
+        book_type_id,
+      } = req.body;
+  
+      let book; // Khai báo biến book ở phạm vi ngoài để sử dụng trong rollback
+      let warehouse; // Khai báo biến warehouse để sử dụng trong rollback
+  
+      try {
+        // Kiểm tra và thêm sách mới
+        const [newBook, created] = await db.Book.findOrCreate({
+          where: { title: title.trim() },
+          defaults: {
+            title: title.trim(),
+            author: author.trim(),
+            publisher: publisher.trim(),
+            published_date: new Date(published_date),
+            price: price,
+            rating_avg: rating_avg ? rating_avg : 5,
+            discount_price: discount_price || null,
+            description: description?.trim() || null,
+            book_type_id: book_type_id,
+          },
+        });
+  
+        if (!created) {
+          return reject({
+            err: 2,
+            msg: 'Sách đã tồn tại!',
+          });
         }
+  
+        book = newBook;
+  
+        // Tự động tạo mới warehouse cho sách
+        try {
+          warehouse = await db.WareHouse.create({
+            book_id: book.book_id,
+            stock_quantity: stock_quantity, // Sử dụng stock_quantity từ request
+            sold_quantity: 0, // Mặc định sold_quantity là 0 khi tạo mới
+          });
+        } catch (warehouseError) {
+          // Rollback: Xóa bản ghi sách nếu tạo warehouse thất bại
+          await book.destroy();
+          return reject({
+            err: 2,
+            msg: 'Lỗi tạo warehouse cho sách!',
+            error: warehouseError.message,
+          });
+        }
+  
+        let uploadResults = null;
+  
+        // Kiểm tra nếu có file ảnh trong request (giả sử req.files hoặc req.file tồn tại)
+        if (req.files && req.files.length > 0) {
+          // Upload hình ảnh lên Cloudinary
+          uploadResults = await cloudinaryService.uploadMultipleImagesService(req);
+  
+          if (!uploadResults || uploadResults.length === 0) {
+            // Rollback: Xóa bản ghi sách và warehouse nếu không upload được ảnh
+            await book.destroy();
+            await warehouse.destroy();
+            return reject({
+              err: 2,
+              msg: 'Lỗi upload lên Cloudinary!',
+            });
+          }
+  
+          // Lưu thông tin hình ảnh vào cơ sở dữ liệu
+          try {
+            await Promise.all(
+              uploadResults.map(async (image) => {
+                await db.BookImage.create({
+                  book_id: book.book_id,
+                  image_public_id: image.image_public_id,
+                  image_path: image.image_path,
+                });
+              })
+            );
+          } catch (imageError) {
+            // Rollback: Xóa ảnh đã upload trên Cloudinary, bản ghi sách, và warehouse nếu lưu vào database thất bại
+            await Promise.all(
+              uploadResults.map(async (image) => {
+                await cloudinary.uploader.destroy(image.image_public_id);
+              })
+            );
+            await book.destroy();
+            await warehouse.destroy();
+            return reject({
+              err: 2,
+              msg: 'Lỗi lưu thông tin ảnh vào database!',
+              error: imageError.message,
+            });
+          }
+        }
+  
+        // Trả về kết quả thành công
+        resolve({
+          err: 0,
+          msg: 'Thêm sách và warehouse thành công!' + (uploadResults ? ' (với hình ảnh)' : ' (không có hình ảnh)'),
+          data: {
+            book,
+            warehouse,
+            images: uploadResults || [], // Trả về mảng rỗng nếu không có ảnh
+          },
+        });
+      } catch (error) {
+        console.error('Lỗi khi thêm sách: ', error);
+  
+        // Rollback trong trường hợp lỗi tổng quát (nếu book và warehouse đã được tạo)
+        if (book) {
+          await book.destroy();
+        }
+        if (warehouse) {
+          await warehouse.destroy();
+        }
+  
+        reject({
+          err: 2,
+          msg: 'Đã xảy ra lỗi trong quá trình thêm sách!',
+          error: error.message,
+        });
+      }
     });
 
 // sửa thông tin

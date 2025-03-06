@@ -5,7 +5,7 @@ export const getCustomerService = (user_id) =>
     new Promise(async (resolve, reject) => {
         try {
             const customer = await db.Customer.findOne({
-                where: { user_id : user_id },
+                where: { user_id: user_id },
                 attributes: ['customer_id', 'full_name', 'dob', 'gender', 'address', 'phone', 'user_id'],
             });
 
@@ -52,11 +52,11 @@ export const addCustomerService = ({ full_name, dob, gender, address, phone, use
     });
 
 // sửa thông tin khách hàng
-export const updateCustomerService = ({ customer_id, full_name, dob, gender, address, phone, user_id }) =>
+export const updateCustomerService = ({ full_name, dob, gender, address, phone, user_id }) =>
     new Promise(async (resolve, reject) => {
         try {
-            const updated = await db.Customer.update({full_name, dob, gender, address, phone, user_id}, {
-                where: { customer_id },
+            const updated = await db.Customer.update({ full_name, dob, gender, address, phone }, {
+                where: { user_id },
             });
 
             if (updated[0] === 0) {
@@ -82,11 +82,11 @@ export const updateCustomerService = ({ customer_id, full_name, dob, gender, add
 
 
 // xóa thông tin khách hàng
-export const deleteCustomerService = (customer_id) =>
+export const deleteCustomerService = (user_id) =>
     new Promise(async (resolve, reject) => {
         try {
             const deleted = await db.Customer.destroy({
-                where: { customer_id },
+                where: { user_id },
             });
 
             if (!deleted) {

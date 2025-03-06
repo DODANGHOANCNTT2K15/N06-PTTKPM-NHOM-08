@@ -15,6 +15,19 @@ module.exports = {
             onUpdate: 'CASCADE',
         });
 
+        // Thêm ràng buộc giữa 'ware_houses' và 'books'
+        await queryInterface.addConstraint('ware_houses', {
+            fields: ['book_id'],
+            type: 'foreign key',
+            name: 'fk_ware_houses_books_book_id',
+            references: {
+                table: 'books',
+                field: 'book_id',
+            },
+            onDelete: 'CASCADE',
+            onUpdate: 'CASCADE',
+        });
+
         // Thêm ràng buộc giữa 'customers' và 'users'
         await queryInterface.addConstraint('customers', {
             fields: ['user_id'],
@@ -164,6 +177,7 @@ module.exports = {
         await queryInterface.removeConstraint('avatars', 'fk_avatars_users_user_id');
         await queryInterface.removeConstraint('customers', 'fk_customers_users_user_id');
         await queryInterface.removeConstraint('books', 'fk_books_book_types_book_type_id');
+        await queryInterface.removeConstraint('ware_houses', 'fk_ware_houses_books_book_id');
         await queryInterface.removeConstraint('orders', 'fk_orders_customers_customer_id');
         await queryInterface.removeConstraint('orders', 'fk_orders_payment_methods_payment_method_id');
         await queryInterface.removeConstraint('order_details', 'fk_order_details_orders_order_id');

@@ -23,10 +23,10 @@ router.post('/auth/register', authController.registerController)
 router.get('/account', accountController.getAllAccountController)
 router.post('/account/id', accountController.getAccountController)
 router.post('/account/forgot', accountController.forgotPassWordController)
-router.put('/account/update', accountController.updateAccountController)
+router.put('/account/update',middleWare.authMiddleware, accountController.updateAccountController)
 router.delete('/account/delete', accountController.deleteAccountController)
-router.post('/account/change', accountController.changePassWordController)
-router.post('/account/avatar', middleWare.authMiddleware, upload.single('avatar'), accountController.uploadAvatatController);
+router.post('/account/change',middleWare.authMiddleware, accountController.changePassWordController)
+router.post('/account/avatar', upload.single('avatar'), accountController.uploadAvatatController);
 
 // books route
 router.get('/book', bookController.getAllBookController)
@@ -56,10 +56,10 @@ router.post('/cart/update', cartController.updateCartController)
 router.post('/cart/delete', cartController.deleteCartItemController)
 
 // customer route
-router.post('/customer', customerController.getCustomerController)
+router.post('/customer/id', customerController.getCustomerController)
 router.post('/customer/add', customerController.addCustomerController)
-router.post('/customer/update', customerController.updateCustomerController)
-router.post('/customer/delete', customerController.deleteCustomerController)
+router.put('/customer/update', customerController.updateCustomerController)
+router.delete('/customer/delete', customerController.deleteCustomerController)
 
 // order route
 router.post("/order/get", orderController.getOrderController);

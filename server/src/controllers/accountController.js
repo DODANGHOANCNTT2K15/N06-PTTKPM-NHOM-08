@@ -44,14 +44,14 @@ export const changePassWordController = async (req, res) => {
                     msg: "Thiếu dữ liệu đầu vào."
                 })
             }
-        }
-        if (!email || !new_pass_word) {
+        } else if (!email || !new_pass_word) {
             return res.status(400).json({
                 err: 1,
                 msg: "Thiếu dữ liệu đầu vào."
             })
         }
-        const rs = await accountService.changePasswordService(req.body)
+
+        const rs = await accountService.changePasswordService(req)
         return res.status(200).json(rs)
     } catch (error) {
         return res.status(500).json(error)
@@ -79,15 +79,25 @@ export const forgotPassWordController = async (req, res) => {
 export const updateAccountController = async (req, res) => {
     const { email, role, status, user_name } = req.body;
     try {
-        if (!email || role == undefined || status == undefined || !user_name) {
-            return res.status(400).json({
-                err: 1,
-                msg: "Thiếu dữ liệu đầu vào."
-            })
+        if(req.user.role === 1) {
+            if (!email || role == undefined || status == undefined || !user_name) {
+                return res.status(400).json({
+                    err: 1,
+                    msg: "Thiếu dữ liệu đầu vào."
+                })
+            }
+        } else {
+            if (!email || !user_name) {
+                return res.status(400).json({
+                    err: 1,
+                    msg: "Thiếu dữ liệu đầu vào."
+                })
+            }
         }
-        const rs = await accountService.updateAccountService(req.body)
+        const rs = await accountService.updateAccountService(req)
         return res.status(200).json(rs)
     } catch (error) {
+        console.log(error)
         return res.status(500).json(error)
     }
 }
@@ -113,14 +123,13 @@ export const deleteAccountController = async (req, res) => {
 export const uploadAvatatController = async (req, res) => {
     const { user_id } = req.body;
     try {
-        if (!user_id || !req.file) {
+        if (!user_id) {
             return res.status(400).json({
                 err: 1,
                 msg: 'Thiếu dữ liệu đầu vào!'
             });
         }
-
-        const rs = await accountService.uploadAvatarService(req)
+        const rs = await accountService.uploadAvatarService(user_id, req)
         return res.status(200).json(rs)
     } catch (error) {
         return res.status(500).json(error)
