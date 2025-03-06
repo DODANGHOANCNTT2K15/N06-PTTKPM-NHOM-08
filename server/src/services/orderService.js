@@ -1,4 +1,5 @@
 import db from "../models";
+import * as cartService from "./cartService"
 
 // Lấy thông tin đơn hàng
 export const getOrderService = (order_id) =>
@@ -40,13 +41,15 @@ export const getOrderService = (order_id) =>
         }
     });
 
-// Thêm đơn hàng mới kèm chi tiết đơn hàng
+// Thêm đơn hàng mới kèm chi tiết đơn hàng và xóa khỏi giỏ hàng
 export const addOrderService = ({
+    user_id,
     customer_id,
     order_date,
     delivery_date,
     delivery_price,
     total_price,
+    discount_id, // Thêm discount_id vào tham số đầu vào
     payment_method_id,
     payment_status,
     order_details,
@@ -60,45 +63,67 @@ export const addOrderService = ({
                     customer_id,
                     order_date,
                     delivery_date,
-                    delivery_price: delivery_price || 0, 
-                    total_price,
-                    status: 0, 
+                    delivery_price: delivery_price || 0,
+                    total_price: Math.ceil(total_price), // Làm tròn tổng giá trị
+                    discount_id: discount_id || null, // Thêm discount_id (nếu có)
+                    status: 0, // Trạng thái mặc định
                     payment_method_id,
-                    payment_status: payment_status || 0, 
+                    payment_status: payment_status || 0,
                 },
                 { transaction }
             );
 
-            // Thêm danh sách chi tiết đơn hàng
-            if (order_details.length > 0) {
-                const orderDetailsData = order_details.map((detail) => {
-                    if (!detail.book_id || !detail.quantity || !detail.price) {
-                        throw new Error("Invalid order detail data");
-                    }
-                    
-                    return {
-                        order_id: newOrder.order_id,
-                        book_id: detail.book_id,
-                        quantity: detail.quantity,
-                        price: detail.price,
-                    };
-                });
-
-                await db.OrderDetails.bulkCreate(orderDetailsData, { 
-                    transaction,
-                    validate: true 
-                });
+            // Kiểm tra và thêm danh sách chi tiết đơn hàng
+            if (!order_details || order_details.length === 0) {
+                throw new Error("Không có chi tiết đơn hàng để thêm.");
             }
+
+            const orderDetailsData = order_details.map((detail) => {
+                if (!detail.book_id || !detail.quantity || !detail.price) {
+                    throw new Error("Dữ liệu chi tiết đơn hàng không hợp lệ.");
+                }
+
+                return {
+                    order_id: newOrder.order_id,
+                    book_id: detail.book_id,
+                    quantity: detail.quantity,
+                    price: detail.price,
+                };
+            });
+
+            await db.OrderDetail.bulkCreate(orderDetailsData, {
+                transaction,
+                validate: true, // Xác thực dữ liệu trước khi thêm
+            });
+
+            // Xóa các sản phẩm khỏi giỏ hàng sau khi thêm đơn hàng thành công
+            const bookIds = order_details.map((detail) => detail.book_id);
+            const cartDeleteResult = await db.Cart.destroy({
+                where: {
+                    user_id: user_id,
+                    book_id: {
+                        [db.Sequelize.Op.in]: bookIds,
+                    },
+                },
+                transaction,
+            });
 
             // Commit transaction
             await transaction.commit();
+            // Lấy số lượng sản phẩm còn lại trong giỏ hàng
+            const totalProductTypes = await db.Cart.count({
+                where: { user_id },
+                distinct: true,
+                col: 'book_id',
+            });
 
             return resolve({
                 err: 0,
-                msg: "Thêm đơn hàng và chi tiết đơn hàng thành công.",
+                msg: "Thêm đơn hàng thành công và đã xóa sản phẩm khỏi giỏ hàng.",
                 data: {
                     order: newOrder,
-                    details: order_details 
+                    details: orderDetailsData,
+                    count: totalProductTypes,
                 },
             });
         } catch (error) {
@@ -107,11 +132,11 @@ export const addOrderService = ({
             return reject({
                 err: 1,
                 msg: error.message || "Lỗi khi thêm đơn hàng.",
-                error: error.message,
+                error: error.stack || error.message,
             });
         }
     });
-    
+
 // Cập nhật thông tin đơn hàng
 export const updateOrderService = ({
     order_id,

@@ -24,6 +24,7 @@ export const getOrderController = async (req, res) => {
 // Thêm đơn hàng mới
 export const addOrderController = async (req, res) => {
     const {
+        user_id,
         customer_id,
         order_date,
         delivery_date,
@@ -35,7 +36,7 @@ export const addOrderController = async (req, res) => {
     } = req.body;
 
     try {
-        if (!customer_id || !order_date || !total_price || payment_method_id === undefined || payment_status === undefined || order_details.length < 0) {
+        if (!user_id || !customer_id || !order_date || !total_price || payment_method_id === undefined || payment_status === undefined || order_details.length < 0) {
             return res.status(400).json({
                 err: 1,
                 msg: "Thiếu dữ liệu đầu vào bắt buộc!",
