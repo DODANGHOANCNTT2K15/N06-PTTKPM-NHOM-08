@@ -28,14 +28,24 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="(banner, index) in filteredBanners" :key="banner.banner_id">
+          <tr
+            v-for="(banner, index) in filteredBanners"
+            :key="banner.banner_id"
+          >
             <td>{{ index + 1 }}</td>
             <td>
-              <img :src="banner.banner_path" alt="Banner Image" class="banner-image" />
+              <img
+                :src="banner.banner_path"
+                alt="Banner Image"
+                class="banner-image"
+              />
             </td>
             <td>{{ banner.banner_name }}</td>
             <td>
-              <button @click="deleteBanner(banner.banner_id, banner.banner_public_id)" class="action-btn delete-btn">
+              <button
+                @click="deleteBanner(banner.banner_id, banner.banner_public_id)"
+                class="action-btn delete-btn"
+              >
                 <i class="fas fa-trash"></i>
               </button>
             </td>
@@ -43,12 +53,23 @@
         </tbody>
       </table>
       <div class="pagination">
-        <span>Hiển thị trang {{ currentPage }} / {{ totalPages }} - {{ filteredBanners.length }} kết quả</span>
+        <span
+          >Hiển thị trang {{ currentPage }} / {{ totalPages }} -
+          {{ filteredBanners.length }} kết quả</span
+        >
         <div>
-          <button @click="prevPage" :disabled="currentPage === 1" class="pagination-btn">
+          <button
+            @click="prevPage"
+            :disabled="currentPage === 1"
+            class="pagination-btn"
+          >
             <i class="fas fa-chevron-left"></i>
           </button>
-          <button @click="nextPage" :disabled="currentPage === totalPages" class="pagination-btn">
+          <button
+            @click="nextPage"
+            :disabled="currentPage === totalPages"
+            class="pagination-btn"
+          >
             <i class="fas fa-chevron-right"></i>
           </button>
         </div>
@@ -73,7 +94,11 @@
               required
             />
             <p v-if="bannerForm.imagePreview" class="image-preview">
-              <img :src="bannerForm.imagePreview" alt="Preview" class="preview-image" />
+              <img
+                :src="bannerForm.imagePreview"
+                alt="Preview"
+                class="preview-image"
+              />
             </p>
           </div>
           <div class="modal-actions">
@@ -87,20 +112,25 @@
 </template>
 
 <script>
-import { ref, onMounted, computed } from 'vue';
-import { apiGetAllBanners, apiAddBanner, apiDeleteBanner } from '@/services/admin/BannerService';
+import { ref, onMounted, computed } from "vue";
+import Swal from "sweetalert2"; // Import SweetAlert2
+import {
+  apiGetAllBanners,
+  apiAddBanner,
+  apiDeleteBanner,
+} from "@/services/admin/BannerService";
 
 export default {
-  name: 'BannersAdmin',
+  name: "BannersAdmin",
   setup() {
     const banners = ref([]);
-    const searchQuery = ref('');
+    const searchQuery = ref("");
     const showAddBannerPopup = ref(false);
-    const bannerForm = ref({ name: '', image: null, imagePreview: '' });
+    const bannerForm = ref({ name: "", image: null, imagePreview: "" });
     const currentPage = ref(1);
     const itemsPerPage = ref(10);
-    const sortKey = ref('');
-    const sortOrder = ref('asc');
+    const sortKey = ref("");
+    const sortOrder = ref("asc");
 
     const fetchBanners = async () => {
       try {
@@ -108,69 +138,126 @@ export default {
         if (response.data.err === 0) {
           banners.value = response.data.data || [];
         } else {
-          console.error('Lỗi khi lấy danh sách banner:', response.data.msg);
+          console.error("Lỗi khi lấy danh sách banner:", response.data.msg);
           banners.value = [];
+          Swal.fire({
+            icon: "error",
+            title: "Lỗi",
+            text: "Không thể tải danh sách banner: " + response.data.msg,
+          });
         }
       } catch (error) {
-        console.error('Lỗi khi gọi API lấy banner:', error);
+        console.error("Lỗi khi gọi API lấy banner:", error);
         banners.value = [];
+        Swal.fire({
+          icon: "error",
+          title: "Lỗi",
+          text: "Có lỗi xảy ra khi tải danh sách banner!",
+        });
       }
     };
 
     const saveBanner = async () => {
       try {
         const formData = new FormData();
-        formData.append('banner_name', bannerForm.value.name);
+        formData.append("banner_name", bannerForm.value.name);
         if (bannerForm.value.image) {
-          formData.append('banner', bannerForm.value.image);
+          formData.append("banner", bannerForm.value.image);
         }
 
         const response = await apiAddBanner(formData);
         if (response.data.err === 0) {
           const newBanner = {
             banner_id: response.data.data.banner_id,
-            banner_name: response.data.data.banner_name || bannerForm.value.name,
-            banner_path: response.data.data.banner_path || bannerForm.value.imagePreview,
+            banner_name:
+              response.data.data.banner_name || bannerForm.value.name,
+            banner_path:
+              response.data.data.banner_path || bannerForm.value.imagePreview,
             banner_public_id: response.data.data.banner_public_id,
           };
           banners.value.push(newBanner);
           closeModal();
-          alert('Thêm banner thành công!');
+          Swal.fire({
+            icon: "success",
+            title: "Thành công",
+            text: "Thêm banner thành công!",
+            timer: 2000,
+            showConfirmButton: false,
+          });
           await fetchBanners();
         } else {
-          alert('Thêm banner thất bại: ' + response.data.msg);
+          Swal.fire({
+            icon: "error",
+            title: "Thất bại",
+            text: "Thêm banner thất bại: " + response.data.msg,
+          });
         }
       } catch (error) {
-        console.error('Lỗi khi thêm banner:', error);
-        alert('Có lỗi xảy ra khi thêm banner!');
+        console.error("Lỗi khi thêm banner:", error);
+        Swal.fire({
+          icon: "error",
+          title: "Lỗi",
+          text: "Có lỗi xảy ra khi thêm banner!",
+        });
       }
     };
 
     const deleteBanner = async (banner_id, banner_public_id) => {
       if (!banner_id || !banner_public_id) {
-        alert('Không thể xóa banner do thiếu thông tin banner_id hoặc banner_public_id!');
+        Swal.fire({
+          icon: "error",
+          title: "Lỗi",
+          text: "Không thể xóa banner do thiếu thông tin banner_id hoặc banner_public_id!",
+        });
         return;
       }
 
-      if (confirm('Bạn có chắc muốn xóa banner này?')) {
-        try {
-          const payload = {
-            banner_id: banner_id,
-            banner_public_id: banner_public_id,
-          };
-          const response = await apiDeleteBanner(payload);
-          if (response.data.err === 0) {
-            banners.value = banners.value.filter(b => b.banner_id !== banner_id);
-            alert('Xóa banner thành công!');
-            await fetchBanners();
-          } else {
-            alert('Xóa banner thất bại: ' + response.data.msg);
+      Swal.fire({
+        title: "Bạn có chắc không?",
+        text: "Bạn có chắc muốn xóa banner này?",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Có, xóa nó!",
+        cancelButtonText: "Hủy",
+      }).then(async (result) => {
+        if (result.isConfirmed) {
+          try {
+            const payload = {
+              banner_id: banner_id,
+              banner_public_id: banner_public_id,
+            };
+            const response = await apiDeleteBanner(payload);
+            if (response.data.err === 0) {
+              banners.value = banners.value.filter(
+                (b) => b.banner_id !== banner_id
+              );
+              Swal.fire({
+                icon: "success",
+                title: "Đã xóa",
+                text: "Xóa banner thành công!",
+                timer: 2000,
+                showConfirmButton: false,
+              });
+              await fetchBanners();
+            } else {
+              Swal.fire({
+                icon: "error",
+                title: "Thất bại",
+                text: "Xóa banner thất bại: " + response.data.msg,
+              });
+            }
+          } catch (error) {
+            console.error("Lỗi khi xóa banner:", error);
+            Swal.fire({
+              icon: "error",
+              title: "Lỗi",
+              text: "Có lỗi xảy ra khi xóa banner!",
+            });
           }
-        } catch (error) {
-          console.error('Lỗi khi xóa banner:', error);
-          alert('Có lỗi xảy ra khi xóa banner!');
         }
-      }
+      });
     };
 
     const handleImageUpload = (event) => {
@@ -187,16 +274,16 @@ export default {
 
     const sort = (key) => {
       if (sortKey.value === key) {
-        sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc';
+        sortOrder.value = sortOrder.value === "asc" ? "desc" : "asc";
       } else {
         sortKey.value = key;
-        sortOrder.value = 'asc';
+        sortOrder.value = "asc";
       }
     };
 
     const getSortIcon = (key) => {
-      if (sortKey.value !== key) return 'fas fa-sort';
-      return sortOrder.value === 'asc' ? 'fas fa-sort-up' : 'fas fa-sort-down';
+      if (sortKey.value !== key) return "fas fa-sort";
+      return sortOrder.value === "asc" ? "fas fa-sort-up" : "fas fa-sort-down";
     };
 
     const filteredBanners = computed(() => {
@@ -204,21 +291,23 @@ export default {
 
       // Lọc theo tìm kiếm
       if (searchQuery.value) {
-        result = result.filter(banner =>
-          banner.banner_name.toLowerCase().includes(searchQuery.value.toLowerCase())
+        result = result.filter((banner) =>
+          banner.banner_name
+            .toLowerCase()
+            .includes(searchQuery.value.toLowerCase())
         );
       }
 
       // Sắp xếp
       if (sortKey.value) {
         result.sort((a, b) => {
-          if (sortKey.value === 'id') {
+          if (sortKey.value === "id") {
             const comparison = a.banner_id - b.banner_id;
-            return sortOrder.value === 'asc' ? comparison : -comparison;
-          } else if (sortKey.value === 'name') {
+            return sortOrder.value === "asc" ? comparison : -comparison;
+          } else if (sortKey.value === "name") {
             const nameA = a.banner_name.toLowerCase();
             const nameB = b.banner_name.toLowerCase();
-            return sortOrder.value === 'asc'
+            return sortOrder.value === "asc"
               ? nameA.localeCompare(nameB)
               : nameB.localeCompare(nameA);
           }
@@ -233,8 +322,10 @@ export default {
     });
 
     const totalPages = computed(() => {
-      const filteredCount = banners.value.filter(banner =>
-        banner.banner_name.toLowerCase().includes(searchQuery.value.toLowerCase())
+      const filteredCount = banners.value.filter((banner) =>
+        banner.banner_name
+          .toLowerCase()
+          .includes(searchQuery.value.toLowerCase())
       ).length;
       return Math.max(1, Math.ceil(filteredCount / itemsPerPage.value));
     });
@@ -249,7 +340,7 @@ export default {
 
     const closeModal = () => {
       showAddBannerPopup.value = false;
-      bannerForm.value = { name: '', image: null, imagePreview: '' };
+      bannerForm.value = { name: "", image: null, imagePreview: "" };
     };
 
     onMounted(fetchBanners);

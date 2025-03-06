@@ -106,6 +106,7 @@
 
 <script>
 import { ref, onMounted, computed } from 'vue';
+import Swal from 'sweetalert2'; // Import SweetAlert2
 import { apiGetAllBookTypes, apiAddBookType, apiEditBookType, apiDeleteBookType } from '@/services/admin/TagBooksService';
 
 export default {
@@ -125,9 +126,23 @@ export default {
     const fetchBookTypes = async () => {
       try {
         const response = await apiGetAllBookTypes();
-        bookTypes.value = response.data.data; // Dựa trên cấu trúc JSON bạn cung cấp
+        if (response.data.err === 0) {
+          bookTypes.value = response.data.data;
+        } else {
+          bookTypes.value = [];
+          Swal.fire({
+            icon: 'error',
+            title: 'Lỗi',
+            text: response.data.msg || 'Không thể tải danh sách loại sách!',
+          });
+        }
       } catch (error) {
         console.error('Lỗi khi lấy danh sách loại sách:', error);
+        Swal.fire({
+          icon: 'error',
+          title: 'Lỗi',
+          text: 'Có lỗi xảy ra khi tải danh sách loại sách!',
+        });
       }
     };
 
@@ -135,14 +150,31 @@ export default {
       try {
         const payload = { ...newBookType.value };
         const response = await apiAddBookType(payload);
-        if (response.data) {
+        if (response.data.err === 0) {
           await fetchBookTypes();
           newBookType.value = { name: '', tag: '', description: '' };
           showAddBookTypePopup.value = false;
-          console.log('Thêm loại sách thành công:', response.data);
+          Swal.fire({
+            icon: 'success',
+            title: 'Thành công',
+            text: 'Thêm loại sách thành công!',
+            timer: 2000,
+            showConfirmButton: false,
+          });
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'Thất bại',
+            text: response.data.msg || 'Không thể thêm loại sách!',
+          });
         }
       } catch (error) {
         console.error('Lỗi khi thêm loại sách:', error);
+        Swal.fire({
+          icon: 'error',
+          title: 'Lỗi',
+          text: 'Có lỗi xảy ra khi thêm loại sách!',
+        });
       }
     };
 
@@ -156,27 +188,74 @@ export default {
       try {
         const payload = { ...editedBookType.value };
         const response = await apiEditBookType(payload);
-        if (response.data) {
+        if (response.data.err === 0) {
           await fetchBookTypes();
           showEditBookTypePopup.value = false;
-          console.log('Cập nhật loại sách thành công:', response.data);
+          Swal.fire({
+            icon: 'success',
+            title: 'Thành công',
+            text: 'Cập nhật loại sách thành công!',
+            timer: 2000,
+            showConfirmButton: false,
+          });
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'Thất bại',
+            text: response.data.msg || 'Không thể cập nhật loại sách!',
+          });
         }
       } catch (error) {
         console.error('Lỗi khi cập nhật loại sách:', error);
+        Swal.fire({
+          icon: 'error',
+          title: 'Lỗi',
+          text: 'Có lỗi xảy ra khi cập nhật loại sách!',
+        });
       }
     };
 
     const deleteBookType = async (id) => {
-      try {
-        const payload = { book_type_id: id };
-        const response = await apiDeleteBookType(payload);
-        if (response.data) {
-          await fetchBookTypes();
-          console.log(`Xóa loại sách ID: ${id} thành công`);
+      Swal.fire({
+        title: 'Bạn có chắc không?',
+        text: 'Bạn có chắc muốn xóa loại sách này?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Có, xóa nó!',
+        cancelButtonText: 'Hủy',
+      }).then(async (result) => {
+        if (result.isConfirmed) {
+          try {
+            const payload = { book_type_id: id };
+            const response = await apiDeleteBookType(payload);
+            if (response.data.err === 0) {
+              await fetchBookTypes();
+              Swal.fire({
+                icon: 'success',
+                title: 'Đã xóa',
+                text: 'Xóa loại sách thành công!',
+                timer: 2000,
+                showConfirmButton: false,
+              });
+            } else {
+              Swal.fire({
+                icon: 'error',
+                title: 'Thất bại',
+                text: response.data.msg || 'Không thể xóa loại sách!',
+              });
+            }
+          } catch (error) {
+            console.error('Lỗi khi xóa loại sách:', error);
+            Swal.fire({
+              icon: 'error',
+              title: 'Lỗi',
+              text: 'Có lỗi xảy ra khi xóa loại sách!',
+            });
+          }
         }
-      } catch (error) {
-        console.error('Lỗi khi xóa loại sách:', error);
-      }
+      });
     };
 
     const filteredAndSortedBookTypes = computed(() => {
@@ -206,7 +285,7 @@ export default {
     });
 
     const totalPages = computed(() => {
-      return Math.ceil(bookTypes.value.length / itemsPerPage.value);
+      return Math.ceil(bookTypes.value.length / itemsPerPage.value) || 1;
     });
 
     const sort = (key) => {

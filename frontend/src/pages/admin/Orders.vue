@@ -217,6 +217,7 @@
 
 <script>
 import { ref, onMounted, computed } from "vue";
+import Swal from "sweetalert2"; // Import SweetAlert2
 import {
   apiGetAllOrderService,
   apiUpdateStatusOrderService,
@@ -247,7 +248,11 @@ export default {
         }
       } catch (error) {
         console.error("Lỗi khi lấy danh sách đơn hàng:", error);
-        alert("Lỗi khi tải dữ liệu!");
+        Swal.fire({
+          icon: "error",
+          title: "Lỗi",
+          text: "Lỗi khi tải dữ liệu!",
+        });
       }
     };
 
@@ -271,27 +276,60 @@ export default {
             orders.value[index] = updatedOrder;
           }
           console.log("Cập nhật đơn hàng thành công:", updatedOrder);
-          alert("Cập nhật đơn hàng thành công@!!");
+          Swal.fire({
+            icon: "success",
+            title: "Thành công",
+            text: "Cập nhật đơn hàng thành công!",
+            timer: 2000,
+            showConfirmButton: false,
+          });
           showEditOrderPopup.value = false;
         }
       } catch (error) {
         console.error("Lỗi khi cập nhật đơn hàng:", error);
+        Swal.fire({
+          icon: "error",
+          title: "Lỗi",
+          text: "Không thể cập nhật đơn hàng!",
+        });
       }
     };
 
     // Xóa đơn hàng qua API
     const deleteOrder = async (orderId) => {
-      if (confirm("Bạn có chắc muốn xóa đơn hàng này?")) {
-        try {
-          const response = await apiDeleteOrderService({ order_id: orderId });
-          if(response.status === 200 && response.data.err !== 2) {
-            orders.value = orders.value.filter((o) => o.order_id !== orderId);
-            console.log(`Đã xóa đơn hàng ${orderId}`);
+      Swal.fire({
+        title: "Bạn có chắc không?",
+        text: "Bạn có chắc muốn xóa đơn hàng này?",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Có, xóa nó!",
+        cancelButtonText: "Hủy",
+      }).then(async (result) => {
+        if (result.isConfirmed) {
+          try {
+            const response = await apiDeleteOrderService({ order_id: orderId });
+            if (response.status === 200 && response.data.err !== 2) {
+              orders.value = orders.value.filter((o) => o.order_id !== orderId);
+              Swal.fire({
+                icon: "success",
+                title: "Đã xóa",
+                text: `Đơn hàng ${orderId} đã được xóa thành công!`,
+                timer: 2000,
+                showConfirmButton: false,
+              });
+            }
+          } catch (error) {
+            console.error("Lỗi khi xóa đơn hàng:", error);
+            Swal.fire({
+              icon: "error",
+              title: "Lỗi",
+              text: "Không thể xóa đơn hàng!",
+            });
           }
-        } catch (error) {
-          console.error("Lỗi khi xóa đơn hàng:", error);
         }
-      }
+      });
     };
 
     // Cập nhật trạng thái đơn hàng qua API
@@ -303,9 +341,21 @@ export default {
         });
         if (response.status === 200 && response.data.err !== 2) {
           await fetchOrders();
+          Swal.fire({
+            icon: "success",
+            title: "Thành công",
+            text: "Cập nhật trạng thái thành công!",
+            timer: 1500,
+            showConfirmButton: false,
+          });
         }
       } catch (error) {
         console.error("Lỗi khi cập nhật trạng thái:", error);
+        Swal.fire({
+          icon: "error",
+          title: "Lỗi",
+          text: "Không thể cập nhật trạng thái!",
+        });
       }
     };
 

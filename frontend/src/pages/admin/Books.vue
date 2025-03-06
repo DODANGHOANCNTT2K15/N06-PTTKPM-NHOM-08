@@ -344,6 +344,7 @@ import {
   apiAddBookImages,
 } from "@/services/admin/BookService";
 import { apiGetAllBookTypes } from "@/services/admin/TagBooksService";
+import Swal from "sweetalert2"; // Import SweetAlert2
 
 export default {
   name: "BooksAdmin",
@@ -358,7 +359,7 @@ export default {
     const addImagePopup = ref(false);
     const selectedBookId = ref(null);
     const newImages = ref([]);
-    const imagePreviews = ref([]); // Để lưu trữ URL tạm thời cho ảnh mới
+    const imagePreviews = ref([]);
 
     const newBook = ref({
       title: "",
@@ -459,12 +460,29 @@ export default {
           await fetchBooks();
           resetNewBook();
           showAddBookPopup.value = false;
+          Swal.fire({
+            icon: "success",
+            title: "Thành công!",
+            text: "Sách đã được thêm thành công.",
+            timer: 2000,
+            showConfirmButton: false,
+          });
           errorMessage.value = "";
         } else {
+          Swal.fire({
+            icon: "error",
+            title: "Lỗi!",
+            text: response.data.msg || "Lỗi không xác định từ server!",
+          });
           errorMessage.value =
             response.data.msg || "Lỗi không xác định từ server!";
         }
       } catch (error) {
+        Swal.fire({
+          icon: "error",
+          title: "Lỗi!",
+          text: error.response?.data?.msg || "Đã xảy ra lỗi khi thêm sách!",
+        });
         errorMessage.value =
           error.response?.data?.msg || "Đã xảy ra lỗi khi thêm sách!";
         console.error("Lỗi khi thêm sách:", error);
@@ -500,43 +518,91 @@ export default {
         if (response.data && response.data.err === 0) {
           await fetchBooks();
           showEditBookPopup.value = false;
+          Swal.fire({
+            icon: "success",
+            title: "Thành công!",
+            text: "Sách đã được cập nhật thành công.",
+            timer: 2000,
+            showConfirmButton: false,
+          });
         }
       } catch (error) {
+        Swal.fire({
+          icon: "error",
+          title: "Lỗi!",
+          text: "Đã xảy ra lỗi khi cập nhật sách!",
+        });
         console.error("Lỗi khi cập nhật sách:", error);
       }
     };
 
     const deleteBook = async (book_id) => {
-      try {
-        const payload = { book_id };
-        const response = await apiDeleteBook(payload);
-        if (response.data && response.data.err === 0) {
-          await fetchBooks();
+      Swal.fire({
+        title: "Bạn có chắc không?",
+        text: "Bạn sẽ không thể khôi phục lại sách này!",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Xóa",
+        cancelButtonText: "Hủy",
+      }).then(async (result) => {
+        if (result.isConfirmed) {
+          try {
+            const payload = { book_id };
+            const response = await apiDeleteBook(payload);
+            if (response.data && response.data.err === 0) {
+              await fetchBooks();
+              Swal.fire("Đã xóa!", "Sách đã được xóa thành công.", "success");
+            }
+          } catch (error) {
+            Swal.fire({
+              icon: "error",
+              title: "Lỗi!",
+              text: "Đã xảy ra lỗi khi xóa sách!",
+            });
+            console.error("Lỗi khi xóa sách:", error);
+          }
         }
-      } catch (error) {
-        console.error("Lỗi khi xóa sách:", error);
-      }
+      });
     };
 
     const deleteImage = async (bookId, imageId) => {
-      if (confirm("Bạn có chắc muốn xóa ảnh này?")) {
-        try {
-          const response = await apiDeleteImageBook({
-            book_id: bookId,
-            image_public_id: imageId,
-          });
-          if (response.data && response.data.err === 0) {
-            await fetchBooks();
-            if (showEditBookPopup.value) {
-              editedBook.value.images = editedBook.value.images.filter(
-                (img) => img.image_public_id !== imageId
-              );
+      Swal.fire({
+        title: "Bạn có chắc không?",
+        text: "Bạn có muốn xóa ảnh này không?",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Xóa",
+        cancelButtonText: "Hủy",
+      }).then(async (result) => {
+        if (result.isConfirmed) {
+          try {
+            const response = await apiDeleteImageBook({
+              book_id: bookId,
+              image_public_id: imageId,
+            });
+            if (response.data && response.data.err === 0) {
+              await fetchBooks();
+              if (showEditBookPopup.value) {
+                editedBook.value.images = editedBook.value.images.filter(
+                  (img) => img.image_public_id !== imageId
+                );
+              }
+              Swal.fire("Đã xóa!", "Ảnh đã được xóa thành công.", "success");
             }
+          } catch (error) {
+            Swal.fire({
+              icon: "error",
+              title: "Lỗi!",
+              text: "Đã xảy ra lỗi khi xóa ảnh!",
+            });
+            console.error("Lỗi khi xóa ảnh:", error);
           }
-        } catch (error) {
-          console.error("Lỗi khi xóa ảnh:", error);
         }
-      }
+      });
     };
 
     const addImage = (bookId) => {
@@ -568,8 +634,20 @@ export default {
           newImages.value = [];
           imagePreviews.value.forEach((url) => URL.revokeObjectURL(url));
           imagePreviews.value = [];
+          Swal.fire({
+            icon: "success",
+            title: "Thành công!",
+            text: "Ảnh đã được thêm thành công.",
+            timer: 2000,
+            showConfirmButton: false,
+          });
         }
       } catch (error) {
+        Swal.fire({
+          icon: "error",
+          title: "Lỗi!",
+          text: "Đã xảy ra lỗi khi thêm ảnh!",
+        });
         console.error("Lỗi khi thêm ảnh:", error);
       }
     };

@@ -2,7 +2,12 @@
   <div class="admin-users">
     <h1>Quản lý Người dùng</h1>
     <div class="user-actions">
-      <input v-model="searchQuery" type="text" placeholder="Tìm kiếm theo tên..." class="search-input" />
+      <input
+        v-model="searchQuery"
+        type="text"
+        placeholder="Tìm kiếm theo tên..."
+        class="search-input"
+      />
       <button @click="showAddUserPopup = true" class="add-button">
         <i class="fas fa-plus"></i> Thêm Người dùng
       </button>
@@ -11,10 +16,18 @@
       <table>
         <thead>
           <tr>
-            <th @click="sort('user_id')">User ID <i :class="getSortIcon('user_id')"></i></th>
-            <th @click="sort('user_name')">Tên người dùng <i :class="getSortIcon('user_name')"></i></th>
-            <th @click="sort('email')">Email <i :class="getSortIcon('email')"></i></th>
-            <th @click="sort('role')">Loại tài khoản <i :class="getSortIcon('role')"></i></th>
+            <th @click="sort('user_id')">
+              User ID <i :class="getSortIcon('user_id')"></i>
+            </th>
+            <th @click="sort('user_name')">
+              Tên người dùng <i :class="getSortIcon('user_name')"></i>
+            </th>
+            <th @click="sort('email')">
+              Email <i :class="getSortIcon('email')"></i>
+            </th>
+            <th @click="sort('role')">
+              Loại tài khoản <i :class="getSortIcon('role')"></i>
+            </th>
             <th>Hành động</th>
           </tr>
         </thead>
@@ -28,10 +41,16 @@
               <button @click="editUser(user.id)" class="action-btn edit-btn">
                 <i class="fas fa-pencil-alt"></i>
               </button>
-              <button @click="changePopup(user.id)" class="action-btn password-btn">
+              <button
+                @click="changePopup(user.id)"
+                class="action-btn password-btn"
+              >
                 <i class="fas fa-key"></i>
               </button>
-              <button @click="deleteUser(user.email)" class="action-btn delete-btn">
+              <button
+                @click="deleteUser(user.email)"
+                class="action-btn delete-btn"
+              >
                 <i class="fas fa-trash"></i>
               </button>
             </td>
@@ -39,12 +58,23 @@
         </tbody>
       </table>
       <div class="pagination">
-        <span>Hiển thị trang {{ currentPage }} / {{ totalPages }} - {{ filteredAndSortedUsers.length }} kết quả</span>
+        <span
+          >Hiển thị trang {{ currentPage }} / {{ totalPages }} -
+          {{ filteredAndSortedUsers.length }} kết quả</span
+        >
         <div>
-          <button @click="prevPage" :disabled="currentPage === 1" class="pagination-btn">
+          <button
+            @click="prevPage"
+            :disabled="currentPage === 1"
+            class="pagination-btn"
+          >
             <i class="fas fa-chevron-left"></i>
           </button>
-          <button @click="nextPage" :disabled="currentPage === totalPages" class="pagination-btn">
+          <button
+            @click="nextPage"
+            :disabled="currentPage === totalPages"
+            class="pagination-btn"
+          >
             <i class="fas fa-chevron-right"></i>
           </button>
         </div>
@@ -136,15 +166,29 @@
         <form @submit.prevent="changePassword">
           <div class="form-group">
             <label>User ID:</label>
-            <input v-model="passwordChange.user_id" type="text" required disabled />
+            <input
+              v-model="passwordChange.user_id"
+              type="text"
+              required
+              disabled
+            />
           </div>
           <div class="form-group">
             <label>Email:</label>
-            <input v-model="passwordChange.email" type="email" required disabled />
+            <input
+              v-model="passwordChange.email"
+              type="email"
+              required
+              disabled
+            />
           </div>
           <div class="form-group">
             <label>Mật khẩu mới:</label>
-            <input v-model="passwordChange.new_pass_word" type="password" required />
+            <input
+              v-model="passwordChange.new_pass_word"
+              type="password"
+              required
+            />
           </div>
           <div class="modal-actions">
             <button type="submit">Lưu</button>
@@ -157,31 +201,58 @@
 </template>
 
 <script>
-import { ref, onMounted, computed } from 'vue';
-import { apiGetAllUsers, apiAddUser, apiEditUser, apiDeleteUser, apiChangePassword } from '@/services/admin/UserService';
+import { ref, onMounted, computed } from "vue";
+import {
+  apiGetAllUsers,
+  apiAddUser,
+  apiEditUser,
+  apiDeleteUser,
+  apiChangePassword,
+} from "@/services/admin/UserService";
+import Swal from "sweetalert2"; // Import SweetAlert2
 
 export default {
-  name: 'UsersAdmin',
+  name: "UsersAdmin",
   setup() {
     const users = ref([]);
-    const searchQuery = ref('');
-    const sortKey = ref('');
-    const sortOrder = ref('asc');
+    const searchQuery = ref("");
+    const sortKey = ref("");
+    const sortOrder = ref("asc");
     const showAddUserPopup = ref(false);
     const showEditUserPopup = ref(false);
     const showChangePasswordPopup = ref(false);
-    const newUser = ref({ user_name: '', email: '', pass_word: '', role: '0', status: '0' });
+    const newUser = ref({
+      user_name: "",
+      email: "",
+      pass_word: "",
+      role: "0",
+      status: "0",
+    });
     const editedUser = ref({});
-    const passwordChange = ref({ user_id: '', email: '', new_pass_word: '' });
+    const passwordChange = ref({ user_id: "", email: "", new_pass_word: "" });
     const currentPage = ref(1);
     const itemsPerPage = ref(10);
 
     const fetchUsers = async () => {
       try {
         const response = await apiGetAllUsers();
-        users.value = response.data.data;
+        if (response.data && response.data.err === 0) {
+          users.value = response.data.data;
+        } else {
+          Swal.fire({
+            icon: "error",
+            title: "Lỗi!",
+            text: response.data.msg || "Dữ liệu trả về không đúng định dạng!",
+          });
+          users.value = [];
+        }
       } catch (error) {
-        console.error('Lỗi khi lấy danh sách người dùng:', error);
+        Swal.fire({
+          icon: "error",
+          title: "Lỗi!",
+          text: "Không thể tải danh sách người dùng!",
+        });
+        console.error("Lỗi khi lấy danh sách người dùng:", error);
       }
     };
 
@@ -189,14 +260,38 @@ export default {
       try {
         const payload = { ...newUser.value };
         const response = await apiAddUser(payload);
-        if (response.data) {
+        if (response.data && response.data.err === 0) {
           await fetchUsers();
-          newUser.value = { user_name: '', email: '', pass_word: '', role: '0', status: '0' };
+          newUser.value = {
+            user_name: "",
+            email: "",
+            pass_word: "",
+            role: "0",
+            status: "0",
+          };
           showAddUserPopup.value = false;
-          console.log('Thêm người dùng thành công:', response.data);
+          Swal.fire({
+            icon: "success",
+            title: "Thành công!",
+            text: "Người dùng đã được thêm thành công.",
+            timer: 2000,
+            showConfirmButton: false,
+          });
+        } else {
+          Swal.fire({
+            icon: "error",
+            title: "Lỗi!",
+            text: response.data.msg || "Không thể thêm người dùng!",
+          });
         }
       } catch (error) {
-        console.error('Lỗi khi thêm người dùng:', error);
+        Swal.fire({
+          icon: "error",
+          title: "Lỗi!",
+          text:
+            error.response?.data?.msg || "Đã xảy ra lỗi khi thêm người dùng!",
+        });
+        console.error("Lỗi khi thêm người dùng:", error);
       }
     };
 
@@ -210,35 +305,86 @@ export default {
       try {
         const payload = { ...editedUser.value };
         const response = await apiEditUser(payload);
-        if (response.data) {
+        if (response.data && response.data.err === 0) {
           await fetchUsers();
           showEditUserPopup.value = false;
-          console.log('Cập nhật người dùng thành công:', response.data);
+          Swal.fire({
+            icon: "success",
+            title: "Thành công!",
+            text: "Người dùng đã được cập nhật thành công.",
+            timer: 2000,
+            showConfirmButton: false,
+          });
+        } else {
+          Swal.fire({
+            icon: "error",
+            title: "Lỗi!",
+            text: response.data.msg || "Không thể cập nhật người dùng!",
+          });
         }
       } catch (error) {
-        console.error('Lỗi khi cập nhật người dùng:', error);
+        Swal.fire({
+          icon: "error",
+          title: "Lỗi!",
+          text:
+            error.response?.data?.msg ||
+            "Đã xảy ra lỗi khi cập nhật người dùng!",
+        });
+        console.error("Lỗi khi cập nhật người dùng:", error);
       }
     };
 
     const deleteUser = async (email) => {
-      try {
-        const payload = { email };
-        const response = await apiDeleteUser(payload);
-        if (response.data) {
-          await fetchUsers();
-          console.log(`Xóa người dùng : ${email} thành công`);
+      Swal.fire({
+        title: "Bạn có chắc không?",
+        text: `Bạn có muốn xóa người dùng với email: ${email}?`,
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Xóa",
+        cancelButtonText: "Hủy",
+      }).then(async (result) => {
+        if (result.isConfirmed) {
+          try {
+            const payload = { email };
+            const response = await apiDeleteUser(payload);
+            if (response.data && response.data.err === 0) {
+              await fetchUsers();
+              Swal.fire({
+                icon: "success",
+                title: "Đã xóa!",
+                text: `Người dùng với email: ${email} đã được xóa thành công.`,
+                timer: 2000,
+                showConfirmButton: false,
+              });
+            } else {
+              Swal.fire({
+                icon: "error",
+                title: "Lỗi!",
+                text: response.data.msg || "Không thể xóa người dùng!",
+              });
+            }
+          } catch (error) {
+            Swal.fire({
+              icon: "error",
+              title: "Lỗi!",
+              text:
+                error.response?.data?.msg ||
+                "Đã xảy ra lỗi khi xóa người dùng!",
+            });
+            console.error("Lỗi khi xóa người dùng:", error);
+          }
         }
-      } catch (error) {
-        console.error('Lỗi khi xóa người dùng:', error);
-      }
+      });
     };
 
-    const changePopup = (id) => { // Đổi tên thành changePopup (theo chuẩn camelCase)
+    const changePopup = (id) => {
       const user = users.value.find((u) => u.id === id);
       passwordChange.value = {
         user_id: user.user_id,
         email: user.email,
-        new_pass_word: ''
+        new_pass_word: "",
       };
       showChangePasswordPopup.value = true;
     };
@@ -247,13 +393,30 @@ export default {
       try {
         const payload = { ...passwordChange.value };
         const response = await apiChangePassword(payload);
-        if (response.data) {
+        if (response.data && response.data.err === 0) {
           showChangePasswordPopup.value = false;
-          console.log('Đổi mật khẩu thành công:', response.data);
+          Swal.fire({
+            icon: "success",
+            title: "Thành công!",
+            text: "Mật khẩu đã được đổi thành công.",
+            timer: 2000,
+            showConfirmButton: false,
+          });
           await fetchUsers();
+        } else {
+          Swal.fire({
+            icon: "error",
+            title: "Lỗi!",
+            text: response.data.msg || "Không thể đổi mật khẩu!",
+          });
         }
       } catch (error) {
-        console.error('Lỗi khi đổi mật khẩu:', error);
+        Swal.fire({
+          icon: "error",
+          title: "Lỗi!",
+          text: error.response?.data?.msg || "Đã xảy ra lỗi khi đổi mật khẩu!",
+        });
+        console.error("Lỗi khi đổi mật khẩu:", error);
       }
     };
 
@@ -261,7 +424,7 @@ export default {
       let result = [...users.value];
 
       if (searchQuery.value) {
-        result = result.filter(user =>
+        result = result.filter((user) =>
           user.user_name.toLowerCase().includes(searchQuery.value.toLowerCase())
         );
       }
@@ -270,7 +433,7 @@ export default {
         result.sort((a, b) => {
           const valueA = a[sortKey.value];
           const valueB = b[sortKey.value];
-          if (sortOrder.value === 'asc') {
+          if (sortOrder.value === "asc") {
             return valueA > valueB ? 1 : valueA < valueB ? -1 : 0;
           } else {
             return valueA < valueB ? 1 : valueA > valueB ? -1 : 0;
@@ -289,18 +452,20 @@ export default {
 
     const sort = (key) => {
       if (sortKey.value === key) {
-        sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc';
+        sortOrder.value = sortOrder.value === "asc" ? "desc" : "asc";
       } else {
         sortKey.value = key;
-        sortOrder.value = 'asc';
+        sortOrder.value = "asc";
       }
     };
 
     const getSortIcon = (key) => {
       if (sortKey.value === key) {
-        return sortOrder.value === 'asc' ? 'fas fa-sort-up' : 'fas fa-sort-down';
+        return sortOrder.value === "asc"
+          ? "fas fa-sort-up"
+          : "fas fa-sort-down";
       }
-      return 'fas fa-sort';
+      return "fas fa-sort";
     };
 
     const prevPage = () => {
@@ -331,7 +496,7 @@ export default {
       addUser,
       updateUser,
       changePassword,
-      changePopup, // Thêm changePopup vào đây
+      changePopup,
       filteredAndSortedUsers,
       sort,
       getSortIcon,

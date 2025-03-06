@@ -32,9 +32,12 @@
     <div class="main-content">
       <header class="header">
         <h3>Admin Dashboard</h3>
-        <div class="user-info">
-          <span>Admin User</span>
-          <button @click="logout">Logout</button>
+        <div class="user-info" @click="toggleDropdown" ref="userInfo">
+          <i class="fas fa-user"></i>
+          <span>{{ username }}</span>
+          <div class="dropdown" v-if="isDropdownOpen">
+            <button @click.stop="handleLogout">Logout</button>
+          </div>
         </div>
       </header>
       <div class="content">
@@ -46,23 +49,73 @@
 
 <script>
 import { RouterLink, RouterView } from 'vue-router';
+import { useAuthStore } from '@/stores/auth'; // Giả sử store nằm trong thư mục stores
+import { ref, onMounted, onUnmounted } from 'vue';
+import { jwtDecode } from 'jwt-decode';
 
 export default {
   name: 'AdminLayout',
-  setup() {
-    const logout = () => {
-      console.log('Logged out');
-      alert('Đã đăng xuất!');
-      // Thêm logic redirect hoặc clear token tại đây (ví dụ: dùng router.push('/login'))
-    };
-
-    return {
-      logout,
-    };
-  },
   components: {
     RouterLink,
     RouterView,
+  },
+  setup() {
+    const authStore = useAuthStore();
+    const username = ref(''); // Tên người dùng từ JWT
+    const isDropdownOpen = ref(false); // Trạng thái dropdown
+    const userInfo = ref(null); // Ref để tham chiếu DOM
+
+    // Khởi tạo trạng thái xác thực và lấy thông tin từ JWT
+    onMounted(() => {
+      authStore.initializeAuth();
+      const token = localStorage.getItem('token'); // Giả sử token được lưu trong localStorage
+      if (token) {
+        try {
+          const decoded = jwtDecode(token);
+          console.log(decoded);
+          username.value = decoded.user_name || 'Admin User'; // Lấy username từ JWT hoặc mặc định
+        } catch (error) {
+          console.error('Error decoding JWT:', error);
+          username.value = 'Admin User'; // Fallback nếu token không hợp lệ
+        }
+      }
+    });
+
+    // Toggle dropdown
+    const toggleDropdown = () => {
+      isDropdownOpen.value = !isDropdownOpen.value;
+    };
+
+    // Đóng dropdown khi nhấp ra ngoài
+    const closeDropdown = (event) => {
+      if (userInfo.value && !userInfo.value.contains(event.target)) {
+        isDropdownOpen.value = false;
+      }
+    };
+
+    onMounted(() => {
+      document.addEventListener('click', closeDropdown);
+    });
+
+    onUnmounted(() => {
+      document.removeEventListener('click', closeDropdown);
+    });
+
+    // Xử lý đăng xuất
+    const handleLogout = () => {
+      authStore.logout(); // Gọi hàm logout từ store
+      alert('Đã đăng xuất!');
+      // Redirect về trang login
+      window.location.href = '/login'; // Hoặc dùng router.push nếu bạn dùng Vue Router
+    };
+
+    return {
+      username,
+      isDropdownOpen,
+      toggleDropdown,
+      handleLogout,
+      userInfo,
+    };
   },
 };
 </script>
@@ -94,7 +147,7 @@ export default {
 }
 
 .logo {
-  max-width: 150px; /* Điều chỉnh kích thước logo */
+  max-width: 150px;
   height: auto;
 }
 
@@ -116,7 +169,7 @@ export default {
 
 .sidebar-item i {
   margin-right: 10px;
-  width: 20px; /* Đảm bảo icon căn đều */
+  width: 20px;
   text-align: center;
 }
 
@@ -148,9 +201,16 @@ export default {
 }
 
 .user-info {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.user-info i {
+  font-size: 16px;
+  color: #666;
 }
 
 .user-info span {
@@ -158,18 +218,32 @@ export default {
   color: #666;
 }
 
-.user-info button {
-  padding: 5px 15px;
+.dropdown {
+  position: absolute;
+  top: 130%;
+  right: 10%;
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+}
+
+.dropdown button {
+  display: block;
+  width: 130%;
+  padding: 8px 15px;
   background-color: #e74c3c;
   color: white;
   border: none;
   border-radius: 5px;
   cursor: pointer;
   font-size: 14px;
+  text-align: left;
   transition: background-color 0.3s ease;
 }
 
-.user-info button:hover {
+.dropdown button:hover {
   background-color: #c0392b;
 }
 
