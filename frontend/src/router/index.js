@@ -15,6 +15,7 @@ import Tags from '@/pages/admin/Tags.vue';
 import Promotions from '@/pages/admin/Promotions.vue';
 import SearchResults from '@/pages/client/SearchResults.vue';
 
+
 const routes = [
     {
       path: '/',

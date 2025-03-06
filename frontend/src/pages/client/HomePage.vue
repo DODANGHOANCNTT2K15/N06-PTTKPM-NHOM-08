@@ -38,15 +38,6 @@
           </div>
         </div>
         <div id="content">
-          <div class="user-section">
-            <div v-if="avatarStore.avatar" class="user-avatar">
-              <img :src="avatarStore.avatar" alt="User Avatar" />
-            </div>
-            <button v-if="authStore.isAuthenticated" @click="logout" class="logout-btn">
-              Đăng xuất
-            </button>
-          </div>
-          
           <div id="banner">
             <div
               class="div_banner"
@@ -54,10 +45,8 @@
               :key="index"
               :class="{ active: index === currentBanner }"
             >
-              <img
-                :src="require(`@/assets/images/${banner}`)"
-                :alt="`Banner ${index + 1}`"
-              />
+              <!-- Sử dụng banner_path từ API thay vì require -->
+              <img :src="banner" :alt="`Banner ${index + 1}`" />
             </div>
             <div id="arrow_left" class="arrow_banner" @click="prevBanner">
               <i class="fas fa-chevron-left"></i>
@@ -146,7 +135,6 @@
           <h1>Sản phẩm đã xem</h1>
         </div>
         <div id="viewed-products">
-          <!-- Hiển thị tối đa 4 sản phẩm, cuộn ngang nếu nhiều hơn -->
           <ProductCard
             v-for="product in viewedProducts.slice(0, 4)"
             :key="product.id"
@@ -160,7 +148,6 @@
             :tags="product.tags"
             @click="goToProductDetail(product.id)"
           />
-          <!-- Hiển thị thông báo nếu chưa có sản phẩm đã xem -->
           <div v-if="viewedProducts.length === 0">
             <p>Chưa có sản phẩm nào được xem.</p>
           </div>
@@ -271,34 +258,41 @@
     <div :class="{ hidden: !showFilterPopup }" id="filter_popup">
       <!-- ... existing filter popup content ... -->
     </div>
+
+    <!-- Thêm component Loading -->
+    <Loading />
   </div>
 </template>
 
 <script>
 import ProductCard from "@/components/client/ProductCard.vue";
+import Loading from "@/components/Loading.vue"; // Import Loading component
 import { computed, ref, onMounted, onUnmounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
 import { useAvatarStore } from "@/stores/avatar";
+import { useLoadingStore } from "@/stores/loading"; // Import Loading store
 import {
   apiLogin,
   apiRegister,
   apiForgotPass,
 } from "@/services/client/AuthService";
 import { apiGetAllBooks } from "@/services/client/BookService";
+import { apiGetAllBanners } from "@/services/admin/BannerService"; // Import API banner
 
 export default {
   name: "HomePage",
-  components: { ProductCard },
+  components: { ProductCard, Loading }, // Đăng ký Loading component
   setup() {
     const route = useRoute();
     const router = useRouter();
     const authStore = useAuthStore();
     const avatarStore = useAvatarStore();
+    const loadingStore = useLoadingStore(); // Khởi tạo Loading store
 
     const currentRouteName = computed(() => route.name);
     const showFilterPopup = ref(false);
-    const banners = ref(["Banner_00.png", "Banner_01.jpg"]);
+    const banners = ref([]); // Khởi tạo banners rỗng, sẽ lấy từ API
     const currentBanner = ref(0);
     let autoSlideInterval = null;
 
@@ -328,17 +322,39 @@ export default {
 
     // Product states
     const products = ref([]);
-    // Khởi tạo viewedProducts với giá trị mặc định từ localStorage
-    const viewedProducts = ref(
-      JSON.parse(localStorage.getItem("viewedProducts")) || []
-    );
+    const viewedProducts = ref(JSON.parse(localStorage.getItem("viewedProducts")) || []);
     const sortOption = ref("newest");
     const itemsPerPage = ref(10);
     const currentPage = ref(1);
 
+    // Hàm lấy danh sách banner từ API
+    const fetchBanners = async () => {
+      try {
+        loadingStore.showLoading(); // Bật loading
+        const response = await apiGetAllBanners();
+        if (response.data.err === 0) {
+          // Lấy danh sách banner_path từ response
+          banners.value = response.data.data.map(banner => banner.banner_path);
+          if (banners.value.length === 0) {
+            // Fallback nếu không có banner từ API
+            banners.value = ["Banner_00.png", "Banner_01.jpg"];
+          }
+        } else {
+          console.error("Lỗi từ API banner:", response.data.msg);
+          banners.value = ["Banner_00.png", "Banner_01.jpg"]; // Fallback
+        }
+      } catch (error) {
+        console.error("Không thể lấy danh sách banner:", error);
+        banners.value = ["Banner_00.png", "Banner_01.jpg"]; // Fallback
+      } finally {
+        loadingStore.hideLoading(); // Tắt loading
+      }
+    };
+
     // Authentication functions
     const login = async () => {
       try {
+        loadingStore.showLoading(); // Bật loading
         const response = await apiLogin({
           email: loginForm.value.email,
           pass_word: loginForm.value.pass_word,
@@ -359,11 +375,14 @@ export default {
       } catch (error) {
         errorMessage.value = error.response?.data?.message || "Lỗi server";
         successMessage.value = "";
+      } finally {
+        loadingStore.hideLoading(); // Tắt loading
       }
     };
 
     const signup = async () => {
       try {
+        loadingStore.showLoading(); // Bật loading
         const response = await apiRegister({
           user_name: signupForm.value.user_name,
           email: signupForm.value.email,
@@ -385,11 +404,14 @@ export default {
       } catch (error) {
         errorMessage.value = error.response?.data?.message || "Lỗi server";
         successMessage.value = "";
+      } finally {
+        loadingStore.hideLoading(); // Tắt loading
       }
     };
 
     const forgetPassword = async () => {
       try {
+        loadingStore.showLoading(); // Bật loading
         const response = await apiForgotPass({
           email: forgetPasswordForm.value.email,
         });
@@ -405,6 +427,8 @@ export default {
       } catch (error) {
         errorMessage.value = error.response?.data?.message || "Lỗi server";
         successMessage.value = "";
+      } finally {
+        loadingStore.hideLoading(); // Tắt loading
       }
     };
 
@@ -421,16 +445,10 @@ export default {
     const goToProductDetail = (id) => {
       const product = products.value.find((p) => p.id === id);
       if (product) {
-        let viewed = [...viewedProducts.value]; // Lấy danh sách hiện tại
-        
-        // Kiểm tra xem sản phẩm đã có trong danh sách chưa
+        let viewed = [...viewedProducts.value];
         if (!viewed.some((p) => p.id === id)) {
           viewed.push(product);
-          // Giới hạn số lượng sản phẩm đã xem (tối đa 5 sản phẩm)
-          if (viewed.length > 5) {
-            viewed.shift(); // Xóa sản phẩm cũ nhất nếu vượt quá giới hạn
-          }
-          // Cập nhật và lưu lại vào localStorage
+          if (viewed.length > 5) viewed.shift();
           viewedProducts.value = viewed;
           localStorage.setItem("viewedProducts", JSON.stringify(viewed));
         }
@@ -440,6 +458,7 @@ export default {
 
     const fetchBooks = async () => {
       try {
+        loadingStore.showLoading(); // Bật loading
         const response = await apiGetAllBooks();
         if (response.data.err === 0) {
           products.value = response.data.data.map((book) => ({
@@ -459,6 +478,8 @@ export default {
         }
       } catch (error) {
         console.error("Lỗi khi lấy sách:", error);
+      } finally {
+        loadingStore.hideLoading(); // Tắt loading
       }
     };
 
@@ -489,20 +510,14 @@ export default {
 
     const filteredProducts = computed(() => {
       let filtered = [...products.value];
-
-      // Tag filter
       if (selectedTags.value.length > 0) {
         filtered = filtered.filter((product) =>
           product.tags.some((tag) => selectedTags.value.includes(tag))
         );
       }
-
-      // Free shipping filter
       if (filters.value.freeShipping) {
         filtered = filtered.filter((product) => product.freeShipping);
       }
-
-      // Rating filter
       const selectedRatings = Object.entries(filters.value.ratings)
         .filter(([, selected]) => selected)
         .map(([rating]) => Number(rating));
@@ -511,8 +526,6 @@ export default {
           selectedRatings.includes(Math.round(product.rating))
         );
       }
-
-      // Price range filter
       const selectedPriceRanges = Object.keys(filters.value.priceRanges).filter(
         (key) => filters.value.priceRanges[key]
       );
@@ -522,15 +535,11 @@ export default {
       ) {
         filtered = filtered.filter((product) => {
           const price = product.discountedPrice;
-
-          // Custom price range
           if (customPriceRange.value.from && customPriceRange.value.to) {
             const from = Number(customPriceRange.value.from);
             const to = Number(customPriceRange.value.to);
             return price >= from && price <= to;
           }
-
-          // Predefined price ranges
           return selectedPriceRanges.some((range) => {
             switch (range) {
               case "under100k": return price < 100000;
@@ -546,7 +555,6 @@ export default {
       return filtered;
     });
 
-    // Tính toán sản phẩm phân trang dựa trên filteredProducts
     const paginatedProducts = computed(() => {
       const start = (currentPage.value - 1) * itemsPerPage.value;
       const end = start + itemsPerPage.value;
@@ -608,12 +616,12 @@ export default {
       authStore.initializeAuth();
       avatarStore.initializeAvatar();
       fetchBooks();
+      fetchBanners(); // Gọi API banner khi trang được mount
     });
 
     onUnmounted(() => {
       if (autoSlideInterval) clearInterval(autoSlideInterval);
     });
-
 
     return {
       authStore,
@@ -635,7 +643,7 @@ export default {
       logout,
       goToProductDetail,
       paginatedProducts,
-      viewedProducts, // Đảm bảo trả về viewedProducts
+      viewedProducts,
       currentPage,
       totalPages,
       sortOption,
@@ -759,7 +767,6 @@ export default {
   border-color: #007bff;
 }
 
-/* Style cho filter section */
 #filter {
   margin-bottom: 20px;
 }
