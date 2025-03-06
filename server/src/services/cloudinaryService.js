@@ -15,8 +15,16 @@ cloudinary.config({
 export const uploadImageService = (req, avatar_public_id) => {
     return new Promise((resolve, reject) => {
         try {
+            if (!req.file || !req.file.buffer) {
+                console.error('Không có file hoặc buffer để upload:', req.file);
+                return reject({
+                    err: 2,
+                    msg: 'Không có file để upload!',
+                });
+            }
+
             const upload = cloudinary.uploader.upload_stream(
-                { folder: 'avatars' }, // Thư mục trên Cloudinary
+                { folder: 'avatars' },
                 async (error, result) => {
                     if (error) {
                         console.error('Lỗi khi upload ảnh lên Cloudinary:', error);
@@ -27,7 +35,6 @@ export const uploadImageService = (req, avatar_public_id) => {
                         });
                     }
 
-                    // Nếu có ảnh cũ, xóa ảnh cũ sau khi upload thành công
                     try {
                         if (avatar_public_id) {
                             await deleteImageService(avatar_public_id);
@@ -36,7 +43,6 @@ export const uploadImageService = (req, avatar_public_id) => {
                         console.error('Lỗi khi xóa ảnh cũ:', deleteError);
                     }
 
-                    // Trả về kết quả thành công
                     resolve({
                         url: result.secure_url,
                         id: result.public_id,
@@ -44,21 +50,14 @@ export const uploadImageService = (req, avatar_public_id) => {
                 }
             );
 
-            // Đẩy buffer của file lên Cloudinary
-            if (req.file && req.file.buffer) {
-                upload.end(req.file.buffer);
-            } else {
-                return reject({
-                    err: 2,
-                    msg: 'Không có file để upload!',
-                });
-            }
+            console.log('Bắt đầu upload file lên Cloudinary...');
+            upload.end(req.file.buffer);
         } catch (error) {
             console.error('Lỗi trong uploadImageService:', error);
             reject({
                 err: 3,
                 msg: 'Lỗi server!',
-                error: error.message,cd
+                error: error.message,
             });
         }
     });

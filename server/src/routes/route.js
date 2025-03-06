@@ -59,8 +59,8 @@ router.post('/review/add', reviewController.addReviewController)
 router.post('/review/delete', reviewController.deleteReviewController)
 
 // banner route
-router.get('/banner', upload.single('banner'), bannerController.getAllBannerController)
-router.post('/banner/add', bannerController.addBannerController)
+router.get('/banner', bannerController.getAllBannerController)
+router.post('/banner/add',upload.single('banner'), bannerController.addBannerController)
 router.delete('/banner/delete', bannerController.deleteBannerController)
 
 // cart route

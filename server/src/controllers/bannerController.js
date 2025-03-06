@@ -15,6 +15,7 @@ export const getAllBannerController = async (req, res) => {
 
 // tạo banner mới
 export const addBannerController = async (req, res) => {
+    // console.log(req.body)
     const { banner_name } = req.body;
     try {
         if (!banner_name) {

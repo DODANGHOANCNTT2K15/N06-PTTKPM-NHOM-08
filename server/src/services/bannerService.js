@@ -60,8 +60,8 @@ export const addBannerService = (banner_name, req) =>
             }
 
             // Upload ảnh lên Cloudinary
-            const uploadResult = await cloudinaryService.uploadImageService(req);
-            if (!uploadResult || !uploadResult.url || !uploadResult.banner_public_id) {
+            const uploadResult = await cloudinaryService.uploadImageService(req, null);
+            if (!uploadResult) {
                 await transaction.rollback();
                 return reject({
                     err: 2,
@@ -119,6 +119,7 @@ export const addBannerService = (banner_name, req) =>
             });
         }
     });
+
 // xóa banner
 export const deleteBannerService = ({ banner_id, banner_public_id }) =>
     new Promise(async (resolve, reject) => {
