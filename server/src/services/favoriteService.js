@@ -31,13 +31,6 @@ export const addToFavoriteService = ({ user_id, book_id }) =>
         try {
             const existingFavorite = await db.Favorite.findOne({
                 where: { user_id, book_id },
-                include: [
-                    {
-                        model: db.BookImage,
-                        as: "images",
-                        attributes: ['image_public_id', 'image_path'],
-                    }
-                ]
             });
 
             if (existingFavorite) {
@@ -84,7 +77,14 @@ export const getFavoritesService = (user_id) =>
                     {
                         model: db.Book,
                         as: 'book',
-                        attributes: ['title', 'price'], // Lấy thông tin bổ sung từ bảng sách
+                        attributes: ['title', 'price'],
+                        include: [
+                            {
+                                model: db.BookImage,
+                                as: "images",
+                                attributes: ['image_public_id', 'image_path'],
+                            }
+                        ] 
                     },
                 ],
             });
