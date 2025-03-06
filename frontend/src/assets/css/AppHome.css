@@ -16,28 +16,72 @@ main > div:nth-child(1){
 #catagory {
     width: 16%;
     height: fit-content;
-    border-radius: 10px;
-    background-color: whitesmoke;
+    border-radius: 12px; /* Bo góc mềm hơn */
+    background-color: #fff; /* Đổi sang trắng tinh cho sạch sẽ */
     padding: 20px;
     box-sizing: border-box;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05); /* Thêm bóng đổ nhẹ */
+    transition: box-shadow 0.3s ease; /* Hiệu ứng khi hover */
 }
 
-#catagory h1{
-    font-size: 1em;
-    margin-bottom: 10px;
-}
-#catagory > div:nth-child(1){
-    border-bottom: 1px solid rgba(0, 0, 0, 0.533);
+#catagory:hover {
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); /* Bóng đổ đậm hơn khi hover */
 }
 
-#catagory h2{
-    font-size: 1em;
-    margin-top: 10px;
-    margin-bottom: 10px;
+#catagory h1 {
+    font-size: 1.2em; /* Tăng kích thước chữ cho nổi bật */
+    font-weight: 700; /* Đậm hơn */
+    color: #333; /* Màu xám đậm thay vì đen mặc định */
+    margin-bottom: 15px; /* Tăng khoảng cách dưới */
+    text-transform: uppercase; /* Chữ in hoa cho tiêu đề */
+    letter-spacing: 1px; /* Giãn chữ nhẹ */
+    border-bottom: 2px solid #007bff; /* Đường viền xanh thay vì đen mờ */
+    padding-bottom: 5px; /* Khoảng cách dưới đường viền */
+}
+
+#catagory > div:nth-child(1) {
+    /* Giữ nguyên border-bottom nhưng cải thiện màu sắc */
+    border-bottom: 1px solid rgba(0, 123, 255, 0.2); /* Màu xanh nhạt */
+}
+
+#catagory h2 {
+    font-size: 1.1em; /* Tăng nhẹ kích thước chữ */
+    font-weight: 600; /* Đậm vừa phải */
+    color: #555; /* Màu xám trung cho dễ đọc */
+    margin: 15px 0 10px; /* Tăng khoảng cách trên */
     cursor: pointer;
+    transition: color 0.3s ease; /* Hiệu ứng đổi màu khi hover */
 }
-#catagory ul{
-    padding-left: 20px;
+
+#catagory h2:hover {
+    color: #007bff; /* Đổi màu xanh khi hover */
+}
+
+#catagory ul {
+    padding-left: 15px; /* Giảm padding để căn chỉnh gọn hơn */
+    list-style: none; /* Loại bỏ dấu đầu dòng mặc định */
+}
+
+#catagory li {
+    font-size: 0.95em; /* Chữ nhỏ gọn hơn */
+    color: #666; /* Màu xám nhạt */
+    padding: 8px 0; /* Khoảng cách đều giữa các mục */
+    position: relative; /* Để thêm pseudo-element */
+    cursor: pointer;
+    transition: color 0.3s ease, padding-left 0.3s ease; /* Hiệu ứng mượt mà */
+}
+
+#catagory li:before {
+    content: "•"; /* Thêm dấu chấm tùy chỉnh */
+    color: #007bff; /* Màu xanh cho dấu chấm */
+    position: absolute;
+    left: -10px; /* Đặt dấu chấm bên trái */
+    font-size: 1.2em;
+}
+
+#catagory li:hover {
+    color: #007bff; /* Đổi màu chữ khi hover */
+    padding-left: 5px; /* Dịch nhẹ sang phải khi hover */
 }
 
 #content {
@@ -80,48 +124,111 @@ main > div:nth-child(1){
     color: white;
 }
 
-#filter{
+#filter {
     padding: 20px;
-    background-color: rgb(255, 255, 255);
+    background-color: #fff; /* Giữ nền trắng sạch sẽ */
     margin-top: 20px;
-    border-radius: 10px;
-}
-#filter h1{
-    margin-bottom: 10px;
-    font-size: 1.2em;
-}
-#filter_tag_cover{
-    width: 70%;
-    display: flex;
-}
-.filter_tag{
-    padding: 4px 20px;
-    border: 1px solid black;
-    border-radius: 20px;
-    margin-right: 10px;
+    border-radius: 12px; /* Bo góc mềm hơn */
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05); /* Thêm bóng đổ nhẹ */
+    transition: box-shadow 0.3s ease; /* Hiệu ứng bóng khi hover */
 }
 
-#filter > div:nth-child(2){
+#filter:hover {
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); /* Bóng đậm hơn khi hover */
+}
+
+#filter h1 {
+    font-size: 1.4em; /* Tăng kích thước chữ cho nổi bật */
+    font-weight: 700; /* Đậm hơn */
+    color: #333; /* Màu xám đậm */
+    margin-bottom: 15px; /* Tăng khoảng cách dưới */
+    text-transform: uppercase; /* Chữ in hoa */
+    letter-spacing: 1px; /* Giãn chữ nhẹ */
+}
+
+#filter > div:nth-child(2) {
     width: 100%;
     display: flex;
     justify-content: space-between;
-    padding-bottom: 10px;
-    border-bottom: 1px solid black;
-    margin-bottom: 10px;
+    align-items: center; /* Căn giữa theo chiều dọc */
+    padding-bottom: 15px; /* Tăng padding dưới */
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1); /* Đường viền nhạt hơn */
+    margin-bottom: 15px; /* Tăng khoảng cách dưới */
 }
-#filter_tag_all{
-    padding-left: 20px;
-    border-left: 1px solid black;
+
+#filter_tag_cover {
+    width: 70%;
+    display: flex;
+    gap: 12px; /* Thay margin-right bằng gap cho đều hơn */
 }
-#filter_tag_all > div{
-    border: 1px solid black;
-    padding: 5px;
-    border-radius: 5px;
-    cursor: pointer;
-}
-#sort-options{
-    padding: 5px;
+
+.filter_tag {
+    padding: 6px 18px; /* Tăng padding cho thoải mái hơn */
+    border: 1px solid #ddd; /* Viền nhạt hơn thay vì đen cứng */
     border-radius: 20px;
+    font-size: 0.9em; /* Chữ nhỏ gọn */
+    color: #555; /* Màu xám trung */
+    background-color: #f5f5f5; /* Nền xám nhạt */
+    cursor: pointer;
+    transition: all 0.3s ease; /* Hiệu ứng mượt mà */
+}
+
+.filter_tag:hover {
+    background-color: #007bff; /* Màu xanh khi hover */
+    color: white; /* Chữ trắng khi hover */
+    border-color: #007bff; /* Đồng bộ viền */
+}
+
+#filter_tag_all {
+    padding-left: 20px;
+    border-left: 1px solid rgba(0, 0, 0, 0.1); /* Viền nhạt hơn */
+}
+
+#filter_tag_all > div {
+    border: 1px solid #007bff; /* Viền xanh thay vì đen */
+    padding: 6px 12px; /* Tăng padding nhẹ */
+    border-radius: 20px; /* Bo góc tròn hơn */
+    background-color: #007bff; /* Nền xanh mặc định */
+    color: white; /* Chữ trắng */
+    display: flex;
+    align-items: center;
+    gap: 5px; /* Khoảng cách giữa icon và chữ */
+    cursor: pointer;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+#filter_tag_all > div:hover {
+    background-color: #0056b3; /* Xanh đậm hơn khi hover */
+    border-color: #0056b3;
+}
+
+#filter > div:nth-child(3) > div {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* Khoảng cách giữa label và select */
+}
+
+#filter label[for="sort-options"] {
+    font-size: 0.9em;
+    color: #666; /* Màu xám nhạt */
+    font-weight: 500;
+}
+
+#sort-options {
+    padding: 8px 15px; /* Tăng padding cho dễ bấm */
+    border: 1px solid #ddd; /* Viền nhạt */
+    border-radius: 8px; /* Bo góc nhẹ */
+    font-size: 0.9em;
+    color: #333;
+    background-color: #fff;
+    cursor: pointer;
+    transition: border-color 0.3s ease;
+}
+
+#sort-options:hover,
+#sort-options:focus {
+    border-color: #007bff; /* Viền xanh khi hover/focus */
+    outline: none;
 }
 #products{
     margin-top: 20px;
@@ -129,22 +236,52 @@ main > div:nth-child(1){
     gap: 20px;
     flex-wrap: wrap;
 }
+/* Phần chứa các card sản phẩm */
+#products {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); /* Tăng chiều rộng tối thiểu */
+    gap: 20px; /* Khoảng cách giữa các card */
+    margin-top: 20px;
+}
+
+/* Card sản phẩm */
 .product {
-    background-color: #f9f9f9;
-    padding: 20px;
+    background-color: #fff; /* Đổi sang trắng cho sạch sẽ */
+    padding: 15px; /* Giảm padding để cân đối */
     border-radius: 10px;
-    width: 200px !important;
-    height: fit-content;
+    border: 1px solid #e0e0e0; /* Viền nhạt */
+    width: 100%; /* Đảm bảo card chiếm hết chiều rộng của grid cell */
+    height: 100%; /* Chiều cao đầy đủ để đồng đều */
+    box-sizing: border-box; /* Bao gồm padding và border trong kích thước */
+    display: flex;
+    flex-direction: column; /* Bố cục dọc */
+    transition: transform 0.2s ease, box-shadow 0.2s ease; /* Hiệu ứng mượt mà */
+    cursor: pointer;
 }
-.product h1{
-    font-size: 1.3em;
-    margin-bottom: 10px;
+
+.product:hover {
+    transform: translateY(-5px); /* Nhấc lên khi hover */
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1); /* Bóng đổ đậm hơn */
 }
-.product p{
-    font-size: 0.7em;
-    opacity: 0.7;
-    font-weight: bold;
-    margin-bottom: 10px;
+
+.product h1 {
+    font-size: 1.2em; /* Giảm nhẹ để cân đối */
+    font-weight: 600; /* Đậm vừa phải */
+    color: #2c3e50; /* Màu đậm hơn */
+    margin: 8px 0; /* Khoảng cách đều */
+    line-height: 1.3; /* Tăng khoảng cách dòng */
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis; /* Dấu ba chấm nếu tiêu đề dài */
+}
+
+.product p {
+    font-size: 0.85em; /* Tăng kích thước chữ cho dễ đọc */
+    color: #666; /* Màu xám trung */
+    font-weight: 500; /* Đậm vừa phải */
+    margin: 5px 0; /* Giảm khoảng cách để tiết kiệm không gian */
+    opacity: 1; /* Bỏ opacity để rõ ràng hơn */
 }
 span{
     font-size: 0.8em;
@@ -176,36 +313,45 @@ span{
     display: flex;
     justify-items: center;
 }
-#load_more{
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    margin-top: 20px;
-}
-#load_more button{
-    padding: 10px 20px;
-    border: none;
-    background-color: rgba(74, 141, 176, 1);
-    color: white;
-    border-radius: 20px;
-    cursor: pointer;
-}
 
 #history {
-    margin-top: 20px;
+    margin-top: 30px;
     width: 100%;
     height: fit-content;
-    background-color: rgb(247, 247, 247);
-    padding: 20px;
+    background-color: #fff;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    transition: box-shadow 0.3s ease;
 }
 
-#history h1{
-    font-size: 1.4em;
-    margin-bottom: 10px;
+#history:hover {
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
-#history > div:nth-child(2){
+#history h1 {
+    font-size: 1.5em;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 15px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-bottom: 2px solid #007bff;
+    padding-bottom: 5px;
+}
+
+#history > div:nth-child(2) {
     display: flex;
-    gap: 20px;
+    flex-wrap: wrap; /* Cho phép xuống dòng */
+    gap: 25px; /* Khoảng cách giữa các card */
     margin-top: 20px;
+    justify-content: flex-start; /* Căn trái */
+    align-items: flex-start; /* Đảm bảo card không bị kéo giãn theo chiều cao */
+}
+
+/* Đảm bảo ProductCard không bị scale ngang */
+#history .product {
+    flex: 0 0 auto; /* Ngăn card mở rộng tự do */
+    width: 220px; /* Chiều rộng cố định cho card */
+    max-width: 100%; /* Giới hạn tối đa theo container */
 }

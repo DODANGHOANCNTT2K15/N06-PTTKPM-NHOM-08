@@ -1,37 +1,46 @@
 /* Style cho phân trang */
 #pagination {
-    display: flex;
-    justify-content: center;
-    margin-top: 20px;
-    gap: 10px;
-  }
-  
-  #pagination button {
-    padding: 8px 12px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    background-color: white;
-    cursor: pointer;
-    font-size: 14px;
-    color: #2c3e50;
-  }
-  
-  #pagination button:disabled {
-    background-color: #f0f0f0;
-    cursor: not-allowed;
-    color: #999;
-  }
-  
-  #pagination button:hover:not(:disabled) {
-    background-color: #e0e0e0;
-  }
-  
-  #pagination .active button {
-    background-color: #4288ce;
-    color: white;
-    border-color: #4288ce;
-  }
-  
-  #pagination .active button:hover {
-    background-color: #34495e;
-  }
+  display: flex;
+  justify-content: center;
+  align-items: center; /* Căn giữa theo chiều dọc */
+  margin-top: 30px; /* Tăng khoảng cách trên cho thoáng */
+  gap: 12px; /* Tăng nhẹ khoảng cách giữa các nút */
+  padding: 10px 0; /* Thêm padding để vùng phân trang rộng rãi hơn */
+}
+
+#pagination button {
+  padding: 10px 16px; /* Tăng kích thước nút cho dễ bấm */
+  border: none; /* Loại bỏ viền mặc định */
+  border-radius: 8px; /* Bo góc mềm hơn */
+  background-color: #f5f5f5; /* Nền xám nhạt thay vì trắng */
+  cursor: pointer;
+  font-size: 14px;
+  color: #2c3e50; /* Giữ màu chữ đậm */
+  font-weight: 500; /* Đậm vừa phải */
+  transition: background-color 0.3s ease, color 0.3s ease, transform 0.2s ease; /* Hiệu ứng mượt mà */
+}
+
+#pagination button:hover:not(:disabled) {
+  background-color: #007bff; /* Màu xanh khi hover */
+  color: white; /* Chữ trắng khi hover */
+  transform: translateY(-2px); /* Nhấc lên nhẹ khi hover */
+}
+
+#pagination button:disabled {
+  background-color: #e0e0e0; /* Xám nhạt hơn khi vô hiệu */
+  color: #bbb; /* Chữ nhạt hơn khi vô hiệu */
+  cursor: not-allowed;
+  transform: none; /* Ngăn hiệu ứng nhấc lên khi vô hiệu */
+}
+
+#pagination .active button {
+  background-color: #007bff; /* Đổi màu xanh sáng hơn so với #4288ce */
+  color: white;
+  font-weight: 600; /* Đậm hơn để nổi bật */
+  border: 1px solid #007bff; /* Thêm viền nhẹ để đồng bộ */
+}
+
+#pagination .active button:hover {
+  background-color: #0056b3; /* Xanh đậm hơn khi hover trên nút active */
+  transform: translateY(-2px); /* Giữ hiệu ứng nhấc lên */
+}

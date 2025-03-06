@@ -150,28 +150,15 @@
         <button @click="submitReview" class="submit-review">Gửi đánh giá</button>
       </div>
     </div>
-    <div class="related-products">
-      <h2>Sản phẩm tương tự</h2>
-      <ProductCard
-        image="Product_00.png"
-        :discountedPrice="600000"
-        :originalPrice="1600000"
-        :author="'DAISETZ TEITARO SUZUKI'"
-        :title="'Thiền luận'"
-        :sold="96"
-        :tags="['khoahoc', '4Sao']"
-      />
-    </div>
   </div>
 </template>
 
 <script>
-import ProductCard from "@/components/client/ProductCard.vue";
 import ReviewItem from '@/components/client/ReviewItem.vue';
 
 export default {
   name: "ProductPage",
-  components: { ProductCard, ReviewItem },
+  components: { ReviewItem },
   data() {
     return {
       quantity: 1,

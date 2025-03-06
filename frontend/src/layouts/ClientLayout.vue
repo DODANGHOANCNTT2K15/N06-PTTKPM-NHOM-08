@@ -27,7 +27,7 @@ export default {
 }
 
 main{
-    background-color: rgb(186, 208, 233);
+    background-color: rgb(194, 217, 243);
 }
 
 .flex{
