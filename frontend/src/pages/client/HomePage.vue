@@ -140,18 +140,25 @@
         <div>
           <h1>Sản phẩm đã xem</h1>
         </div>
-        <div>
+        <div id="viewed-products">
+          <!-- Hiển thị tối đa 4 sản phẩm, cuộn ngang nếu nhiều hơn -->
           <ProductCard
-            :id="1"
-            image="Product_00.png"
-            :discountedPrice="600000"
-            :originalPrice="1600000"
-            author="DAISETZ TEITARO SUZUKI"
-            title="Thiền luận"
-            :sold="96"
-            :tags="['khoahoc', '4Sao']"
-            @click="goToProductDetail(1)"
+            v-for="product in viewedProducts.slice(0, 4)"
+            :key="product.id"
+            :id="product.id"
+            :image="product.image"
+            :discountedPrice="product.discountedPrice"
+            :originalPrice="product.originalPrice"
+            :author="product.author"
+            :title="product.title"
+            :sold="product.sold"
+            :tags="product.tags"
+            @click="goToProductDetail(product.id)"
           />
+          <!-- Hiển thị thông báo nếu chưa có sản phẩm đã xem -->
+          <div v-if="viewedProducts.length === 0">
+            <p>Chưa có sản phẩm nào được xem.</p>
+          </div>
         </div>
       </div>
     </main>
@@ -477,6 +484,16 @@ export default {
     const filterTags = ref(["Truyện", "Tiểu thuyết", "Trinh thám"]);
     const selectedTags = ref([]);
 
+    // State cho sản phẩm và sản phẩm đã xem
+    const products = ref([]);
+    // Khởi tạo viewedProducts với giá trị mặc định từ localStorage
+    const viewedProducts = ref(
+      JSON.parse(localStorage.getItem("viewedProducts")) || []
+    );
+    const sortOption = ref("newest");
+    const itemsPerPage = ref(10);
+    const currentPage = ref(1);
+
     // Hàm đăng nhập
     const login = async () => {
       try {
@@ -549,15 +566,26 @@ export default {
       }
     };
 
+    // Hàm chuyển hướng đến chi tiết sản phẩm và lưu vào lịch sử xem
     const goToProductDetail = (id) => {
+      const product = products.value.find((p) => p.id === id);
+      if (product) {
+        let viewed = [...viewedProducts.value]; // Lấy danh sách hiện tại
+        
+        // Kiểm tra xem sản phẩm đã có trong danh sách chưa
+        if (!viewed.some((p) => p.id === id)) {
+          viewed.push(product);
+          // Giới hạn số lượng sản phẩm đã xem (tối đa 5 sản phẩm)
+          if (viewed.length > 5) {
+            viewed.shift(); // Xóa sản phẩm cũ nhất nếu vượt quá giới hạn
+          }
+          // Cập nhật và lưu lại vào localStorage
+          viewedProducts.value = viewed;
+          localStorage.setItem("viewedProducts", JSON.stringify(viewed));
+        }
+      }
       router.push(`/product/${id}`);
     };
-
-    // State cho sản phẩm
-    const products = ref([]);
-    const sortOption = ref("newest");
-    const itemsPerPage = ref(10);
-    const currentPage = ref(1);
 
     // Hàm gọi API lấy sách
     const fetchBooks = async () => {
@@ -718,7 +746,7 @@ export default {
       Object.keys(filters.value.priceRanges).forEach(
         (key) => (filters.value.priceRanges[key] = false)
       );
-      selectedTags.value = []; // Reset tags
+      selectedTags.value = [];
       clearCustomPriceRange();
       currentPage.value = 1;
     };
@@ -729,7 +757,6 @@ export default {
       sortProducts();
     };
 
-    // Thêm method toggleTag
     const toggleTag = (tag) => {
       const index = selectedTags.value.indexOf(tag);
       if (index === -1) {
@@ -737,7 +764,7 @@ export default {
       } else {
         selectedTags.value.splice(index, 1);
       }
-      currentPage.value = 1; // Reset về trang đầu khi lọc thay đổi
+      currentPage.value = 1;
     };
 
     // Banner logic
@@ -781,6 +808,7 @@ export default {
       forgetPassword,
       goToProductDetail,
       paginatedProducts,
+      viewedProducts, // Đảm bảo trả về viewedProducts
       currentPage,
       totalPages,
       sortOption,

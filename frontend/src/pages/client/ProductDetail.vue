@@ -180,6 +180,7 @@ import ReviewItem from "@/components/client/ReviewItem.vue";
 import { apiGetAllBookByID } from "@/services/client/BookService";
 import { apiAddReview, apiDeleteReview } from "@/services/client/ReviewService";
 import { apiAddToCart, apiGetCountProductOfCart } from "@/services/client/CartService";
+import { apiAddToFavorite, apiDeleteFavorite, apiGetFavorites } from "@/services/client/FavoriteService";
 import { useCartStore } from "@/stores/cart";
 
 export default {
@@ -202,6 +203,7 @@ export default {
       },
       quantity: 1,
       isFavorite: false,
+      favoriteId: null, // Thêm để lưu favorite_id nếu đã yêu thích
       currentThumbnail: 0,
       mainImage: "",
       reviews: [],
@@ -232,6 +234,7 @@ export default {
   created() {
     this.fetchBookData();
     this.loadCurrentUser();
+    this.checkFavoriteStatus(); // Thêm kiểm tra trạng thái yêu thích khi tải trang
   },
   setup() {
     const cartStore = useCartStore();
@@ -343,7 +346,6 @@ export default {
         const response = await apiAddToCart(cartItem);
         if (response.status === 200 && response.data.err === 0) {
           alert('Đã thêm vào giỏ hàng thành công!');
-          // Cập nhật số lượng trong cartStore
           await this.updateCartCount();
         } else {
           alert(response.data.msg || 'Lỗi khi thêm vào giỏ hàng');
@@ -371,13 +373,66 @@ export default {
         this.cartStore.updatetotal_product_type(0);
       }
     },
-    toggleFavorite() {
-      this.isFavorite = !this.isFavorite;
-      console.log(
-        "Sản phẩm đã được " +
-          (this.isFavorite ? "thêm vào" : "bỏ khỏi") +
-          " yêu thích"
-      );
+    async checkFavoriteStatus() {
+      if (!this.currentUserId) return;
+      const bookId = this.$route.params.id;
+      try {
+        const response = await apiGetFavorites({ user_id: this.currentUserId });
+        if (response.status === 200 && response.data.err === 0) {
+          const favorites = response.data.data;
+          const favorite = favorites.find(fav => fav.book_id === bookId);
+          if (favorite) {
+            this.isFavorite = true;
+            this.favoriteId = favorite.favorite_id;
+          }
+        }
+      } catch (error) {
+        console.error("Lỗi khi kiểm tra trạng thái yêu thích:", error);
+      }
+    },
+    async toggleFavorite() {
+      if (!this.currentUserId) {
+        alert("Vui lòng đăng nhập để thêm vào danh sách yêu thích!");
+        this.$router.push("/login");
+        return;
+      }
+
+      const bookId = this.$route.params.id;
+      if (!this.isFavorite) {
+        // Thêm vào yêu thích
+        const favoriteData = {
+          user_id: this.currentUserId,
+          book_id: bookId
+        };
+        try {
+          const response = await apiAddToFavorite(favoriteData);
+          if (response.status === 200 && response.data.err === 0) {
+            this.isFavorite = true;
+            this.favoriteId = response.data.favorite_id; // Giả sử API trả về favorite_id
+            alert("Đã thêm vào danh sách yêu thích!");
+          } else {
+            alert(response.data.msg || "Lỗi khi thêm vào yêu thích");
+          }
+        } catch (error) {
+          console.error("Lỗi khi thêm vào yêu thích:", error);
+          alert("Có lỗi xảy ra khi thêm vào yêu thích.");
+        }
+      } else {
+        // Xóa khỏi yêu thích
+        try {
+          const response = await apiDeleteFavorite({ favorite_id: this.favoriteId });
+          if (response.status === 200 && response.data.err === 0) {
+            this.isFavorite = false;
+            this.favoriteId = null;
+            alert("Đã xóa khỏi danh sách yêu thích!");
+          } else {
+            alert(response.data.msg || "Lỗi khi xóa khỏi yêu thích");
+          }
+        } catch (error) {
+          console.error("Lỗi khi xóa khỏi yêu thích:", error);
+          alert("Có lỗi xảy ra khi xóa khỏi yêu thích.");
+        }
+      }
     },
     selectThumbnail(index) {
       this.currentThumbnail = index;
