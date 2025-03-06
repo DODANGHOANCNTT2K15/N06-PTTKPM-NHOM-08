@@ -15,9 +15,9 @@ export const getAllBookTypeController = async (req, res) => {
 
 // thêm loại sách
 export const addBookTypeController = async (req, res) => {
-    const { name, description } = req.body;
+    const { name, tag,  description } = req.body;
     try {
-        if (!name) {
+        if (!name || !tag) {
             return res.status(400).json({
                 err: 1,
                 msg: 'Thiếu dữ liệu đầu vào!',
@@ -38,9 +38,9 @@ export const addBookTypeController = async (req, res) => {
 
 // sửa loại sách
 export const updateBookTypeController = async (req, res) => {
-    const { book_type_id, name, description } = req.body;
+    const { book_type_id, name, tag, description } = req.body;
     try {
-        if (!book_type_id || (!name && !description)) {
+        if (!book_type_id || (!name && !description && !tag)) {
             return res.status(400).json({
                 err: 1,
                 msg: 'Thiếu dữ liệu đầu vào!',

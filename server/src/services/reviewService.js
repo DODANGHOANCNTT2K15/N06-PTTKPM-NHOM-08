@@ -61,6 +61,8 @@ export const updateRatingReviewService = (book_id, rating) =>
                 ],
             });
 
+            console.log(stats);
+
             const currentCount = parseInt(stats[0]?.dataValues?.count || 0, 10);
             const newRatingAvg = (book.rating_avg * currentCount + rating) / (currentCount + 1);
 

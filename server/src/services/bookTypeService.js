@@ -21,11 +21,12 @@ export const getAllBookTypeService = () => new Promise(async (resolve, reject) =
 })
 
 // thêm mới
-export const addBookTypeService = async ({ name, description }) => {
+export const addBookTypeService = async ({ name, tag,  description }) => {
     try {
         // Thêm dữ liệu vào bảng
         const newBookType = await db.BookType.create({
-            name,
+            name : name.trim(),
+            tag: tag.trim().toLowerCase(),
             description: description.trim() || null,
         });
 
@@ -45,7 +46,7 @@ export const addBookTypeService = async ({ name, description }) => {
 };
 
 // chinh sửa loại sách 
-export const updateBookTypeService = async ({ book_type_id, name, description }) => {
+export const updateBookTypeService = async ({ book_type_id, name, tag,  description }) => {
     try {
         // Tìm bản ghi cần sửa
         const bookType = await db.BookType.findOne({
@@ -60,7 +61,7 @@ export const updateBookTypeService = async ({ book_type_id, name, description })
         }
 
         // Cập nhật dữ liệu
-        await bookType.update({ name, description });
+        await bookType.update({ name: name.trim(), tag : tag.trim(), description: tag.trim() });
 
         return {
             err: 0,

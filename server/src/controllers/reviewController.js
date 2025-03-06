@@ -10,7 +10,7 @@ export const addReviewController = async (req, res) => {
                 msg: "Thiếu dữ liệu đầu vào."
             });
         }
-        const rs = await reviewService.createReviewService(req.body);
+        const rs = await reviewService.addReviewService(req.body);
         return res.status(200).json(rs);
     } catch (error) {
         return res.status(500).json(error);

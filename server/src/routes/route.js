@@ -35,7 +35,7 @@ router.post('/book/add', upload.array('images', 10), bookController.addBookContr
 router.put('/book/update', bookController.updateBookController)
 router.delete('/book/delete', bookController.deleteBookController)
 
-// book image
+// book image route
 router.post('/bookimage/add', upload.array('images', 10), bookImageController.addBookImageController)
 router.delete('/bookimage/delete', bookImageController.deleteBookImageController)
 
@@ -47,7 +47,7 @@ router.delete('/booktype/delete', bookTypeController.deleteBookTypeController)
 
 // review route
 router.post('/review/add', reviewController.addReviewController)
-router.post('/review/delete', reviewController.deleteReviewController)
+router.delete('/review/delete', reviewController.deleteReviewController)
 
 // cart route
 router.get('/cart', cartController.getCartController)
