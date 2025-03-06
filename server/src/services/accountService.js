@@ -253,12 +253,12 @@ export const uploadAvatarService = (user_id, req) =>
             }
 
             // Lưu public_id của ảnh vừa upload để rollback nếu cần
-            uploadedImagePublicId = rs.avatar_public_id;
+            uploadedImagePublicId = rs.id;
 
             await avatarRecord.update(
                 {
                     avatar_path: rs.url,
-                    avatar_public_id: rs.avatar_public_id,
+                    avatar_public_id: rs.id,
                 },
                 { transaction }
             );

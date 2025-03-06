@@ -39,7 +39,7 @@ export const uploadImageService = (req, avatar_public_id) => {
                     // Trả về kết quả thành công
                     resolve({
                         url: result.secure_url,
-                        avatar_public_id: result.public_id,
+                        id: result.public_id,
                     });
                 }
             );

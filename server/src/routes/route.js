@@ -11,6 +11,7 @@ import * as orderController from "../controllers/orderController"
 import * as paymentService from "../services/paymentService"
 import * as discountController from "../controllers/discountController"
 import * as favoriteController from "../controllers/favoriteController"
+import * as bannerController from "../controllers/bannerController"
 import * as middleWare from "../middleware/authMiddleWare"
 import { upload } from "../middleware/multerMiddleWare";
 
@@ -56,6 +57,10 @@ router.delete('/booktype/delete', bookTypeController.deleteBookTypeController)
 // review route
 router.post('/review/add', reviewController.addReviewController)
 router.post('/review/delete', reviewController.deleteReviewController)
+
+// banner route
+router.post('/banner/add', bannerController.addBannerController)
+router.post('/banner/delete', bannerController.deleteBannerController)
 
 // cart route
 router.post('/cart/userid', cartController.getCartController)
