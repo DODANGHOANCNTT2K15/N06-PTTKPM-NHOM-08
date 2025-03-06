@@ -5,11 +5,11 @@ export const useAvatarStore = defineStore('avatar', () => {
   const avatar = ref(null); // Thêm ref để lưu avatar
 
   function initializeAvatar() {
-    if(!localStorage.getItem('avatar')) {
-        localStorage.setItem('avatar', '');
+    if (!localStorage.getItem('avatar')) {
+      localStorage.setItem('avatar', '');
     } else {
-        const storedAvatar = localStorage.getItem('avatar');
-        avatar.value = storedAvatar ? storedAvatar : null;
+      const storedAvatar = localStorage.getItem('avatar');
+      avatar.value = storedAvatar ? storedAvatar : null;
     }
   }
 
@@ -27,9 +27,9 @@ export const useAvatarStore = defineStore('avatar', () => {
     }
   });
 
-  return { 
-    avatar, 
+  return {
+    avatar,
     updateAvatar,
-    initializeAvatar 
+    initializeAvatar
   };
 });
