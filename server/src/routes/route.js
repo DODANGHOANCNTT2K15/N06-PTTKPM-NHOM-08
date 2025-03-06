@@ -82,7 +82,10 @@ router.put('/customer/update', customerController.updateCustomerController)
 router.delete('/customer/delete', customerController.deleteCustomerController)
 
 // order route
+router.get("/order", orderController.getAllOrderController);
+router.post("/order/userid", orderController.getAllOrderByUserController);
 router.post("/order/get", orderController.getOrderController);
+router.put("/order/status", orderController.updateOrderStatusController);
 router.post("/order/add", orderController.addOrderController);
 router.put("/order/update", orderController.updateOrderController);
 router.delete("/order/delete", orderController.deleteOrderController);

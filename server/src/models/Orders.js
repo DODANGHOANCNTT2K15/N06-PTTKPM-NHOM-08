@@ -6,7 +6,7 @@ module.exports = (sequelize) => {
     static associate(models) {
       Order.belongsTo(models.Customer, { foreignKey: 'customer_id', as: 'customer' });
       Order.belongsTo(models.PaymentMethod, { foreignKey: 'payment_method_id', as: 'paymentMethod' });
-      Order.hasMany(models.OrderDetail, { foreignKey: 'order_id', as: 'orderDetails' });
+      Order.hasMany(models.OrderDetail, { foreignKey: 'order_id', as: 'order_details' });
     }
   }
 

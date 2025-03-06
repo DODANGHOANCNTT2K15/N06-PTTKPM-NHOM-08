@@ -1,5 +1,63 @@
 import * as orderService from "../services/orderService";
 
+// Lấy toàn bộ thông tin đơn hàng 
+export const getAllOrderController = async (req, res) => {
+    try {
+        const rs = await orderService.getAllOrderService();
+        return res.status(200).json(rs);
+    } catch (error) {
+        return res.status(500).json({
+            err: 1,
+            msg: "Lỗi server.",
+            error: error.message,
+        });
+    }
+};
+
+// update status
+export const updateOrderStatusController = async (req, res) => {
+    try {
+        const { order_id, status } = req.body;
+        if (!order_id || status === undefined) {
+            return res.status(400).json({
+                err: 1,
+                msg: "Thiếu order_id hoặc status.",
+            });
+        }
+
+        const rs = await orderService.updateOrderStatusService(order_id, status);
+        return res.status(200).json(rs);
+    } catch (error) {
+        return res.status(500).json({
+            err: 1,
+            msg: "Lỗi server.",
+            error: error.message,
+        });
+    }
+};
+
+
+// Lấy thông tin đơn hàng theo user
+export const getAllOrderByUserController = async (req, res) => {
+    const { user_id } = req.body;
+    try {
+        if (!user_id) {
+            return res.status(400).json({
+                err: 1,
+                msg: "Thiếu user_id.",
+            });
+        }
+        const rs = await orderService.getAllOrderByUserService(user_id);
+        return res.status(200).json(rs);
+    } catch (error) {
+        return res.status(500).json({
+            err: 1,
+            msg: "Lỗi server.",
+            error: error.message,
+        });
+    }
+};
+
 // Lấy thông tin đơn hàng
 export const getOrderController = async (req, res) => {
     const { order_id } = req.body;

@@ -1,5 +1,144 @@
 import db from "../models";
-import * as cartService from "./cartService"
+
+// lấy ra toàn bộ đơn hàng
+export const getAllOrderService = (user_id) =>
+    new Promise(async (resolve, reject) => {
+        try {
+            const orders = await db.Order.findAll({
+                include: [
+                    {
+                        model: db.OrderDetail, 
+                        as: 'order_details',
+                        attributes: ['book_id', 'quantity', 'price'], 
+                        include: [
+                            {
+                                model: db.Book, 
+                                as: 'book'
+                            },
+                        ]
+                    },
+                    {
+                        model: db.Customer, 
+                        as: 'customer'
+                    }
+                ]
+            });
+
+            if (!orders.length) {
+                return resolve({
+                    err: 1,
+                    msg: "Không tìm thấy đơn hàng nào.",
+                });
+            }
+
+            return resolve({
+                err: 0,
+                msg: "Tìm thấy đơn hàng.",
+                data: orders,
+            });
+        } catch (error) {
+            console.error("Lỗi tại getAllOrderByUserService: ", error);
+            return reject({
+                err: 1,
+                msg: "Lỗi khi tìm kiếm đơn hàng.",
+                error: error.message,
+            });
+        }
+    });
+// update status
+export const updateOrderStatusService = (order_id, status) =>
+    new Promise(async (resolve, reject) => {
+        try {
+            // Tìm đơn hàng theo order_id
+            const order = await db.Order.findOne({
+                where: { order_id }
+            });
+
+            if (!order) {
+                return resolve({
+                    err: 1,
+                    msg: "Không tìm thấy đơn hàng.",
+                });
+            }
+
+            // Cập nhật trạng thái đơn hàng
+            await order.update({ status: status });
+
+            return resolve({
+                err: 0,
+                msg: "Cập nhật trạng thái đơn hàng thành công.",
+                data: { order_id, status }
+            });
+        } catch (error) {
+            console.error("Lỗi tại updateOrderStatusService: ", error);
+            return reject({
+                err: 1,
+                msg: "Lỗi khi cập nhật trạng thái đơn hàng.",
+                error: error.message,
+            });
+        }
+    });
+
+
+// lấy thông tin theo người dùng
+export const getAllOrderByUserService = (user_id) =>
+    new Promise(async (resolve, reject) => {
+        try {
+            // 🔹 Tìm customer_id dựa trên user_id
+            const customer = await db.Customer.findOne({
+                where: { user_id },
+                attributes: ['customer_id'] // Chỉ lấy trường customer_id
+            });
+
+            if (!customer) {
+                return resolve({
+                    err: 1,
+                    msg: "Không tìm thấy khách hàng.",
+                });
+            }
+
+            // 🔹 Sau khi có customer_id, lấy danh sách order kèm theo book
+            const orders = await db.Order.findAll({
+                where: { customer_id: customer.customer_id },
+                include: [
+                    {
+                        model: db.OrderDetail, 
+                        as: 'order_details',
+                        attributes: ['book_id', 'quantity', 'price'], 
+                        include: [
+                            {
+                                model: db.Book, 
+                                as: 'book'
+                            }
+                        ]
+                    }
+                ]
+            });
+
+            if (!orders.length) {
+                return resolve({
+                    err: 1,
+                    msg: "Không tìm thấy đơn hàng nào.",
+                });
+            }
+
+            return resolve({
+                err: 0,
+                msg: "Tìm thấy đơn hàng.",
+                data: orders,
+            });
+        } catch (error) {
+            console.error("Lỗi tại getAllOrderByUserService: ", error);
+            return reject({
+                err: 1,
+                msg: "Lỗi khi tìm kiếm đơn hàng.",
+                error: error.message,
+            });
+        }
+    });
+
+
+
 
 // Lấy thông tin đơn hàng
 export const getOrderService = (order_id) =>
@@ -150,7 +289,7 @@ export const updateOrderService = ({
 }) =>
     new Promise(async (resolve, reject) => {
         try {
-            const updated = await db.Orders.update(
+            const updated = await db.Order.update(
                 {
                     customer_id,
                     order_date,
