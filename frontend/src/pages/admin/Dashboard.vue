@@ -64,13 +64,15 @@
 <script>
 import { ref, onMounted, computed } from 'vue';
 import Chart from 'chart.js/auto';
-import { apiGetAllUsers } from '@/services/admin/UserService'; // Import API
+import { apiGetAllUsers } from '@/services/admin/UserService';
+import { apiGetAllBooks } from '@/services/admin/BookService';
+import { apiGetAllDiscounts } from '@/services/admin/DiscountService'; // Import API lấy tổng khuyến mãi
 
 export default {
   name: 'AdminDashboard',
   setup() {
     // Dữ liệu mẫu (sẽ được cập nhật từ API)
-    const totalBooks = ref(150);
+    const totalBooks = ref(0); // Khởi tạo 0, sẽ cập nhật từ API
     const totalUsers = ref(0); // Khởi tạo 0, sẽ cập nhật từ API
     const totalOrders = ref(300);
     const banners = ref([
@@ -78,11 +80,7 @@ export default {
       { id: 2, name: 'Sách Mới', status: 'active' },
       { id: 3, name: 'Giảm giá 50%', status: 'inactive' },
     ]);
-    const promotions = ref([
-      { id: 1, name: 'Khuyến mãi Tết', discount: 20 },
-      { id: 2, name: 'Giảm giá hè', discount: 15 },
-      { id: 3, name: 'Black Friday', discount: 30 },
-    ]);
+    const promotions = ref([]); // Khởi tạo rỗng, sẽ cập nhật từ API
 
     // Dữ liệu mẫu cho hoạt động gần đây
     const activities = ref([
@@ -193,23 +191,42 @@ export default {
     // Hàm lấy dữ liệu từ API
     const fetchStats = async () => {
       try {
-        const usersResponse = await apiGetAllUsers(); // Gọi API lấy danh sách người dùng
+        // Lấy tổng người dùng
+        const usersResponse = await apiGetAllUsers();
         if (usersResponse.data.err === 0) {
-          totalUsers.value = usersResponse.data.data.length; // Cập nhật số lượng người dùng
+          totalUsers.value = usersResponse.data.data.length;
         } else {
           console.error('Lỗi khi lấy danh sách người dùng:', usersResponse.data.msg);
           totalUsers.value = 0;
         }
 
-        // Trong thực tế, bạn cũng cần gọi các API khác để lấy totalBooks, totalOrders, banners, promotions
+        // Lấy tổng sách
+        const booksResponse = await apiGetAllBooks();
+        if (booksResponse.data.err === 0) {
+          totalBooks.value = booksResponse.data.data.length;
+        } else {
+          console.error('Lỗi khi lấy danh sách sách:', booksResponse.data.msg);
+          totalBooks.value = 0;
+        }
+
+        // Lấy tổng khuyến mãi
+        const discountsResponse = await apiGetAllDiscounts();
+        if (discountsResponse.data.err === 0) {
+          promotions.value = discountsResponse.data.data;
+        } else {
+          console.error('Lỗi khi lấy danh sách khuyến mãi:', discountsResponse.data.msg);
+          promotions.value = [];
+        }
+
+        // Trong thực tế, bạn cũng cần gọi các API khác để lấy totalOrders, banners
         // Ví dụ:
-        // const booksResponse = await apiGetAllBooks();
-        // totalBooks.value = booksResponse.data.length;
         // const ordersResponse = await apiGetAllOrders();
         // totalOrders.value = ordersResponse.data.length;
       } catch (error) {
         console.error('Lỗi khi lấy dữ liệu thống kê:', error);
-        totalUsers.value = 0; // Reset về 0 nếu có lỗi
+        totalUsers.value = 0;
+        totalBooks.value = 0;
+        promotions.value = [];
       }
     };
 
