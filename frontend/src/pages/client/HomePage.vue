@@ -81,7 +81,7 @@
                   style="font-size: 0.9em; opacity: 0.8; margin-right: 10px"
                   >Sắp xếp</label
                 >
-                <select id="sort-options">
+                <select id="sort-options" v-model="sortOption" @change="sortProducts">
                   <option value="popular">Phổ biến</option>
                   <option value="best-seller">Bán chạy nhất</option>
                   <option value="low-to-high">Giá thấp đến cao</option>
@@ -96,7 +96,7 @@
               v-for="product in paginatedProducts"
               :key="product.id"
               :id="product.id"
-              image="Product_00.png"
+              :image="product.image"
               :discountedPrice="product.discountedPrice"
               :originalPrice="product.originalPrice"
               :author="product.author"
@@ -440,6 +440,9 @@ import {
   apiRegister,
   apiForgotPass,
 } from "@/services/client/AuthService";
+import {
+  apiGetAllBooks
+} from "@/services/client/BookService";
 
 export default {
   name: "HomePage",
@@ -456,21 +459,9 @@ export default {
     let autoSlideInterval = null;
 
     // State cho form
-    const loginForm = ref({
-      email: "",
-      pass_word: "",
-    });
-
-    const signupForm = ref({
-      user_name: "",
-      email: "",
-      pass_word: "",
-    });
-
-    const forgetPasswordForm = ref({
-      email: "",
-    });
-
+    const loginForm = ref({ email: "", pass_word: "" });
+    const signupForm = ref({ user_name: "", email: "", pass_word: "" });
+    const forgetPasswordForm = ref({ email: "" });
     const errorMessage = ref("");
     const successMessage = ref("");
 
@@ -486,18 +477,13 @@ export default {
           authStore.login();
           successMessage.value = "Đăng nhập thành công!";
           errorMessage.value = "";
-
           loginForm.value = { email: "", pass_word: "" };
-
-          setTimeout(() => {
-            router.push("/");
-          }, 1000);
+          setTimeout(() => router.push("/"), 1000);
         } else {
           errorMessage.value = response.data.msg;
         }
       } catch (error) {
-        errorMessage.value =
-          error.response?.data?.message || "Đăng nhập thất bại!";
+        errorMessage.value = error.response?.data?.message || "Đăng nhập thất bại!";
         successMessage.value = "";
       }
     };
@@ -510,26 +496,19 @@ export default {
           email: signupForm.value.email,
           pass_word: signupForm.value.pass_word,
         });
-
         if (response.status === 200 && response.data.err === 0) {
           localStorage.setItem("token", response.data.token);
           authStore.login();
-          successMessage.value =
-            "Đăng ký thành công! Đang chuyển hướng về trang chủ...";
+          successMessage.value = "Đăng ký thành công! Đang chuyển hướng...";
           errorMessage.value = "";
-
           signupForm.value = { user_name: "", email: "", pass_word: "" };
-
-          setTimeout(() => {
-            router.push("/");
-          }, 1000);
+          setTimeout(() => router.push("/"), 1000);
         } else {
           successMessage.value = "";
           errorMessage.value = response.data.msg;
         }
       } catch (error) {
-        errorMessage.value =
-          error.response?.data?.message || "Đăng ký thất bại!";
+        errorMessage.value = error.response?.data?.message || "Đăng ký thất bại!";
         successMessage.value = "";
       }
     };
@@ -540,24 +519,17 @@ export default {
         const response = await apiForgotPass({
           email: forgetPasswordForm.value.email,
         });
-
         if (response.status === 200 && response.data.err === 0) {
-          successMessage.value =
-            "Mật khẩu mới đã được gửi tới email của bạn. Vui lòng kiểm tra và đổi mật khẩu sớm nhất có thể!";
+          successMessage.value = "Mật khẩu mới đã được gửi tới email của bạn!";
           errorMessage.value = "";
-
-          setTimeout(() => {
-            router.push("/login");
-          }, 1000);
-
+          setTimeout(() => router.push("/login"), 1000);
           forgetPasswordForm.value = { email: "" };
         } else {
           successMessage.value = "";
           errorMessage.value = response.data.msg;
         }
       } catch (error) {
-        errorMessage.value =
-          error.response?.data?.message || "Không thể gửi mã xác nhận!";
+        errorMessage.value = error.response?.data?.message || "Không thể gửi mã!";
         successMessage.value = "";
       }
     };
@@ -566,6 +538,71 @@ export default {
       router.push(`/product/${id}`);
     };
 
+    // State cho sản phẩm
+    const products = ref([]);
+    const sortOption = ref("newest");
+    const itemsPerPage = ref(10);
+    const currentPage = ref(1);
+
+    // Hàm gọi API lấy sách
+    const fetchBooks = async () => {
+      try {
+        const response = await apiGetAllBooks(); // Thay bằng endpoint thực tế
+        if (response.data.err === 0) {
+          const books = response.data.data.map((book) => ({
+            id: book.book_id,
+            image: book.images[0]?.image_path || "Product_00.png",
+            discountedPrice: book.price * (1 - book.discount_price / 100),
+            originalPrice: book.price,
+            author: book.author,
+            title: book.title,
+            sold: book.warehouses[0]?.sold_quantity || 0,
+            tags: [`${book.bookType.tag}`, `${book.rating_avg}Sao`],
+            publishedDate: new Date(book.published_date),
+          }));
+          products.value = books;
+          sortProducts();
+        } else {
+          console.error("Lỗi từ API:", response.data.msg);
+        }
+      } catch (error) {
+        console.error("Không thể lấy dữ liệu sách:", error);
+      }
+    };
+
+    // Hàm sắp xếp sản phẩm
+    const sortProducts = () => {
+      const sortedProducts = [...products.value];
+      switch (sortOption.value) {
+        case "popular":
+        case "best-seller":
+          sortedProducts.sort((a, b) => b.sold - a.sold);
+          break;
+        case "low-to-high":
+          sortedProducts.sort((a, b) => a.discountedPrice - b.discountedPrice);
+          break;
+        case "high-to-low":
+          sortedProducts.sort((a, b) => b.discountedPrice - a.discountedPrice);
+          break;
+        case "newest":
+          sortedProducts.sort((a, b) => b.publishedDate - a.publishedDate);
+          break;
+      }
+      products.value = sortedProducts;
+    };
+
+    // Tính toán sản phẩm phân trang
+    const paginatedProducts = computed(() => {
+      const start = (currentPage.value - 1) * itemsPerPage.value;
+      const end = start + itemsPerPage.value;
+      return products.value.slice(start, end);
+    });
+
+    const totalPages = computed(() => {
+      return Math.ceil(products.value.length / itemsPerPage.value);
+    });
+
+    // Filter logic
     const filters = ref({
       freeShipping: false,
       ratings: { 1: false, 2: false, 3: false, 4: false, 5: false },
@@ -582,9 +619,7 @@ export default {
     const customPriceRange = ref({ from: "", to: "" });
 
     const hasPriceRangeSelected = computed(() => {
-      return Object.values(filters.value.priceRanges).some(
-        (value) => value === true
-      );
+      return Object.values(filters.value.priceRanges).some((value) => value);
     });
 
     const clearCustomPriceRange = () => {
@@ -593,84 +628,42 @@ export default {
 
     const clearAllFilters = () => {
       filters.value.freeShipping = false;
-      Object.keys(filters.value.ratings).forEach(
-        (key) => (filters.value.ratings[key] = false)
-      );
-      Object.keys(filters.value.priceRanges).forEach(
-        (key) => (filters.value.priceRanges[key] = false)
-      );
+      Object.keys(filters.value.ratings).forEach((key) => (filters.value.ratings[key] = false));
+      Object.keys(filters.value.priceRanges).forEach((key) => (filters.value.priceRanges[key] = false));
       clearCustomPriceRange();
     };
 
     const showResults = () => {
       console.log("Applying filters:", filters.value, customPriceRange.value);
-      setTimeout(() => {
-        router.push("/filter-results");
-      }, 10000);
+      setTimeout(() => router.push("/filter-results"), 1000);
     };
 
+    // Banner logic
     const nextBanner = () => {
       currentBanner.value = (currentBanner.value + 1) % banners.value.length;
     };
 
     const prevBanner = () => {
-      currentBanner.value =
-        (currentBanner.value - 1 + banners.value.length) % banners.value.length;
+      currentBanner.value = (currentBanner.value - 1 + banners.value.length) % banners.value.length;
     };
 
     const startAutoSlide = () => {
       autoSlideInterval = setInterval(nextBanner, 10000);
     };
 
-    // Phân trang cho sản phẩm
-    const products = ref([
-      { id: 1, discountedPrice: 600000, originalPrice: 1600000, author: 'DAISETZ TEITARO SUZUKI', title: 'Thiền luận', sold: 96, tags: ['khoahoc', '4Sao'] },
-      { id: 2, discountedPrice: 350000, originalPrice: 800000, author: 'NGUYEN DU', title: 'Truyện Kiều', sold: 150, tags: ['van hoc', '5Sao'] },
-      { id: 3, discountedPrice: 250000, originalPrice: 500000, author: 'STEPHEN HAWKING', title: 'Lược sử thời gian', sold: 200, tags: ['khoa hoc', '4Sao'] },
-      { id: 4, discountedPrice: 250000, originalPrice: 500000, author: 'STEPHEN HAWKING', title: 'Lược sử thời gian', sold: 200, tags: ['khoa hoc', '4Sao'] },
-      { id: 5, discountedPrice: 250000, originalPrice: 500000, author: 'STEPHEN HAWKING', title: 'Lược sử thời gian', sold: 200, tags: ['khoa hoc', '4Sao'] },
-      { id: 6, discountedPrice: 250000, originalPrice: 500000, author: 'STEPHEN HAWKING', title: 'Lược sử thời gian', sold: 200, tags: ['khoa hoc', '4Sao'] },
-      { id: 7, discountedPrice: 250000, originalPrice: 500000, author: 'STEPHEN HAWKING', title: 'Lược sử thời gian', sold: 200, tags: ['khoa hoc', '4Sao'] },
-      { id: 8, discountedPrice: 250000, originalPrice: 500000, author: 'STEPHEN HAWKING', title: 'Lược sử thời gian', sold: 200, tags: ['khoa hoc', '4Sao'] },
-      { id: 9, discountedPrice: 250000, originalPrice: 500000, author: 'STEPHEN HAWKING', title: 'Lược sử thời gian', sold: 200, tags: ['khoa hoc', '4Sao'] },
-      { id: 10, discountedPrice: 250000, originalPrice: 500000, author: 'STEPHEN HAWKING', title: 'Lược sử thời gian', sold: 200, tags: ['khoa hoc', '4Sao'] },
-      { id: 11, discountedPrice: 250000, originalPrice: 500000, author: 'STEPHEN HAWKING', title: 'Lược sử thời gian', sold: 200, tags: ['khoa hoc', '4Sao'] },
-    ]);
-
-    const itemsPerPage = ref(10); // Số sản phẩm trên mỗi trang
-    const currentPage = ref(1); // Trang hiện tại
-
-    const paginatedProducts = computed(() => {
-      const start = (currentPage.value - 1) * itemsPerPage.value;
-      const end = start + itemsPerPage.value;
-      return products.value.slice(start, end);
-    });
-
-    const totalPages = computed(() => {
-      return Math.ceil(products.value.length / itemsPerPage.value);
-    });
-
     onMounted(() => {
       startAutoSlide();
       authStore.initializeAuth();
+      fetchBooks();
     });
 
     onUnmounted(() => {
-      if (autoSlideInterval) {
-        clearInterval(autoSlideInterval);
-      }
+      if (autoSlideInterval) clearInterval(autoSlideInterval);
     });
 
     return {
       currentRouteName,
       showFilterPopup,
-      filters,
-      customPriceRange,
-      hasPriceRangeSelected,
-      clearCustomPriceRange,
-      clearAllFilters,
-      showResults,
-      goToProductDetail,
       banners,
       currentBanner,
       nextBanner,
@@ -683,9 +676,18 @@ export default {
       login,
       signup,
       forgetPassword,
+      goToProductDetail,
       paginatedProducts,
       currentPage,
       totalPages,
+      sortOption,
+      sortProducts,
+      filters,
+      customPriceRange,
+      hasPriceRangeSelected,
+      clearCustomPriceRange,
+      clearAllFilters,
+      showResults,
     };
   },
 };

@@ -13,9 +13,8 @@
           <tr>
             <th @click="sort('book_type_id')">ID Loại Sách <i :class="getSortIcon('book_type_id')"></i></th>
             <th @click="sort('name')">Tên Loại Sách <i :class="getSortIcon('name')"></i></th>
+            <th @click="sort('tag')">Thẻ <i :class="getSortIcon('tag')"></i></th>
             <th @click="sort('description')">Mô tả <i :class="getSortIcon('description')"></i></th>
-            <th @click="sort('createdAt')">Ngày Tạo <i :class="getSortIcon('createdAt')"></i></th>
-            <th @click="sort('updatedAt')">Ngày Cập Nhật <i :class="getSortIcon('updatedAt')"></i></th>
             <th>Hành động</th>
           </tr>
         </thead>
@@ -23,9 +22,8 @@
           <tr v-for="bookType in filteredAndSortedBookTypes" :key="bookType.book_type_id">
             <td>{{ bookType.book_type_id }}</td>
             <td>{{ bookType.name }}</td>
+            <td>#{{ bookType.tag }}</td>
             <td>{{ bookType.description }}</td>
-            <td>{{ new Date(bookType.createdAt).toLocaleString() }}</td>
-            <td>{{ new Date(bookType.updatedAt).toLocaleString() }}</td>
             <td>
               <button @click="editBookType(bookType.book_type_id)" class="action-btn edit-btn">
                 <i class="fas fa-pencil-alt"></i>
@@ -60,6 +58,10 @@
             <input v-model="newBookType.name" type="text" required />
           </div>
           <div class="form-group">
+            <label>Thẻ:</label>
+            <input v-model="newBookType.tag" type="text" required />
+          </div>
+          <div class="form-group">
             <label>Mô tả:</label>
             <textarea v-model="newBookType.description" required></textarea>
           </div>
@@ -83,6 +85,10 @@
           <div class="form-group">
             <label>Tên Loại Sách:</label>
             <input v-model="editedBookType.name" type="text" required />
+          </div>
+          <div class="form-group">
+            <label>Thẻ:</label>
+            <input v-model="editedBookType.tag" type="text" required />
           </div>
           <div class="form-group">
             <label>Mô tả:</label>
@@ -111,7 +117,7 @@ export default {
     const sortOrder = ref('asc');
     const showAddBookTypePopup = ref(false);
     const showEditBookTypePopup = ref(false);
-    const newBookType = ref({ name: '', description: '' });
+    const newBookType = ref({ name: '', tag: '', description: '' });
     const editedBookType = ref({});
     const currentPage = ref(1);
     const itemsPerPage = ref(10);
@@ -131,7 +137,7 @@ export default {
         const response = await apiAddBookType(payload);
         if (response.data) {
           await fetchBookTypes();
-          newBookType.value = { name: '', description: '' };
+          newBookType.value = { name: '', tag: '', description: '' };
           showAddBookTypePopup.value = false;
           console.log('Thêm loại sách thành công:', response.data);
         }
@@ -257,6 +263,7 @@ export default {
 </script>
 
 <style scoped>
+/* The CSS remains unchanged as it doesn't depend on the database schema */
 .admin-book-types {
   background-color: white;
   padding: 20px;

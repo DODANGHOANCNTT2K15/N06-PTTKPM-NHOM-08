@@ -144,7 +144,7 @@
           </div>
           <div class="form-group">
             <label>Mật khẩu mới:</label>
-            <input v-model="passwordChange.pass_word" type="password" required />
+            <input v-model="passwordChange.new_pass_word" type="password" required />
           </div>
           <div class="modal-actions">
             <button type="submit">Lưu</button>
@@ -238,7 +238,7 @@ export default {
       passwordChange.value = {
         user_id: user.user_id,
         email: user.email,
-        pass_word: ''
+        new_pass_word: ''
       };
       showChangePasswordPopup.value = true;
     };
