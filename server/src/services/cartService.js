@@ -44,7 +44,7 @@ export const addToCartService = ({ user_id, book_id, quantity, all_price }) =>
                 user_id,
                 book_id,
                 quantity,
-                all_price,
+                all_price: Math.ceil(all_price),
             });
 
             const totalProductTypes = await db.Cart.count({

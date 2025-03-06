@@ -6,7 +6,7 @@ import path from 'path';
 // Lọc file để chỉ chấp nhận file ảnh
 const fileFilter = (req, file, cb) => {
     const ext = path.extname(file.originalname).toLowerCase();
-    const allowedExtensions = ['.jpg', '.jpeg', '.png', '.gif'];
+    const allowedExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.tiff', '.webp', '.svg', '.ico', '.avif'];
     if (allowedExtensions.includes(ext)) {
         cb(null, true); 
     } else {

@@ -6,7 +6,7 @@ export const getAllDiscountsService = () => new Promise(async (resolve, reject) 
         const discounts = await db.Discount.findAll({});
 
         return resolve({
-            err: discounts.length ? 0 : 2,
+            err: 0,
             msg: discounts.length ? 'Lấy danh sách giảm giá thành công!' : 'Không có giảm giá nào.',
             data: discounts
         });
