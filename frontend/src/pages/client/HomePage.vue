@@ -359,10 +359,11 @@ export default {
           email: loginForm.value.email,
           pass_word: loginForm.value.pass_word,
         });
-        if (response.status === 200 && response.data.err === 0) {
+        if (response.status === 200 && response.data.err !== 2) {
           localStorage.setItem("token", response.data.token);
           authStore.login();
-          const avatarUrl = response.data.data?.avatar || response.data.data?.avata;
+          console.log(response.data?.avatar);
+          const avatarUrl = response.data?.avatar || response.data?.avata;
           avatarStore.updateAvatar(avatarUrl || null);
           successMessage.value = "Đăng nhập thành công!";
           errorMessage.value = "";

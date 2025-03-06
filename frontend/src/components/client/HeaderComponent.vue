@@ -41,8 +41,8 @@
         </div>
         <div v-else class="account-dropdown">
           <button type="button" class="account-button">
-            <template v-if="authStore.user?.avatar">
-              <img :src="avatarStore.avatar" alt="Avatar" class="avatar" />
+            <template v-if="avatarStore.avatar">
+              <img :src="avatarStore.avatar" alt="Avatar" class="avatar" @error="avatarStore.updateAvatar(null)" />
             </template>
             <template v-else>
               <i class="fa fa-user avatar-icon"></i>
@@ -72,6 +72,7 @@
 
 <script>
 import { useAuthStore } from "@/stores/auth";
+import { useAvatarStore } from "@/stores/avatar";
 import { onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import { useCartStore } from "@/stores/cart";
@@ -83,6 +84,7 @@ export default {
     const router = useRouter();
     const authStore = useAuthStore();
     const cartStore = useCartStore();
+    const avatarStore = useAvatarStore();
     const showOverlay = ref(false);
     const searchQuery = ref("");
 
@@ -91,15 +93,20 @@ export default {
       const token = localStorage.getItem("token");
       if (token && authStore.isLoggedIn) {
         const userInfo = getUserInfoFromToken(token);
-        authStore.user = userInfo || {}; // Đảm bảo user luôn là object
+        authStore.user = userInfo || {};
+        // Đồng bộ avatar từ authStore sang avatarStore nếu có
+        if (userInfo?.avatar) {
+          avatarStore.updateAvatar(userInfo.avatar);
+        }
       } else {
-        authStore.user = {}; // Mặc định là object rỗng nếu không đăng nhập
+        authStore.user = {};
       }
     };
 
     onMounted(() => {
       authStore.initializeAuth();
       cartStore.initializeCart();
+      avatarStore.initializeAvatar(); // Khởi tạo avatar từ localStorage
       initializeUserInfo(); // Khởi tạo thông tin người dùng
       fetchCountOfCart();
     });
@@ -187,7 +194,8 @@ export default {
     const handleLogout = () => {
       authStore.logout();
       cartStore.updatetotal_product_type(0);
-      authStore.user = {}; // Reset user về object rỗng
+      avatarStore.updateAvatar(null); // Reset avatar khi đăng xuất
+      authStore.user = {};
       alert("Đăng xuất thành công!");
       router.push("/");
     };
@@ -198,13 +206,15 @@ export default {
         fetchCountOfCart();
       } else {
         cartStore.updatetotal_product_type(0);
-        authStore.user = {}; // Reset user khi đăng xuất
+        avatarStore.updateAvatar(null); // Reset avatar khi đăng xuất
+        authStore.user = {};
       }
     });
 
     return {
       authStore,
       cartStore,
+      avatarStore,
       goToHome,
       gotoLogin,
       goToUserInfo,
@@ -222,7 +232,6 @@ export default {
 </script>
 
 <style scoped>
-/* Style giữ nguyên */
 header {
   font-family: "Arial", sans-serif;
   background-color: #fff;
