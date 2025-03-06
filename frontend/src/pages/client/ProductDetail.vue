@@ -3,24 +3,24 @@
     <div class="product-header">
       <nav class="nav-tabs">
         <a href="#">Trang chủ</a> > <a href="#">Sách tiếng Việt</a> > <a href="#">Truyện tranh</a> > 
-        <span>{{ product.name }}</span>
+        <span>Thiên Tài Bên Trái, Kẻ Điên Bên Phải (Tái Bản)</span>
       </nav>
     </div>
 
     <div class="product-content">
       <div class="product-left">
         <div class="product-image">
-          <img :src="product.mainImage || require(`@/assets/images/default-product.png`)" alt="Product Image" />
+          <img :src="require(`@/assets/images/${mainImage}`)" alt="Thiên Tài Bên Trái, Kẻ Điên Bên Phải" />
         </div>
-        <div class="thumbnail-slider" v-if="product.thumbnails && product.thumbnails.length">
+        <div class="thumbnail-slider">
           <button class="arrow-left" @click="prevThumbnail">
             <i class="fas fa-chevron-left"></i>
           </button>
           <div class="thumbnail-container">
             <img
-              v-for="(thumbnail, index) in product.thumbnails"
+              v-for="(thumbnail, index) in thumbnails"
               :key="index"
-              :src="thumbnail || require(`@/assets/images/default-thumbnail.png`)"
+              :src="require(`@/assets/images/${thumbnail}`)"
               :alt="`Thumbnail ${index + 1}`"
               :class="{ 'active': index === currentThumbnail }"
               @click="selectThumbnail(index)"
@@ -33,19 +33,21 @@
         <div class="highlight-section">
           <h3>Đặc điểm nổi bật</h3>
           <ul>
-            <li v-for="highlight in product.highlights" :key="highlight">{{ highlight }}</li>
+            <li>Khám phá những điều thú vị ngay cả khi bạn chưa từng đọc truyện tranh, kể cả bạn đã từng đọc.</li>
+            <li>Ngôn ngữ sắc sảo, sâu sắc với văn phong, khai thác sâu những giá trị nhân văn.</li>
+            <li>Tạo động lực, giúp bạn tìm thấy chính mình.</li>
           </ul>
         </div>
       </div>
       
       <div class="product-right">
-        <h1>{{ product.name }}</h1>
+        <h1>Thiên Tài Bên Trái, Kẻ Điên Bên Phải (Tái Bản)</h1>
         <div class="rating">
-          <span>★★★★★</span> ({{ product.ratingCount || 0 }}) | Đã bán {{ product.soldCount || 0 }}+
+          <span>★★★★★</span> (5,467) | Đã bán 3,000+
         </div>
         <div class="price">
-          <span class="current-price">{{ product.currentPrice || '0 VNĐ' }} VNĐ</span>
-          <span class="original-price" v-if="product.originalPrice">~{{ product.originalPrice || '0 VNĐ' }} VNĐ</span>
+          <span class="current-price">600,000 VNĐ</span>
+          <span class="original-price">~1,000,000 VNĐ</span>
         </div>
 
         <div class="quantity">
@@ -62,25 +64,49 @@
         </div>
 
         <div class="shipping-info">
-          <p><i class="fas fa-map-marker-alt"></i> {{ product.shippingLocation || 'Hoàn Kiếm, Hà Đông, Hà Nội' }}</p>
-          <p><i class="fas fa-truck"></i> {{ product.shippingFee || 'Giao phí chỉ từ 10k cho đơn từ 45k, 25k cho đơn từ 100k' }}</p>
+          <p><i class="fas fa-map-marker-alt"></i> Hoàn Kiếm, Hà Đông, Hà Nội</p>
+          <p><i class="fas fa-truck"></i> Giao phí chỉ từ 10k cho đơn từ 45k, 25k cho đơn từ 100k</p>
         </div>
 
         <div class="product-details">
           <h2>Thông tin sản phẩm</h2>
           <table>
             <tbody>
-              <tr v-for="[key, value] in Object.entries(product.details || {})" :key="key">
-                <td>{{ key }}</td>
-                <td>{{ value }}</td>
+              <tr>
+                <td>Phiên bản</td>
+                <td>Tái bản</td>
+              </tr>
+              <tr>
+                <td>Công ty phát hành</td>
+                <td>Vibooks</td>
+              </tr>
+              <tr>
+                <td>Ngày xuất bản</td>
+                <td>2021-06-01</td>
+              </tr>
+              <tr>
+                <td>Kích thước</td>
+                <td>16 x 24 cm</td>
+              </tr>
+              <tr>
+                <td>Dịch giá</td>
+                <td>Thu Hương</td>
+              </tr>
+              <tr>
+                <td>Số trang</td>
+                <td>424</td>
+              </tr>
+              <tr>
+                <td>Nhà xuất bản</td>
+                <td>Nhà xuất bản Thế Giới</td>
               </tr>
             </tbody>
           </table>
         </div>
         <div class="description">
           <h2>Mô tả sản phẩm</h2>
-          <p>{{ product.description }}</p>
-          <button class="read-more" @click="toggleDescription">Xem thêm</button>
+          <p>NEW MỚI NGAY ANH THÁY TÔI ĐIỆN, THỨC RA CHỈNH LÀ ANH ĐIỆN! Hãy nhớ rằng con người đang sống trên thế giới này, bản thân bị giới hạn bởi rất nhiều thứ, nhưng nếu bạn có thể vượt qua những giới hạn ấy, bạn sẽ thấy cả một thế giới rộng lớn đang chờ đợi bạn...</p>
+          <button class="read-more">Xem thêm</button>
         </div>
       </div>
     </div>
@@ -129,145 +155,100 @@
 
 <script>
 import ReviewItem from '@/components/client/ReviewItem.vue';
-import { ref, onMounted, computed } from 'vue';
-import { useRoute, useRouter } from 'vue-router'; // Import Vue Router
-import { apiGetProductDetail, apiAddReview } from '@/services/productService'; // Assume this is your API service
 
 export default {
   name: "ProductPage",
   components: { ReviewItem },
-  setup() {
-    const route = useRoute();
-    const router = useRouter();
-    const product = ref({});
-    const quantity = ref(1);
-    const isFavorite = ref(false);
-    const currentThumbnail = ref(0);
-    const reviews = ref([]);
-    const newReview = ref({
-      rating: 1,
-      reviewText: '',
-    });
-    const itemsPerPage = ref(2);
-    const currentPage = ref(1);
-    const isDescriptionExpanded = ref(false);
-
-    const fetchProductDetail = async () => {
-      try {
-        const productId = route.params.id; // Assuming the product ID is passed as a route parameter
-        const response = await apiGetProductDetail(productId);
-        product.value = response.data.data || {};
-        if (product.value.thumbnails && product.value.thumbnails.length) {
-          product.value.mainImage = product.value.thumbnails[0]; // Set default main image
-        }
-        // Fetch reviews for this product (you might need a separate API call or include reviews in the product detail response)
-        reviews.value = product.value.reviews || [];
-      } catch (error) {
-        console.error('Lỗi khi lấy thông tin sản phẩm:', error);
-      }
+  data() {
+    return {
+      quantity: 1,
+      isFavorite: false, // Trạng thái yêu thích ban đầu
+      thumbnails: [
+        'Product_00.png',
+        'image_00.png',
+        'Product_00.png',
+        'Product_00.png',
+        'Product_00.png', // Thêm nhiều ảnh để test cuộn
+        'Product_00.png',
+        'Product_00.png',
+      ],
+      currentThumbnail: 0, // Index của thumbnail hiện tại (có viền đen)
+      mainImage: 'Product_00.png', // Hình ảnh lớn mặc định
+      reviews: [
+        {
+          id: 1,
+          userName: 'Tina Bình',
+          purchaseTime: 'Đã tham gia 2 năm',
+          rating: 5,
+          reviewText: 'Rất hài lòng, sách chất lượng tốt, nội dung hay, giao hàng nhanh.',
+        },
+        {
+          id: 2,
+          userName: 'Tina Bình',
+          purchaseTime: 'Đã tham gia 2 năm',
+          rating: 4,
+          reviewText: 'Hơi thất vọng, nhưng nội dung vẫn ổn, giao hàng đúng hẹn.',
+        },
+      ],
+      newReview: {
+        id: null,
+        userName: 'Người dùng (giả lập)', // Giả lập tên người dùng, bạn có thể thay bằng logic thực tế
+        purchaseTime: 'Vừa đánh giá',
+        rating: 1,
+        reviewText: '',
+      },
+      itemsPerPage: 2, // Số bình luận trên mỗi trang
+      currentPage: 1, // Trang hiện tại
     };
-
-    const buyNow = () => {
-      console.log('Mua ngay:', quantity.value);
-      // Thêm logic mua hàng tại đây (e.g., redirect to checkout or call API)
-    };
-
-    const addToCart = () => {
-      console.log('Thêm vào giỏ:', quantity.value);
-      // Thêm logic thêm vào giỏ hàng tại đây (e.g., call API or use store)
-    };
-
-    const submitReview = async () => {
-      if (newReview.value.reviewText.trim() && newReview.value.rating) {
-        try {
-          const productId = route.params.id;
-          const reviewData = {
-            productId,
-            rating: newReview.value.rating,
-            reviewText: newReview.value.reviewText,
-          };
-          const response = await apiAddReview(reviewData);
-          if (response.data) {
-            reviews.value.push({
-              id: reviews.value.length + 1,
-              userName: 'Người dùng (giả lập)', // Replace with actual user data or API response
-              purchaseTime: 'Vừa đánh giá',
-              rating: newReview.value.rating,
-              reviewText: newReview.value.reviewText,
-            });
-            newReview.value.reviewText = '';
-            newReview.value.rating = 1;
-            currentPage.value = Math.ceil(reviews.value.length / itemsPerPage.value);
-            console.log('Đánh giá mới đã được gửi:', reviews.value);
-          }
-        } catch (error) {
-          console.error('Lỗi khi gửi đánh giá:', error);
-        }
+  },
+  computed: {
+    paginatedReviews() {
+      const start = (this.currentPage - 1) * this.itemsPerPage;
+      const end = start + this.itemsPerPage;
+      return this.reviews.slice(start, end);
+    },
+    totalPages() {
+      return Math.ceil(this.reviews.length / this.itemsPerPage);
+    },
+  },
+  methods: {
+    buyNow() {
+      console.log('Mua ngay:', this.quantity);
+      // Thêm logic mua hàng tại đây
+    },
+    addToCart() {
+      console.log('Thêm vào giỏ:', this.quantity);
+      // Thêm logic thêm vào giỏ hàng tại đây
+    },
+    submitReview() {
+      if (this.newReview.reviewText.trim() && this.newReview.rating) {
+        this.newReview.id = this.reviews.length + 1;
+        this.reviews.push({ ...this.newReview });
+        this.newReview.reviewText = ''; // Reset bình luận
+        this.newReview.rating = 1; // Reset đánh giá về 1 sao
+        this.currentPage = Math.ceil(this.reviews.length / this.itemsPerPage); // Chuyển đến trang cuối nếu cần
+        console.log('Đánh giá mới đã được gửi:', this.reviews);
       } else {
         alert('Vui lòng nhập đánh giá và bình luận!');
       }
-    };
-
-    const toggleFavorite = () => {
-      isFavorite.value = !isFavorite.value;
-      console.log('Sản phẩm đã được ' + (isFavorite.value ? 'thêm vào' : 'bỏ khỏi') + ' yêu thích');
-      // Thêm logic lưu vào store/API tại đây (e.g., Pinia/Vuex hoặc API call)
-    };
-
-    const selectThumbnail = (index) => {
-      currentThumbnail.value = index;
-      product.value.mainImage = product.value.thumbnails[index];
-    };
-
-    const prevThumbnail = () => {
-      currentThumbnail.value = (currentThumbnail.value - 1 + (product.value.thumbnails?.length || 0)) % (product.value.thumbnails?.length || 0);
-      product.value.mainImage = product.value.thumbnails[currentThumbnail.value];
-    };
-
-    const nextThumbnail = () => {
-      currentThumbnail.value = (currentThumbnail.value + 1) % (product.value.thumbnails?.length || 0);
-      product.value.mainImage = product.value.thumbnails[currentThumbnail.value];
-    };
-
-    const toggleDescription = () => {
-      isDescriptionExpanded.value = !isDescriptionExpanded.value;
-    };
-
-    const paginatedReviews = computed(() => {
-      const start = (currentPage.value - 1) * itemsPerPage.value;
-      const end = start + itemsPerPage.value;
-      return reviews.value.slice(start, end);
-    });
-
-    const totalPages = computed(() => {
-      return Math.ceil(reviews.value.length / itemsPerPage.value);
-    });
-
-    onMounted(() => {
-      fetchProductDetail();
-    });
-
-    return {
-      product,
-      quantity,
-      isFavorite,
-      currentThumbnail,
-      reviews,
-      newReview,
-      itemsPerPage,
-      currentPage,
-      isDescriptionExpanded,
-      paginatedReviews,
-      totalPages,
-      buyNow,
-      addToCart,
-      submitReview,
-      toggleFavorite,
-      selectThumbnail,
-      prevThumbnail,
-      nextThumbnail,
-      toggleDescription,
-    };
+    },
+    toggleFavorite() {
+      this.isFavorite = !this.isFavorite;
+      console.log('Sản phẩm đã được ' + (this.isFavorite ? 'thêm vào' : 'bỏ khỏi') + ' yêu thích');
+      // Thêm logic lưu vào store/API tại đây (ví dụ: Pinia/Vuex hoặc API call)
+    },
+    selectThumbnail(index) {
+      this.currentThumbnail = index;
+      this.mainImage = this.thumbnails[index]; // Cập nhật hình ảnh lớn khi chọn thumbnail
+    },
+    prevThumbnail() {
+      this.currentThumbnail = (this.currentThumbnail - 1 + this.thumbnails.length) % this.thumbnails.length;
+      this.mainImage = this.thumbnails[this.currentThumbnail]; // Cập nhật hình ảnh lớn khi chuyển trước
+    },
+    nextThumbnail() {
+      this.currentThumbnail = (this.currentThumbnail + 1) % this.thumbnails.length;
+      this.mainImage = this.thumbnails[this.currentThumbnail]; // Cập nhật hình ảnh lớn khi chuyển sau
+    },
   },
 };
 </script>
