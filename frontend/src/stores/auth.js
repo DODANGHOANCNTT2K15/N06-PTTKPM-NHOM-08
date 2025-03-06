@@ -19,7 +19,9 @@ export const useAuthStore = defineStore('auth', () => {
   // Hàm đăng xuất
   function logout() {
     isLoggedIn.value = false;
+    localStorage.clear();
     localStorage.setItem('isLogin', 'false');
+    history.go(0);
   }
 
   return { isLoggedIn, initializeAuth, login, logout };

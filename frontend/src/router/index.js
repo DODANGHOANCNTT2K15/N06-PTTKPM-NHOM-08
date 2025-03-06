@@ -50,8 +50,8 @@ const routes = [
               component: UserPage, // Thông tin tài khoản (default)
             },
             {
-              path: 'cart',
-              name: 'UserCart',
+              path: 'orders',
+              name: 'UserOrders',
               component: UserPage, // Giỏ hàng của user
             },
             {

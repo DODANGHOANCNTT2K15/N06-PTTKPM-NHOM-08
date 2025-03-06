@@ -41,21 +41,21 @@
         </div>
         <div v-else class="account-dropdown">
           <button type="button" class="account-button">
-            <i class="fa fa-user"></i> Tài khoản
+            <template v-if="authStore.user && authStore.user.avatar">
+              <img :src="authStore.user.avatar" alt="Avatar" class="avatar" />
+              <span>{{ authStore.user.user_name || 'Người dùng' }}</span>
+            </template>
+            <template v-else>
+              <i class="fa fa-user avatar-icon"></i>
+              <span>{{ authStore.user?.email || 'Email không xác định' }}</span>
+            </template>
           </button>
           <div class="dropdown-content">
             <button @click="goToUserInfo">Thông tin tài khoản</button>
             <button @click="goToOrders">Đơn hàng</button>
             <button @click="goToLikes">Yêu thích</button>
-            <button @click="goToHistory">Lịch sử</button>
-            <button
-              @click="
-                authStore.logout();
-                $router.push('/');
-              "
-            >
-              Đăng xuất
-            </button>
+            <button @click="goToAddresss">Địa chỉ giao hàng</button>
+            <button @click="handleLogout">Đăng xuất</button>
           </div>
         </div>
         <div id="div_cart">
@@ -84,42 +84,57 @@ export default {
     const router = useRouter();
     const authStore = useAuthStore();
     const cartStore = useCartStore();
-    const showOverlay = ref(false); // Quản lý trạng thái overlay
-    const searchQuery = ref(""); // Giá trị ô tìm kiếm
+    const showOverlay = ref(false);
+    const searchQuery = ref("");
+
+    // Khởi tạo thông tin người dùng từ token hoặc API
+    const initializeUserInfo = () => {
+      const token = localStorage.getItem("token");
+      if (token && authStore.isLoggedIn) {
+        const userInfo = getUserInfoFromToken(token);
+        authStore.user = userInfo || {}; // Đảm bảo user luôn là object
+      } else {
+        authStore.user = {}; // Mặc định là object rỗng nếu không đăng nhập
+      }
+    };
 
     onMounted(() => {
       authStore.initializeAuth();
       cartStore.initializeCart();
-      fetchCountOfCart(); // Gọi API khi component được mount
+      initializeUserInfo(); // Khởi tạo thông tin người dùng
+      fetchCountOfCart();
     });
 
     const goToHome = () => {
       router.push("/");
     };
+
     const gotoLogin = () => {
       router.push("/login");
     };
+
     const goToUserInfo = () => {
       router.push("/user/info");
     };
+
     const goToOrders = () => {
       router.push("/user/orders");
     };
+
     const goToLikes = () => {
       router.push("/user/like");
     };
-    const goToHistory = () => {
-      router.push("/user/history");
+
+    const goToAddresss = () => {
+      router.push("/user/address");
     };
 
-    // Đóng overlay với độ trễ để tránh xung đột với click
     const hideOverlayWithDelay = () => {
       setTimeout(() => {
         showOverlay.value = false;
       }, 200);
     };
 
-    // Xử lý tìm kiếm và truyền query qua router
     const handleSearch = () => {
       if (searchQuery.value.trim()) {
         router.push({
@@ -130,51 +145,61 @@ export default {
       }
     };
 
-    // Hàm giải mã JWT token để lấy user_id
-    const getUserIdFromToken = () => {
-      const token = localStorage.getItem("token");
+    const getUserInfoFromToken = (token) => {
       if (!token) {
         console.log("Không tìm thấy token trong localStorage");
         return null;
       }
       try {
         const payload = JSON.parse(atob(token.split(".")[1]));
-        return payload.user_id || payload.id;
+        return {
+          user_id: payload.user_id || payload.id,
+          email: payload.email,
+          user_name: payload.user_name,
+          avatar: payload.avatar,
+        };
       } catch (error) {
         console.log("Lỗi khi giải mã token:", error);
         return null;
       }
     };
 
-    // Hàm gọi API lấy count of cart
     const fetchCountOfCart = async () => {
       try {
-        const userId = getUserIdFromToken();
+        const userId = authStore.user?.user_id || getUserInfoFromToken(localStorage.getItem("token"))?.user_id;
         if (userId) {
           const response = await apiGetCountProductOfCart({ user_id: userId });
           if (response.data.err === 0) {
-            // Giả sử API trả về count trong response.data.count
             const count = response.data.total_product_types || 0;
             cartStore.updatetotal_product_type(count);
           } else {
             console.error("Lỗi từ API:", response.data.msg);
-            cartStore.updatetotal_product_type(0); // Đặt về 0 nếu có lỗi
+            cartStore.updatetotal_product_type(0);
           }
         } else {
-          cartStore.updatetotal_product_type(0); // Nếu không có userId
+          cartStore.updatetotal_product_type(0);
         }
       } catch (error) {
         console.error("Không thể lấy dữ liệu count of cart:", error);
-        cartStore.updatetotal_product_type(0); // Đặt về 0 nếu có lỗi
+        cartStore.updatetotal_product_type(0);
       }
     };
 
-    // Watch khi đăng nhập/đăng xuất để cập nhật lại số lượng giỏ hàng
+    const handleLogout = () => {
+      authStore.logout();
+      cartStore.updatetotal_product_type(0);
+      authStore.user = {}; // Reset user về object rỗng
+      alert("Đăng xuất thành công!");
+      router.push("/");
+    };
+
     authStore.$subscribe((mutation, state) => {
       if (state.isLoggedIn) {
-        fetchCountOfCart(); // Gọi lại khi đăng nhập
+        initializeUserInfo(); // Cập nhật lại thông tin người dùng khi đăng nhập
+        fetchCountOfCart();
       } else {
-        cartStore.updatetotal_product_type(0); // Reset khi đăng xuất
+        cartStore.updatetotal_product_type(0);
+        authStore.user = {}; // Reset user khi đăng xuất
       }
     });
 
@@ -186,11 +211,12 @@ export default {
       goToUserInfo,
       goToOrders,
       goToLikes,
-      goToHistory,
+      goToAddresss,
       showOverlay,
       searchQuery,
       hideOverlayWithDelay,
       handleSearch,
+      handleLogout,
     };
   },
 };
@@ -204,7 +230,6 @@ header {
   position: relative;
 }
 
-/* Phần tiêu đề trên cùng */
 .header-top {
   background-color: #2c3e50;
   color: white;
@@ -217,7 +242,6 @@ header {
   letter-spacing: 1px;
 }
 
-/* Phần chính của header */
 .header-main {
   height: 120px;
   display: flex;
@@ -228,14 +252,12 @@ header {
   gap: 20px;
 }
 
-/* Logo */
 .logo img {
   height: 80px;
   cursor: pointer;
   margin-right: 100px;
 }
 
-/* Phần tìm kiếm và tag */
 .search-section {
   flex: 1;
   display: flex;
@@ -248,7 +270,7 @@ header {
   position: relative;
   width: 100%;
   max-width: 600px;
-  z-index: 1000; /* Đảm bảo ô tìm kiếm ở trên overlay */
+  z-index: 1000;
 }
 
 .search-container > input {
@@ -266,7 +288,7 @@ header {
 .search-container > input:focus {
   border-color: #9ac2ec;
   outline: none;
-  box-shadow: 0 0 10px rgba(0, 123, 255, 0.5); /* Làm sáng ô tìm kiếm khi focus */
+  box-shadow: 0 0 10px rgba(0, 123, 255, 0.5);
 }
 
 .search-container > button {
@@ -321,7 +343,6 @@ header {
   color: white;
 }
 
-/* Overlay */
 .overlay {
   position: fixed;
   top: 0;
@@ -329,20 +350,19 @@ header {
   width: 100%;
   height: 100%;
   background-color: rgba(0, 0, 0, 0.5);
-  z-index: 998; /* Dưới ô tìm kiếm và gợi ý */
+  z-index: 998;
 }
 
-/* Gợi ý tìm kiếm */
 .search-suggestions {
   position: absolute;
-  top: 50px; /* Dưới ô tìm kiếm */
+  top: 50px;
   left: 0;
   width: 100%;
   max-width: 600px;
   background-color: #fff;
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  z-index: 999; /* Trên overlay */
+  z-index: 999;
   padding: 10px 0;
 }
 
@@ -358,14 +378,12 @@ header {
   background-color: #f5f5f5;
 }
 
-/* Phần hành động (login, cart) */
 .header-actions {
   display: flex;
   align-items: center;
   gap: 20px;
 }
 
-/* Nút đăng nhập */
 .login-button button {
   color: #2c3e50;
   border: 1px solid #e0e0e0;
@@ -388,26 +406,48 @@ header {
   border-color: #007bff;
 }
 
-/* Dropdown tài khoản */
 .account-dropdown {
   position: relative;
 }
 
 .account-button {
+  display: flex;
+  align-items: center;
   color: #2c3e50;
   border: 1px solid #e0e0e0;
   height: 40px;
-  padding: 0 20px;
+  padding: 0 10px;
   font-weight: 600;
   font-size: 0.9em;
   background-color: #fff;
-  border-radius: 8px;
+  border-radius: 20px;
   cursor: pointer;
   transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
-.account-button i {
+.account-button .avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
   margin-right: 8px;
+  object-fit: cover;
+}
+
+.account-button .avatar-icon {
+  width: 30px;
+  height: 30px;
+  line-height: 30px;
+  text-align: center;
+  font-size: 1.2em;
+  color: #007bff;
+  margin-right: 8px;
+}
+
+.account-button span {
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .account-button:hover {
@@ -424,7 +464,7 @@ header {
   z-index: 1000;
   border-radius: 8px;
   top: 100%;
-  left: 0;
+  right: 0;
 }
 
 .dropdown-content button {
@@ -450,7 +490,6 @@ header {
   display: block;
 }
 
-/* Giỏ hàng */
 #div_cart {
   position: relative;
 }
