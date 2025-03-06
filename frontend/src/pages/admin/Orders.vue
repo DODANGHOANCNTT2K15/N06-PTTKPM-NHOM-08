@@ -2,61 +2,94 @@
   <div class="admin-orders">
     <h1>Quản lý Đơn hàng</h1>
     <div class="order-actions">
-      <input v-model="searchQuery" type="text" placeholder="Tìm kiếm theo ID hoặc khách hàng..." class="search-input" />
+      <input
+        v-model="searchQuery"
+        type="text"
+        placeholder="Tìm kiếm theo ID hoặc khách hàng..."
+        class="search-input"
+      />
     </div>
     <div class="order-table">
       <table>
         <thead>
           <tr>
-            <th @click="sort('id')">ID Đơn hàng <i :class="getSortIcon('id')"></i></th>
-            <th @click="sort('customer')">Khách hàng <i :class="getSortIcon('customer')"></i></th>
+            <th @click="sort('order_id')">
+              ID Đơn hàng <i :class="getSortIcon('order_id')"></i>
+            </th>
+            <th @click="sort('customer')">
+              Khách hàng <i :class="getSortIcon('customer')"></i>
+            </th>
             <th>Số lượng sách</th>
-            <th @click="sort('total')">Tổng tiền <i :class="getSortIcon('total')"></i></th>
-            <th @click="sort('status')">Trạng thái <i :class="getSortIcon('status')"></i></th>
+            <th @click="sort('total_price')">
+              Tổng tiền <i :class="getSortIcon('total_price')"></i>
+            </th>
+            <th @click="sort('status')">
+              Trạng thái <i :class="getSortIcon('status')"></i>
+            </th>
             <th>Thông tin giao hàng</th>
             <th>Hành động</th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="order in filteredAndSortedOrders" :key="order.id">
-            <td>{{ order.id }}</td>
-            <td>{{ order.customer }}</td>
+          <tr v-for="order in filteredAndSortedOrders" :key="order.order_id">
+            <td>{{ order.order_id }}</td>
+            <td>{{ order.customer.full_name }}</td>
             <td>
-              {{ order.books.length }} sách
+              {{ order.order_details.length }} sách
               <button @click="showOrderDetails(order)" class="view-details-btn">
                 <i class="fas fa-eye"></i> Xem chi tiết
               </button>
             </td>
-            <td>{{ order.total }} VNĐ</td>
+            <td>{{ formatPrice(order.total_price) }}</td>
             <td>
-              <select v-model="order.status" @change="updateOrderStatus(order.id, order.status)">
-                <option value="pending">Chờ xác nhận</option>
-                <option value="confirmed">Đã xác nhận</option>
-                <option value="rejected">Từ chối</option>
+              <select
+                v-model="order.status"
+                @change="updateOrderStatus(order.order_id, order.status)"
+              >
+                <option :value="0">Chờ xác nhận</option>
+                <option :value="1">Đã xác nhận</option>
+                <option :value="2">Từ chối</option>
               </select>
             </td>
             <td>
-              <p>Địa chỉ: {{ order.shippingAddress }}</p>
-              <p>SĐT: {{ order.phone }}</p>
+              <p>Địa chỉ: {{ order.customer.address }}</p>
+              <p>SĐT: {{ order.customer.phone }}</p>
             </td>
             <td>
-              <button @click="editOrder(order.id)" class="action-btn edit-btn">
+              <button
+                @click="editOrder(order.order_id)"
+                class="action-btn edit-btn"
+              >
                 <i class="fas fa-pencil-alt"></i>
               </button>
-              <button @click="deleteOrder(order.id)" class="action-btn delete-btn">
+              <button
+                @click="deleteOrder(order.order_id)"
+                class="action-btn delete-btn"
+              >
                 <i class="fas fa-trash"></i>
               </button>
             </td>
           </tr>
         </tbody>
       </table>
-      <div class="pagination" v-if="orders.length > 10">
-        <span>Hiển thị trang {{ currentPage }} / {{ totalPages }} - {{ filteredAndSortedOrders.length }} kết quả</span>
+      <div class="pagination">
+        <span
+          >Hiển thị trang {{ currentPage }} / {{ totalPages }} -
+          {{ filteredAndSortedOrders.length }} kết quả</span
+        >
         <div>
-          <button @click="prevPage" :disabled="currentPage === 1" class="pagination-btn">
+          <button
+            @click="prevPage"
+            :disabled="currentPage === 1"
+            class="pagination-btn"
+          >
             <i class="fas fa-chevron-left"></i>
           </button>
-          <button @click="nextPage" :disabled="currentPage === totalPages" class="pagination-btn">
+          <button
+            @click="nextPage"
+            :disabled="currentPage === totalPages"
+            class="pagination-btn"
+          >
             <i class="fas fa-chevron-right"></i>
           </button>
         </div>
@@ -66,18 +99,31 @@
     <!-- Popup Xem chi tiết Đơn hàng -->
     <div v-if="showOrderDetailPopup" class="modal">
       <div class="modal-content">
-        <h2>Chi tiết Đơn hàng #{{ selectedOrder.id }}</h2>
+        <h2>Chi tiết Đơn hàng #{{ selectedOrder.order_id }}</h2>
         <div class="order-details">
-          <p><strong>Khách hàng:</strong> {{ selectedOrder.customer }}</p>
-          <p><strong>Tổng tiền:</strong> {{ selectedOrder.total }} VNĐ</p>
-          <p><strong>Trạng thái:</strong> {{ selectedOrder.status }}</p>
+          <p>
+            <strong>Khách hàng:</strong> {{ selectedOrder.customer.full_name }}
+          </p>
+          <p>
+            <strong>Tổng tiền:</strong>
+            {{ formatPrice(selectedOrder.total_price) }}
+          </p>
+          <p>
+            <strong>Trạng thái:</strong> {{ statusText(selectedOrder.status) }}
+          </p>
+          <p>
+            <strong>Phí giao hàng:</strong>
+            {{ formatPrice(selectedOrder.delivery_price) }}
+          </p>
           <p><strong>Thông tin giao hàng:</strong></p>
-          <p>Địa chỉ: {{ selectedOrder.shippingAddress }}</p>
-          <p>SĐT: {{ selectedOrder.phone }}</p>
+          <p>Địa chỉ: {{ selectedOrder.customer.address }}</p>
+          <p>SĐT: {{ selectedOrder.customer.phone }}</p>
           <h3>Danh sách Sách</h3>
           <ul class="order-books">
-            <li v-for="book in selectedOrder.books" :key="book.id">
-              {{ book.title }} (Số lượng: {{ book.quantity }} x {{ book.price }} VNĐ = {{ book.quantity * book.price }} VNĐ)
+            <li v-for="item in selectedOrder.order_details" :key="item.book_id">
+              {{ item.book.title }} (Số lượng: {{ item.quantity }} x
+              {{ formatPrice(item.price) }} =
+              {{ formatPrice(item.quantity * item.price) }})
             </li>
           </ul>
         </div>
@@ -92,42 +138,72 @@
       <div class="modal-content">
         <h2>Sửa Đơn hàng</h2>
         <form @submit.prevent="updateOrder">
-          <div class="form-group">
-            <label>ID Đơn hàng:</label>
-            <input v-model="editedOrder.id" type="text" disabled />
+          <div class="form-columns">
+            <div class="form-column">
+              <div class="form-group">
+                <label>ID Đơn hàng:</label>
+                <input v-model="editedOrder.order_id" type="text" disabled />
+              </div>
+              <div class="form-group">
+                <label>Khách hàng:</label>
+                <input
+                  v-model="editedOrder.customer.full_name"
+                  type="text"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label>Tổng tiền:</label>
+                <input
+                  v-model.number="editedOrder.total_price"
+                  type="number"
+                  required
+                />
+              </div>
+            </div>
+            <div class="form-column">
+              <div class="form-group">
+                <label>Trạng thái:</label>
+                <select v-model="editedOrder.status" required>
+                  <option :value="0">Chờ xác nhận</option>
+                  <option :value="1">Đã xác nhận</option>
+                  <option :value="2">Từ chối</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Địa chỉ giao hàng:</label>
+                <input
+                  v-model="editedOrder.customer.address"
+                  type="text"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label>Số điện thoại:</label>
+                <input
+                  v-model="editedOrder.customer.phone"
+                  type="tel"
+                  required
+                />
+              </div>
+            </div>
           </div>
-          <div class="form-group">
-            <label>Khách hàng:</label>
-            <input v-model="editedOrder.customer" type="text" required />
-          </div>
-          <div class="form-group">
+          <div class="form-group full-width">
             <label>Sách:</label>
             <ul class="order-books">
-              <li v-for="(book, index) in editedOrder.books" :key="book.id">
-                {{ book.title }} (Số lượng: {{ book.quantity }} x {{ book.price }} VNĐ)
-                <input v-model.number="editedOrder.books[index].quantity" type="number" min="1" required />
+              <li
+                v-for="(item, index) in editedOrder.order_details"
+                :key="item.book_id"
+              >
+                {{ item.book.title }} (Giá: {{ formatPrice(item.price) }})
+                <input
+                  v-model.number="editedOrder.order_details[index].quantity"
+                  type="number"
+                  min="1"
+                  required
+                />
               </li>
             </ul>
-          </div>
-          <div class="form-group">
-            <label>Tổng tiền:</label>
-            <input v-model.number="editedOrder.total" type="number" required />
-          </div>
-          <div class="form-group">
-            <label>Trạng thái:</label>
-            <select v-model="editedOrder.status" required>
-              <option value="pending">Chờ xác nhận</option>
-              <option value="confirmed">Đã xác nhận</option>
-              <option value="rejected">Từ chối</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Địa chỉ giao hàng:</label>
-            <input v-model="editedOrder.shippingAddress" type="text" required />
-          </div>
-          <div class="form-group">
-            <label>Số điện thoại:</label>
-            <input v-model="editedOrder.phone" type="tel" required />
           </div>
           <div class="modal-actions">
             <button type="submit">Cập nhật</button>
@@ -140,41 +216,21 @@
 </template>
 
 <script>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed } from "vue";
+import {
+  apiGetAllOrderService,
+  apiUpdateStatusOrderService,
+  apiUpdateOrderService,
+  apiDeleteOrderService,
+} from "@/services/admin/OrderService";
 
 export default {
-  name: 'OrdersAdmin',
+  name: "OrdersAdmin",
   setup() {
-    const orders = ref([
-      {
-        id: 1,
-        customer: 'Tina Bình',
-        books: [
-          { id: 1, title: 'Thiền Luận', quantity: 1, price: 600000 },
-          { id: 2, title: 'Thiên Tài Bên Trái', quantity: 2, price: 500000 },
-        ],
-        total: 1600000, // Cập nhật tổng tiền cho nhiều sách
-        status: 'pending',
-        shippingAddress: '123 Đường ABC, Quận 1, TP.HCM',
-        phone: '0987654321',
-      },
-      {
-        id: 2,
-        customer: 'Đỗ Đình Hoàn',
-        books: [
-          { id: 3, title: 'Sách Kỹ Năng Sống', quantity: 1, price: 400000 },
-          { id: 4, title: 'Truyện Ngắn Hay', quantity: 3, price: 200000 },
-        ],
-        total: 1400000, // Cập nhật tổng tiền cho nhiều sách
-        status: 'pending',
-        shippingAddress: '456 Đường XYZ, Quận 7, TP.HCM',
-        phone: '0912345678',
-      },
-    ]);
-
-    const searchQuery = ref('');
-    const sortKey = ref('');
-    const sortOrder = ref('asc');
+    const orders = ref([]);
+    const searchQuery = ref("");
+    const sortKey = ref("");
+    const sortOrder = ref("asc");
     const showEditOrderPopup = ref(false);
     const showOrderDetailPopup = ref(false);
     const editedOrder = ref({});
@@ -182,61 +238,122 @@ export default {
     const currentPage = ref(1);
     const itemsPerPage = ref(10);
 
-    const fetchOrders = () => {
-      // Trong thực tế, gọi API để lấy danh sách đơn hàng
-      // Ví dụ: await apiGetOrders();
+    // Lấy danh sách đơn hàng từ API
+    const fetchOrders = async () => {
+      try {
+        const response = await apiGetAllOrderService();
+        if (response.status === 200 && response.data.err !== 2) {
+          orders.value = response.data.data;
+        }
+      } catch (error) {
+        console.error("Lỗi khi lấy danh sách đơn hàng:", error);
+        alert("Lỗi khi tải dữ liệu!");
+      }
     };
 
-    const editOrder = (id) => {
-      const order = orders.value.find(o => o.id === id);
-      editedOrder.value = { ...order };
+    // Sửa đơn hàng
+    const editOrder = (orderId) => {
+      const order = orders.value.find((o) => o.order_id === orderId);
+      editedOrder.value = JSON.parse(JSON.stringify(order)); // Deep copy để tránh thay đổi trực tiếp
       showEditOrderPopup.value = true;
     };
 
-    const updateOrder = () => {
-      const index = orders.value.findIndex(o => o.id === editedOrder.value.id);
-      if (index !== -1) {
-        orders.value[index] = { ...editedOrder.value };
-        console.log('Cập nhật đơn hàng thành công:', editedOrder.value);
-      }
-      showEditOrderPopup.value = false;
-    };
-
-    const deleteOrder = (id) => {
-      if (confirm('Bạn có chắc muốn xóa đơn hàng này?')) {
-        orders.value = orders.value.filter(o => o.id !== id);
-      }
-    };
-
-    const updateOrderStatus = (id, status) => {
-      const order = orders.value.find(o => o.id === id);
-      if (order) {
-        order.status = status;
-        console.log(`Cập nhật trạng thái đơn hàng ${id} thành: ${status}`);
-        // Trong thực tế, gọi API để cập nhật trạng thái: await apiUpdateOrderStatus(id, status);
+    // Cập nhật đơn hàng qua API
+    const updateOrder = async () => {
+      try {
+        const updatedOrder = { ...editedOrder.value };
+        const response = await apiUpdateOrderService(updatedOrder);
+        if (response.status === 200 && response.data.err !== 2) {
+          const index = orders.value.findIndex(
+            (o) => o.order_id === updatedOrder.order_id
+          );
+          if (index !== -1) {
+            orders.value[index] = updatedOrder;
+          }
+          console.log("Cập nhật đơn hàng thành công:", updatedOrder);
+          alert("Cập nhật đơn hàng thành công@!!");
+          showEditOrderPopup.value = false;
+        }
+      } catch (error) {
+        console.error("Lỗi khi cập nhật đơn hàng:", error);
       }
     };
 
+    // Xóa đơn hàng qua API
+    const deleteOrder = async (orderId) => {
+      if (confirm("Bạn có chắc muốn xóa đơn hàng này?")) {
+        try {
+          const response = await apiDeleteOrderService({ order_id: orderId });
+          if(response.status === 200 && response.data.err !== 2) {
+            orders.value = orders.value.filter((o) => o.order_id !== orderId);
+            console.log(`Đã xóa đơn hàng ${orderId}`);
+          }
+        } catch (error) {
+          console.error("Lỗi khi xóa đơn hàng:", error);
+        }
+      }
+    };
+
+    // Cập nhật trạng thái đơn hàng qua API
+    const updateOrderStatus = async (orderId, status) => {
+      try {
+        const response = await apiUpdateStatusOrderService({
+          order_id: orderId,
+          status: status,
+        });
+        if (response.status === 200 && response.data.err !== 2) {
+          await fetchOrders();
+        }
+      } catch (error) {
+        console.error("Lỗi khi cập nhật trạng thái:", error);
+      }
+    };
+
+    // Hiển thị chi tiết đơn hàng
     const showOrderDetails = (order) => {
-      selectedOrder.value = { ...order };
+      selectedOrder.value = JSON.parse(JSON.stringify(order)); // Deep copy
       showOrderDetailPopup.value = true;
     };
 
+    // Chuyển đổi trạng thái thành text
+    const statusText = (status) => {
+      switch (status) {
+        case 0:
+          return "Chờ xác nhận";
+        case 1:
+          return "Đã xác nhận";
+        case 2:
+          return "Từ chối";
+        default:
+          return "Không xác định";
+      }
+    };
+
+    // Lọc và sắp xếp đơn hàng
     const filteredAndSortedOrders = computed(() => {
       let result = [...orders.value];
 
       if (searchQuery.value) {
-        result = result.filter(order =>
-          order.id.toString().includes(searchQuery.value) ||
-          order.customer.toLowerCase().includes(searchQuery.value.toLowerCase())
+        result = result.filter(
+          (order) =>
+            order.order_id.toString().includes(searchQuery.value) ||
+            order.customer.full_name
+              .toLowerCase()
+              .includes(searchQuery.value.toLowerCase())
         );
       }
 
       if (sortKey.value) {
         result.sort((a, b) => {
-          const valueA = a[sortKey.value];
-          const valueB = b[sortKey.value];
-          if (sortOrder.value === 'asc') {
+          let valueA =
+            sortKey.value === "customer"
+              ? a.customer.full_name
+              : a[sortKey.value];
+          let valueB =
+            sortKey.value === "customer"
+              ? b.customer.full_name
+              : b[sortKey.value];
+          if (sortOrder.value === "asc") {
             return valueA > valueB ? 1 : valueA < valueB ? -1 : 0;
           } else {
             return valueA < valueB ? 1 : valueA > valueB ? -1 : 0;
@@ -255,18 +372,20 @@ export default {
 
     const sort = (key) => {
       if (sortKey.value === key) {
-        sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc';
+        sortOrder.value = sortOrder.value === "asc" ? "desc" : "asc";
       } else {
         sortKey.value = key;
-        sortOrder.value = 'asc';
+        sortOrder.value = "asc";
       }
     };
 
     const getSortIcon = (key) => {
       if (sortKey.value === key) {
-        return sortOrder.value === 'asc' ? 'fas fa-sort-up' : 'fas fa-sort-down';
+        return sortOrder.value === "asc"
+          ? "fas fa-sort-up"
+          : "fas fa-sort-down";
       }
-      return 'fas fa-sort';
+      return "fas fa-sort";
     };
 
     const prevPage = () => {
@@ -275,6 +394,13 @@ export default {
 
     const nextPage = () => {
       if (currentPage.value < totalPages.value) currentPage.value++;
+    };
+
+    const formatPrice = (price) => {
+      return new Intl.NumberFormat("vi-VN", {
+        style: "currency",
+        currency: "VND",
+      }).format(price);
     };
 
     onMounted(fetchOrders);
@@ -298,6 +424,8 @@ export default {
       totalPages,
       prevPage,
       nextPage,
+      formatPrice,
+      statusText,
     };
   },
 };
@@ -307,8 +435,8 @@ export default {
 .admin-orders {
   background-color: white;
   padding: 20px;
-  border-radius: 5px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
 .admin-orders h1 {
@@ -320,7 +448,7 @@ export default {
 .order-actions {
   margin-bottom: 20px;
   display: flex;
-  justify-content: flex-start;
+  justify-content: space-between;
   align-items: center;
 }
 
@@ -348,8 +476,8 @@ export default {
 .order-table {
   overflow-x: auto;
   background-color: white;
-  border-radius: 5px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
 .order-table table {
@@ -435,7 +563,6 @@ export default {
   font-size: 16px;
 }
 
-/* Modal Styles */
 .modal {
   position: fixed;
   top: 0;
@@ -453,7 +580,7 @@ export default {
   background-color: white;
   padding: 20px;
   border-radius: 10px;
-  width: 500px;
+  width: 600px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   border: 1px solid #ddd;
 }
@@ -488,8 +615,22 @@ export default {
   margin-bottom: 5px;
 }
 
+.form-columns {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 15px;
+}
+
+.form-column {
+  flex: 1;
+}
+
 .form-group {
   margin-bottom: 15px;
+}
+
+.form-group.full-width {
+  width: 100%;
 }
 
 .form-group label {
@@ -551,7 +692,6 @@ export default {
   background-color: #c0392b;
 }
 
-/* Phân trang */
 .pagination {
   padding: 10px 16px;
   display: flex;
@@ -559,10 +699,9 @@ export default {
   align-items: center;
   background-color: #f8f9fa;
   border-top: 1px solid #e9ecef;
-  border-radius: 0 0 5px 5px;
+  border-radius: 0 0 8px 8px;
   font-size: 14px;
   color: #495057;
-  margin-top: 20px;
 }
 
 .pagination-btn {
