@@ -41,13 +41,20 @@
         </div>
         <div v-else class="account-dropdown">
           <button type="button" class="account-button">
-            <i class="fa fa-user"></i> Tài khoản
+            <template v-if="authStore.user && authStore.user.avatar">
+              <img :src="authStore.user.avatar" alt="Avatar" class="avatar" />
+              <span>{{ authStore.user.user_name || 'Người dùng' }}</span>
+            </template>
+            <template v-else>
+              <i class="fa fa-user avatar-icon"></i>
+              <span>{{ authStore.user?.email || 'Email không xác định' }}</span>
+            </template>
           </button>
           <div class="dropdown-content">
             <button @click="goToUserInfo">Thông tin tài khoản</button>
             <button @click="goToOrders">Đơn hàng</button>
             <button @click="goToLikes">Yêu thích</button>
-            <button @click="goToHistory">Lịch sử</button>
+            <button @click="goToAddresss">Địa chỉ giao hàng</button>
             <button @click="handleLogout">Đăng xuất</button>
           </div>
         </div>
@@ -80,9 +87,21 @@ export default {
     const showOverlay = ref(false);
     const searchQuery = ref("");
 
+    // Khởi tạo thông tin người dùng từ token hoặc API
+    const initializeUserInfo = () => {
+      const token = localStorage.getItem("token");
+      if (token && authStore.isLoggedIn) {
+        const userInfo = getUserInfoFromToken(token);
+        authStore.user = userInfo || {}; // Đảm bảo user luôn là object
+      } else {
+        authStore.user = {}; // Mặc định là object rỗng nếu không đăng nhập
+      }
+    };
+
     onMounted(() => {
       authStore.initializeAuth();
       cartStore.initializeCart();
+      initializeUserInfo(); // Khởi tạo thông tin người dùng
       fetchCountOfCart();
     });
 
@@ -106,8 +125,8 @@ export default {
       router.push("/user/like");
     };
 
-    const goToHistory = () => {
-      router.push("/user/history");
+    const goToAddresss = () => {
+      router.push("/user/address");
     };
 
     const hideOverlayWithDelay = () => {
@@ -126,15 +145,19 @@ export default {
       }
     };
 
-    const getUserIdFromToken = () => {
-      const token = localStorage.getItem("token");
+    const getUserInfoFromToken = (token) => {
       if (!token) {
         console.log("Không tìm thấy token trong localStorage");
         return null;
       }
       try {
         const payload = JSON.parse(atob(token.split(".")[1]));
-        return payload.user_id || payload.id;
+        return {
+          user_id: payload.user_id || payload.id,
+          email: payload.email,
+          user_name: payload.user_name,
+          avatar: payload.avatar,
+        };
       } catch (error) {
         console.log("Lỗi khi giải mã token:", error);
         return null;
@@ -143,7 +166,7 @@ export default {
 
     const fetchCountOfCart = async () => {
       try {
-        const userId = getUserIdFromToken();
+        const userId = authStore.user?.user_id || getUserInfoFromToken(localStorage.getItem("token"))?.user_id;
         if (userId) {
           const response = await apiGetCountProductOfCart({ user_id: userId });
           if (response.data.err === 0) {
@@ -163,17 +186,20 @@ export default {
     };
 
     const handleLogout = () => {
-      authStore.logout(); // Gọi hàm logout từ authStore
-      cartStore.updatetotal_product_type(0); // Reset số lượng giỏ hàng
-      alert("Đăng xuất thành công!"); // Hiển thị thông báo
-      router.push("/"); // Chuyển hướng về trang chủ
+      authStore.logout();
+      cartStore.updatetotal_product_type(0);
+      authStore.user = {}; // Reset user về object rỗng
+      alert("Đăng xuất thành công!");
+      router.push("/");
     };
 
     authStore.$subscribe((mutation, state) => {
       if (state.isLoggedIn) {
+        initializeUserInfo(); // Cập nhật lại thông tin người dùng khi đăng nhập
         fetchCountOfCart();
       } else {
         cartStore.updatetotal_product_type(0);
+        authStore.user = {}; // Reset user khi đăng xuất
       }
     });
 
@@ -185,7 +211,7 @@ export default {
       goToUserInfo,
       goToOrders,
       goToLikes,
-      goToHistory,
+      goToAddresss,
       showOverlay,
       searchQuery,
       hideOverlayWithDelay,
@@ -385,20 +411,43 @@ header {
 }
 
 .account-button {
+  display: flex;
+  align-items: center;
   color: #2c3e50;
   border: 1px solid #e0e0e0;
   height: 40px;
-  padding: 0 20px;
+  padding: 0 10px;
   font-weight: 600;
   font-size: 0.9em;
   background-color: #fff;
-  border-radius: 8px;
+  border-radius: 20px;
   cursor: pointer;
   transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
-.account-button i {
+.account-button .avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
   margin-right: 8px;
+  object-fit: cover;
+}
+
+.account-button .avatar-icon {
+  width: 30px;
+  height: 30px;
+  line-height: 30px;
+  text-align: center;
+  font-size: 1.2em;
+  color: #007bff;
+  margin-right: 8px;
+}
+
+.account-button span {
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .account-button:hover {
@@ -415,7 +464,7 @@ header {
   z-index: 1000;
   border-radius: 8px;
   top: 100%;
-  left: 0;
+  right: 0;
 }
 
 .dropdown-content button {
