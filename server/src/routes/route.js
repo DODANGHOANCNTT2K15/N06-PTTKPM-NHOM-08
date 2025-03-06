@@ -59,8 +59,9 @@ router.post('/review/add', reviewController.addReviewController)
 router.post('/review/delete', reviewController.deleteReviewController)
 
 // banner route
+router.get('/banner', bannerController.getAllBannerController)
 router.post('/banner/add', bannerController.addBannerController)
-router.post('/banner/delete', bannerController.deleteBannerController)
+router.delete('/banner/delete', bannerController.deleteBannerController)
 
 // cart route
 router.post('/cart/userid', cartController.getCartController)
@@ -71,7 +72,6 @@ router.delete('/cart/delete', cartController.deleteCartItemController)
 
 // favorite route
 router.post('/favorite/userid', favoriteController.getFavoritesController)
-// router.post('/cart/count', cartController.getCountController)
 router.post('/favorite/add', favoriteController.addToFavoriteController)
 router.delete('/favorite/delete', favoriteController.deleteFavoriteItemController)
 
@@ -86,8 +86,6 @@ router.post("/order/get", orderController.getOrderController);
 router.post("/order/add", orderController.addOrderController);
 router.put("/order/update", orderController.updateOrderController);
 router.delete("/order/delete", orderController.deleteOrderController);
-
-// payment method
 
 // payment
 router.post("/payment", paymentService.payment);

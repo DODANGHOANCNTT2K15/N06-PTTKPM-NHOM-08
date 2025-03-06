@@ -1,5 +1,18 @@
 import * as bannerService from "../services/bannerService"
 
+//lấy toàn bộ banner
+export const getAllBannerController = async (req, res) => {
+    try {
+        const rs = await bannerService.getAllBannersService();
+        return res.status(200).json(rs);
+
+    } catch (error) {
+        console.error('Error in addBookController:', error);
+        return res.status(500).json(error);
+    }
+};
+
+
 // tạo banner mới
 export const addBannerController = async (req, res) => {
     const { banner_name } = req.body;

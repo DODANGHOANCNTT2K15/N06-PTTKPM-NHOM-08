@@ -1,61 +1,100 @@
 import db from "../models";
 import * as cloudinaryService from "./cloudinaryService"
 
+// lấy dữ liệu
+export const getAllBannersService = () =>
+    new Promise(async (resolve, reject) => {
+      try {
+        const banners = await db.Banner.findAll();
+  
+        if (!banners) {
+          return resolve({
+            err: 0,
+            msg: 'Không có banner nào trong cơ sở dữ liệu!',
+            data: [],
+          });
+        }
+  
+        resolve({
+          err: 0,
+          msg: 'Lấy danh sách banner thành công!',
+          data: banners,
+        });
+      } catch (error) {
+        console.error('Lỗi khi lấy danh sách banner: ', error);
+        reject({
+          err: 1,
+          msg: 'Đã xảy ra lỗi khi lấy danh sách banner!',
+          error: error.message,
+        });
+      }
+    });
+  
+
+// thêm dữ liệu banner
 export const addBannerService = (banner_name, req) =>
     new Promise(async (resolve, reject) => {
         let transaction;
         let uploadedImagePublicId = null;
 
         try {
+            // Bắt đầu transaction
             transaction = await db.sequelize.transaction();
 
-            const [bannerRecord, created] = await db.Avatar.Create({
-                defaults: {
+            // Tạo bản ghi banner mới với thông tin mặc định
+            const bannerRecord = await db.Banner.create(
+                {
+                    banner_name: banner_name.trim(),
                     banner_path: '',
                     banner_public_id: '',
                 },
-                transaction,
-            });
+                { transaction }
+            );
 
             if (!bannerRecord) {
                 await transaction.rollback();
                 return reject({
                     err: 2,
-                    msg: 'Không thể tìm hoặc tạo bản ghi banner!',
+                    msg: 'Không thể tạo bản ghi banner!',
                 });
             }
 
-            const rs = await cloudinaryService.uploadImageService(req);
-            if (!rs) {
+            // Upload ảnh lên Cloudinary
+            const uploadResult = await cloudinaryService.uploadImageService(req);
+            if (!uploadResult || !uploadResult.url || !uploadResult.banner_public_id) {
                 await transaction.rollback();
                 return reject({
                     err: 2,
-                    msg: 'Lỗi upload lên Cloudinary!',
+                    msg: 'Lỗi khi upload ảnh lên Cloudinary!',
                 });
             }
 
-            // Lưu public_id của ảnh vừa upload để rollback nếu cần
-            uploadedImagePublicId = rs.banner_public_id;
+            // Lưu public_id để rollback nếu cần
+            uploadedImagePublicId = uploadResult.banner_public_id;
 
+            // Cập nhật bản ghi banner với đường dẫn và public_id từ Cloudinary
             await bannerRecord.update(
                 {
-                    banner_path: rs.url,
-                    banner_public_id: rs.banner_public_id,
+                    banner_path: uploadResult.url,
+                    banner_public_id: uploadResult.banner_public_id,
                 },
                 { transaction }
             );
 
+            // Commit transaction
             await transaction.commit();
 
             resolve({
                 err: 0,
-                msg: 'Upload banner thành công!',
+                msg: 'Thêm banner thành công!',
                 data: {
-                    banner_path: rs.url
+                    banner_id: bannerRecord.banner_id,
+                    banner_name: bannerRecord.banner_name,
+                    banner_path: uploadResult.url,
                 },
             });
         } catch (error) {
-            console.error('Lỗi tại upload banner: ', error);
+            console.error('Lỗi tại addBannerService: ', error);
 
             // Rollback database
             if (transaction) {
@@ -75,12 +114,11 @@ export const addBannerService = (banner_name, req) =>
 
             reject({
                 err: 1,
-                msg: 'Lỗi khi thay đổi banner!',
+                msg: 'Lỗi khi thêm banner!',
                 error: error.message,
             });
         }
     });
-
 // xóa banner
 export const deleteBannerService = ({ banner_id, banner_public_id }) =>
     new Promise(async (resolve, reject) => {

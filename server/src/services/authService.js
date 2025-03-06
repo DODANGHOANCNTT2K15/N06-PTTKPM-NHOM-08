@@ -52,7 +52,6 @@ export const loginService = ({ email, pass_word }) => new Promise(async (resolve
                 user_id: account.user_id,
                 user_name: account.user_name,
                 email: account.email,
-                avatar: account.avatar ? account.avatar.avatar_path : "",
                 role: account.role,
             },
             process.env.SECRET_KEY || 'khongcokeygihet',
@@ -64,6 +63,7 @@ export const loginService = ({ email, pass_word }) => new Promise(async (resolve
             err: 0,
             msg: 'Đăng nhập thành công!',
             token,
+            avatar: account.avatar ? account.avatar.avatar_path : "",
         });
     } catch (error) {
         console.error('Lỗi trong loginService:', error);
@@ -77,7 +77,6 @@ export const loginService = ({ email, pass_word }) => new Promise(async (resolve
 
 // đăng ký
 const hash = password => bcrypt.hashSync(password, bcrypt.genSaltSync(10));
-
 export const registerService = ({ user_name, email, pass_word, role }) => 
     new Promise(async (resolve, reject) => {
         try {
@@ -110,18 +109,12 @@ export const registerService = ({ user_name, email, pass_word, role }) =>
                 status: 0
             });
 
-            // // Tạo thông tin khách hàng
-            // await db.Customer.create({
-            //     user_id: newUser.user_id
-            // });
-
             // Tạo JWT token
             const token = jwt.sign(
                 {
                     user_id: newUser.user_id,
                     user_name: newUser.user_name,
                     email: newUser.email,
-                    avatar: newUser.avatar?.avatar_path || "",
                     role: newUser.role
                 },
                 process.env.JWT_SECRET || 'khongcokeygihet',
@@ -132,7 +125,8 @@ export const registerService = ({ user_name, email, pass_word, role }) =>
             resolve({
                 err: 0,
                 msg: 'Tạo tài khoản thành công!',
-                token: token
+                token: token,
+                avatar: newUser.avatar?.avatar_path || "",
             });
 
         } catch (error) {
