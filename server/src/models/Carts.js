@@ -11,7 +11,7 @@ module.exports = (sequelize, DataTypes) => {
 
   Cart.init(
     {
-      card_id: {
+      cart_id: {
         type: DataTypes.BIGINT,
         primaryKey: true,
         autoIncrement: true,

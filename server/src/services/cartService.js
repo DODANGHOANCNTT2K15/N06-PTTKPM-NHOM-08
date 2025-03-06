@@ -81,6 +81,13 @@ export const getCartService = (user_id) =>
                         model: db.Book,
                         as: 'book',
                         attributes: ['title', 'price'], // Lấy thông tin bổ sung từ bảng sách
+                        include: [
+                            {
+                                model: db.BookImage,
+                                as: 'images',
+                                attributes: ['image_public_id', 'image_path'], // Lấy thông tin bổ sung từ bảng sách
+                            },
+                        ],
                     },
                 ],
             });
