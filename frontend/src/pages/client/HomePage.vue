@@ -61,9 +61,15 @@
             <div><h1>Tất cả sản phẩm</h1></div>
             <div>
               <div id="filter_tag_cover">
-                <div class="filter_tag">Truyện</div>
-                <div class="filter_tag">Tiểu thuyết</div>
-                <div class="filter_tag">Trinh thám</div>
+                <div 
+                  class="filter_tag" 
+                  v-for="tag in filterTags" 
+                  :key="tag"
+                  @click="toggleTag(tag)"
+                  :class="{ active: selectedTags.includes(tag) }"
+                >
+                  {{ tag }}
+                </div>
               </div>
               <div>
                 <div id="filter_tag_all" @click="showFilterPopup = true">
@@ -465,6 +471,10 @@ export default {
     const errorMessage = ref("");
     const successMessage = ref("");
 
+    // Thêm filter tags
+    const filterTags = ref(["Truyện", "Tiểu thuyết", "Trinh thám"]);
+    const selectedTags = ref([]);
+
     // Hàm đăng nhập
     const login = async () => {
       try {
@@ -547,7 +557,7 @@ export default {
     // Hàm gọi API lấy sách
     const fetchBooks = async () => {
       try {
-        const response = await apiGetAllBooks(); // Thay bằng endpoint thực tế
+        const response = await apiGetAllBooks();
         if (response.data.err === 0) {
           const books = response.data.data.map((book) => ({
             id: book.book_id,
@@ -559,6 +569,8 @@ export default {
             sold: book.warehouses[0]?.sold_quantity || 0,
             tags: [`${book.bookType.tag}`, `${book.rating_avg}Sao`],
             publishedDate: new Date(book.published_date),
+            rating: book.rating_avg || 0,
+            freeShipping: book.free_shipping || false,
           }));
           products.value = books;
           sortProducts();
@@ -572,7 +584,7 @@ export default {
 
     // Hàm sắp xếp sản phẩm
     const sortProducts = () => {
-      const sortedProducts = [...products.value];
+      const sortedProducts = [...filteredProducts.value];
       switch (sortOption.value) {
         case "popular":
         case "best-seller":
@@ -590,17 +602,6 @@ export default {
       }
       products.value = sortedProducts;
     };
-
-    // Tính toán sản phẩm phân trang
-    const paginatedProducts = computed(() => {
-      const start = (currentPage.value - 1) * itemsPerPage.value;
-      const end = start + itemsPerPage.value;
-      return products.value.slice(start, end);
-    });
-
-    const totalPages = computed(() => {
-      return Math.ceil(products.value.length / itemsPerPage.value);
-    });
 
     // Filter logic
     const filters = ref({
@@ -622,20 +623,116 @@ export default {
       return Object.values(filters.value.priceRanges).some((value) => value);
     });
 
+    // Logic lọc sản phẩm
+    const filteredProducts = computed(() => {
+      let filtered = [...products.value];
+
+      // Tag filter
+      if (selectedTags.value.length > 0) {
+        filtered = filtered.filter((product) =>
+          product.tags.some((tag) => selectedTags.value.includes(tag))
+        );
+      }
+
+      // Free shipping filter
+      if (filters.value.freeShipping) {
+        filtered = filtered.filter((product) => product.freeShipping);
+      }
+
+      // Rating filter
+      const selectedRatings = Object.entries(filters.value.ratings)
+        .filter(([, selected]) => selected)
+        .map(([rating]) => Number(rating));
+      if (selectedRatings.length > 0) {
+        filtered = filtered.filter((product) =>
+          selectedRatings.includes(Math.round(product.rating))
+        );
+      }
+
+      // Price range filter
+      const selectedPriceRanges = Object.keys(filters.value.priceRanges).filter(
+        (key) => filters.value.priceRanges[key]
+      );
+      if (
+        selectedPriceRanges.length > 0 ||
+        (customPriceRange.value.from && customPriceRange.value.to)
+      ) {
+        filtered = filtered.filter((product) => {
+          const price = product.discountedPrice;
+
+          // Custom price range
+          if (customPriceRange.value.from && customPriceRange.value.to) {
+            const from = Number(customPriceRange.value.from);
+            const to = Number(customPriceRange.value.to);
+            return price >= from && price <= to;
+          }
+
+          // Predefined price ranges
+          return selectedPriceRanges.some((range) => {
+            switch (range) {
+              case "under100k":
+                return price < 100000;
+              case "100k-200k":
+                return price >= 100000 && price <= 200000;
+              case "200k-500k":
+                return price >= 200000 && price <= 500000;
+              case "500k-1m":
+                return price >= 500000 && price <= 1000000;
+              case "1m-2m":
+                return price >= 1000000 && price <= 2000000;
+              case "over2m":
+                return price > 2000000;
+            }
+          });
+        });
+      }
+
+      return filtered;
+    });
+
+    // Tính toán sản phẩm phân trang dựa trên filteredProducts
+    const paginatedProducts = computed(() => {
+      const start = (currentPage.value - 1) * itemsPerPage.value;
+      const end = start + itemsPerPage.value;
+      return filteredProducts.value.slice(start, end);
+    });
+
+    const totalPages = computed(() => {
+      return Math.ceil(filteredProducts.value.length / itemsPerPage.value);
+    });
+
     const clearCustomPriceRange = () => {
       customPriceRange.value = { from: "", to: "" };
     };
 
     const clearAllFilters = () => {
       filters.value.freeShipping = false;
-      Object.keys(filters.value.ratings).forEach((key) => (filters.value.ratings[key] = false));
-      Object.keys(filters.value.priceRanges).forEach((key) => (filters.value.priceRanges[key] = false));
+      Object.keys(filters.value.ratings).forEach(
+        (key) => (filters.value.ratings[key] = false)
+      );
+      Object.keys(filters.value.priceRanges).forEach(
+        (key) => (filters.value.priceRanges[key] = false)
+      );
+      selectedTags.value = []; // Reset tags
       clearCustomPriceRange();
+      currentPage.value = 1;
     };
 
     const showResults = () => {
-      console.log("Applying filters:", filters.value, customPriceRange.value);
-      setTimeout(() => router.push("/filter-results"), 1000);
+      showFilterPopup.value = false;
+      currentPage.value = 1;
+      sortProducts();
+    };
+
+    // Thêm method toggleTag
+    const toggleTag = (tag) => {
+      const index = selectedTags.value.indexOf(tag);
+      if (index === -1) {
+        selectedTags.value.push(tag);
+      } else {
+        selectedTags.value.splice(index, 1);
+      }
+      currentPage.value = 1; // Reset về trang đầu khi lọc thay đổi
     };
 
     // Banner logic
@@ -644,7 +741,8 @@ export default {
     };
 
     const prevBanner = () => {
-      currentBanner.value = (currentBanner.value - 1 + banners.value.length) % banners.value.length;
+      currentBanner.value =
+        (currentBanner.value - 1 + banners.value.length) % banners.value.length;
     };
 
     const startAutoSlide = () => {
@@ -688,6 +786,9 @@ export default {
       clearCustomPriceRange,
       clearAllFilters,
       showResults,
+      filterTags,
+      selectedTags,
+      toggleTag,
     };
   },
 };
@@ -738,5 +839,36 @@ export default {
   background-color: rgba(74, 141, 176, 1);
   color: white;
   border-color: rgba(74, 141, 176, 1);
+}
+
+#filter_tag_cover {
+  display: flex;
+  gap: 10px;
+  margin: 10px 0;
+}
+
+.filter_tag {
+  padding: 8px 15px;
+  border: 1px solid #ddd;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.filter_tag:hover,
+.filter_tag.active {
+  background-color: #007bff;
+  color: white;
+  border-color: #007bff;
+}
+
+/* Style cho filter section */
+#filter {
+  margin-bottom: 20px;
+}
+
+#filter_tag_all {
+  padding: 8px 15px;
+  cursor: pointer;
 }
 </style>

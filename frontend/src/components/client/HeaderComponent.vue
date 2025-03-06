@@ -8,7 +8,7 @@
         <img src="@/assets/images/Logo_00.png" alt="PlayBook Logo" />
       </div>
       <div class="search-section">
-        <form action="" class="search-container" @submit.prevent>
+        <form action="" class="search-container" @submit.prevent="handleSearch">
           <i class="fa fa-search"></i>
           <input 
             type="text" 
@@ -93,6 +93,17 @@ export default {
       }, 200);
     };
 
+    // Xử lý tìm kiếm và truyền query qua router
+    const handleSearch = () => {
+      if (searchQuery.value.trim()) { // Kiểm tra nếu searchQuery không rỗng
+        router.push({
+          path: "/search",
+          query: { q: searchQuery.value.trim() }
+        });
+        showOverlay.value = false; // Đóng overlay sau khi tìm kiếm
+      }
+    };
+
     return {
       authStore,
       goToHome,
@@ -104,6 +115,7 @@ export default {
       showOverlay,
       searchQuery,
       hideOverlayWithDelay,
+      handleSearch,
     };
   },
 };
