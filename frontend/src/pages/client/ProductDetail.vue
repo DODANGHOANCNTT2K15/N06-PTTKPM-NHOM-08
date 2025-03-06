@@ -2,15 +2,15 @@
   <div class="product-detail-container">
     <div class="product-header">
       <nav class="nav-tabs">
-        <a href="#">Trang chủ</a> > <a href="#">Sách tiếng Việt</a> > <a href="#">Truyện tranh</a> > 
-        <span>Thiên Tài Bên Trái, Kẻ Điên Bên Phải (Tái Bản)</span>
+        <a href="#">Trang chủ</a> > <a href="#">Sách tiếng Việt</a> >
+        <span>{{ book.title }}</span>
       </nav>
     </div>
 
     <div class="product-content">
       <div class="product-left">
         <div class="product-image">
-          <img :src="require(`@/assets/images/${mainImage}`)" alt="Thiên Tài Bên Trái, Kẻ Điên Bên Phải" />
+          <img :src="mainImage" :alt="book.title" />
         </div>
         <div class="thumbnail-slider">
           <button class="arrow-left" @click="prevThumbnail">
@@ -18,11 +18,11 @@
           </button>
           <div class="thumbnail-container">
             <img
-              v-for="(thumbnail, index) in thumbnails"
+              v-for="(thumbnail, index) in book.images"
               :key="index"
-              :src="require(`@/assets/images/${thumbnail}`)"
+              :src="thumbnail.image_path"
               :alt="`Thumbnail ${index + 1}`"
-              :class="{ 'active': index === currentThumbnail }"
+              :class="{ active: index === currentThumbnail }"
               @click="selectThumbnail(index)"
             />
           </div>
@@ -33,21 +33,26 @@
         <div class="highlight-section">
           <h3>Đặc điểm nổi bật</h3>
           <ul>
-            <li>Khám phá những điều thú vị ngay cả khi bạn chưa từng đọc truyện tranh, kể cả bạn đã từng đọc.</li>
-            <li>Ngôn ngữ sắc sảo, sâu sắc với văn phong, khai thác sâu những giá trị nhân văn.</li>
-            <li>Tạo động lực, giúp bạn tìm thấy chính mình.</li>
+            <li>Tác phẩm kinh điển của {{ book.author }}</li>
+            <li>Ngôn ngữ sắc sảo, phản ánh xã hội sâu sắc</li>
+            <li>Ấn bản mới từ {{ book.publisher }}</li>
           </ul>
         </div>
       </div>
-      
+
       <div class="product-right">
-        <h1>Thiên Tài Bên Trái, Kẻ Điên Bên Phải (Tái Bản)</h1>
+        <h1>{{ book.title }}</h1>
         <div class="rating">
-          <span>★★★★★</span> (5,467) | Đã bán 3,000+
+          <span>{{
+            "★".repeat(book.rating_avg) + "☆".repeat(5 - book.rating_avg)
+          }}</span>
+          ({{ book.reviews.length || 0 }} đánh giá)
         </div>
         <div class="price">
-          <span class="current-price">600,000 VNĐ</span>
-          <span class="original-price">~1,000,000 VNĐ</span>
+          <span class="current-price">{{
+            formatPrice(book.price * (1 - book.discount_price / 100))
+          }} VNĐ</span>
+          <span class="original-price">~{{ formatPrice(book.price) }} VNĐ</span>
         </div>
 
         <div class="quantity">
@@ -65,7 +70,7 @@
 
         <div class="shipping-info">
           <p><i class="fas fa-map-marker-alt"></i> Hoàn Kiếm, Hà Đông, Hà Nội</p>
-          <p><i class="fas fa-truck"></i> Giao phí chỉ từ 10k cho đơn từ 45k, 25k cho đơn từ 100k</p>
+          <p><i class="fas fa-truck"></i> Giao phí chỉ từ 10k cho đơn từ 45k</p>
         </div>
 
         <div class="product-details">
@@ -77,35 +82,31 @@
                 <td>Tái bản</td>
               </tr>
               <tr>
-                <td>Công ty phát hành</td>
-                <td>Vibooks</td>
+                <td>Ngày xuất bản</td>
+                <td>{{ formatDate(book.published_date) }}</td>
               </tr>
               <tr>
-                <td>Ngày xuất bản</td>
-                <td>2021-06-01</td>
+                <td>Tác giả</td>
+                <td>{{ book.author }}</td>
               </tr>
               <tr>
                 <td>Kích thước</td>
                 <td>16 x 24 cm</td>
               </tr>
               <tr>
-                <td>Dịch giá</td>
-                <td>Thu Hương</td>
-              </tr>
-              <tr>
                 <td>Số trang</td>
-                <td>424</td>
+                <td>100000</td>
               </tr>
               <tr>
-                <td>Nhà xuất bản</td>
-                <td>Nhà xuất bản Thế Giới</td>
+                <td>Công ty phát hành</td>
+                <td>{{ book.publisher }}</td>
               </tr>
             </tbody>
           </table>
         </div>
         <div class="description">
           <h2>Mô tả sản phẩm</h2>
-          <p>NEW MỚI NGAY ANH THÁY TÔI ĐIỆN, THỨC RA CHỈNH LÀ ANH ĐIỆN! Hãy nhớ rằng con người đang sống trên thế giới này, bản thân bị giới hạn bởi rất nhiều thứ, nhưng nếu bạn có thể vượt qua những giới hạn ấy, bạn sẽ thấy cả một thế giới rộng lớn đang chờ đợi bạn...</p>
+          <p>{{ book.description }}</p>
           <button class="read-more">Xem thêm</button>
         </div>
       </div>
@@ -121,16 +122,25 @@
           :purchase-time="review.purchaseTime"
           :rating="review.rating"
           :review-text="review.reviewText"
+          :can-delete="review.user_id === currentUserId"
+          @delete-review="deleteReview(review.id)"
         />
       </div>
       <div class="pagination">
-        <button :disabled="currentPage === 1" @click="currentPage--">Previous</button>
-        <span v-for="page in totalPages" :key="page" :class="{ 'active': currentPage === page }">
+        <button :disabled="currentPage === 1" @click="currentPage--">
+          Previous
+        </button>
+        <span
+          v-for="page in totalPages"
+          :key="page"
+          :class="{ active: currentPage === page }"
+        >
           <button @click="currentPage = page">{{ page }}</button>
         </span>
-        <button :disabled="currentPage === totalPages" @click="currentPage++">Next</button>
+        <button :disabled="currentPage === totalPages" @click="currentPage++">
+          Next
+        </button>
       </div>
-      <!-- Form đánh giá cho người dùng -->
       <div class="user-review-form">
         <h3>Thêm đánh giá của bạn</h3>
         <div class="rating-input">
@@ -145,60 +155,55 @@
         </div>
         <div class="comment-input">
           <label>Bình luận:</label>
-          <textarea v-model="newReview.reviewText" placeholder="Viết đánh giá của bạn..." rows="4"></textarea>
+          <textarea
+            v-model="newReview.reviewText"
+            placeholder="Viết đánh giá của bạn..."
+            rows="4"
+          ></textarea>
         </div>
-        <button @click="submitReview" class="submit-review">Gửi đánh giá</button>
+        <button @click="submitReview" class="submit-review">
+          Gửi đánh giá
+        </button>
       </div>
     </div>
   </div>
 </template>
 
 <script>
-import ReviewItem from '@/components/client/ReviewItem.vue';
+import ReviewItem from "@/components/client/ReviewItem.vue";
+import { apiGetAllBookByID } from "@/services/client/BookService";
+import axios from "axios";
 
 export default {
   name: "ProductPage",
   components: { ReviewItem },
   data() {
     return {
-      quantity: 1,
-      isFavorite: false, // Trạng thái yêu thích ban đầu
-      thumbnails: [
-        'Product_00.png',
-        'image_00.png',
-        'Product_00.png',
-        'Product_00.png',
-        'Product_00.png', // Thêm nhiều ảnh để test cuộn
-        'Product_00.png',
-        'Product_00.png',
-      ],
-      currentThumbnail: 0, // Index của thumbnail hiện tại (có viền đen)
-      mainImage: 'Product_00.png', // Hình ảnh lớn mặc định
-      reviews: [
-        {
-          id: 1,
-          userName: 'Tina Bình',
-          purchaseTime: 'Đã tham gia 2 năm',
-          rating: 5,
-          reviewText: 'Rất hài lòng, sách chất lượng tốt, nội dung hay, giao hàng nhanh.',
-        },
-        {
-          id: 2,
-          userName: 'Tina Bình',
-          purchaseTime: 'Đã tham gia 2 năm',
-          rating: 4,
-          reviewText: 'Hơi thất vọng, nhưng nội dung vẫn ổn, giao hàng đúng hẹn.',
-        },
-      ],
-      newReview: {
-        id: null,
-        userName: 'Người dùng (giả lập)', // Giả lập tên người dùng, bạn có thể thay bằng logic thực tế
-        purchaseTime: 'Vừa đánh giá',
-        rating: 1,
-        reviewText: '',
+      book: {
+        book_id: "",
+        title: "",
+        author: "",
+        publisher: "",
+        published_date: "",
+        price: 0,
+        rating_avg: 0,
+        discount_price: 0,
+        description: "",
+        images: [],
+        reviews: [],
       },
-      itemsPerPage: 2, // Số bình luận trên mỗi trang
-      currentPage: 1, // Trang hiện tại
+      quantity: 1,
+      isFavorite: false,
+      currentThumbnail: 0,
+      mainImage: "",
+      reviews: [],
+      newReview: {
+        rating: 1,
+        reviewText: "",
+      },
+      itemsPerPage: 2,
+      currentPage: 1,
+      currentUserId: null,
     };
   },
   computed: {
@@ -211,168 +216,285 @@ export default {
       return Math.ceil(this.reviews.length / this.itemsPerPage);
     },
   },
+  created() {
+    this.fetchBookData();
+    this.loadCurrentUser();
+  },
   methods: {
+    // Hàm giải mã JWT token để lấy user_id
+    getUserIdFromToken() {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        console.log("Không tìm thấy token trong localStorage");
+        return null;
+      }
+      try {
+        const payload = JSON.parse(atob(token.split(".")[1])); // Giải mã phần payload của JWT
+        console.log(payload.user_id); // Giả định user_id nằm trong payload
+        return payload.user_id || payload.id; // Trả về user_id hoặc id tùy backend
+      } catch (error) {
+        console.log("Lỗi khi giải mã token:", error);
+        return null;
+      }
+    },
+    loadCurrentUser() {
+      this.currentUserId = this.getUserIdFromToken();
+    },
+    async fetchBookData() {
+      const bookId = this.$route.params.id;
+      try {
+        const response = await apiGetAllBookByID({ book_id: bookId });
+        if (response.status === 200 && response.data.err === 0) {
+          this.book = response.data.data;
+          this.mainImage = this.book.images[0]?.image_path || "";
+          this.reviews = this.book.reviews || [];
+        }
+      } catch (error) {
+        console.error("Lỗi khi lấy thông tin sách:", error);
+      }
+    },
+    async submitReview() {
+      if (!this.newReview.reviewText.trim() || !this.newReview.rating) {
+        alert("Vui lòng nhập đánh giá và bình luận!");
+        return;
+      }
+
+      const bookId = this.$route.params.id;
+      const reviewData = {
+        book_id: bookId,
+        user_id: this.currentUserId,
+        rating: parseInt(this.newReview.rating),
+        comment: this.newReview.reviewText,
+      };
+
+      try {
+        const response = await axios.post(
+          "http://your-api-url/api/reviews",
+          reviewData,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
+        );
+
+        if (response.data.err === 0) {
+          this.reviews.push({
+            id: response.data.data.id, // Giả sử API trả về id
+            userName: "Bạn",
+            purchaseTime: "Vừa xong",
+            rating: reviewData.rating,
+            reviewText: reviewData.comment,
+            user_id: this.currentUserId,
+          });
+          this.newReview.reviewText = "";
+          this.newReview.rating = 1;
+          this.currentPage = Math.ceil(this.reviews.length / this.itemsPerPage);
+        } else {
+          alert(response.data.msg);
+        }
+      } catch (error) {
+        console.error("Lỗi khi gửi đánh giá:", error);
+        alert("Có lỗi xảy ra khi gửi đánh giá.");
+      }
+    },
+    deleteReview(reviewId) {
+      this.reviews = this.reviews.filter((review) => review.id !== reviewId);
+      // Nếu cần xóa trên server:
+      // await axios.delete(`http://your-api-url/api/reviews/${reviewId}`, {
+      //   headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      // });
+    },
+    formatPrice(price) {
+      return price.toLocaleString("vi-VN");
+    },
+    formatDate(date) {
+      return new Date(date).toLocaleDateString("vi-VN");
+    },
     buyNow() {
-      console.log('Mua ngay:', this.quantity);
-      // Thêm logic mua hàng tại đây
+      console.log("Mua ngay:", this.quantity, "sách:", this.book.title);
     },
     addToCart() {
-      console.log('Thêm vào giỏ:', this.quantity);
-      // Thêm logic thêm vào giỏ hàng tại đây
-    },
-    submitReview() {
-      if (this.newReview.reviewText.trim() && this.newReview.rating) {
-        this.newReview.id = this.reviews.length + 1;
-        this.reviews.push({ ...this.newReview });
-        this.newReview.reviewText = ''; // Reset bình luận
-        this.newReview.rating = 1; // Reset đánh giá về 1 sao
-        this.currentPage = Math.ceil(this.reviews.length / this.itemsPerPage); // Chuyển đến trang cuối nếu cần
-        console.log('Đánh giá mới đã được gửi:', this.reviews);
-      } else {
-        alert('Vui lòng nhập đánh giá và bình luận!');
-      }
+      console.log("Thêm vào giỏ:", this.quantity, "sách:", this.book.title);
     },
     toggleFavorite() {
       this.isFavorite = !this.isFavorite;
-      console.log('Sản phẩm đã được ' + (this.isFavorite ? 'thêm vào' : 'bỏ khỏi') + ' yêu thích');
-      // Thêm logic lưu vào store/API tại đây (ví dụ: Pinia/Vuex hoặc API call)
+      console.log(
+        "Sản phẩm đã được " +
+          (this.isFavorite ? "thêm vào" : "bỏ khỏi") +
+          " yêu thích"
+      );
     },
     selectThumbnail(index) {
       this.currentThumbnail = index;
-      this.mainImage = this.thumbnails[index]; // Cập nhật hình ảnh lớn khi chọn thumbnail
+      this.mainImage = this.book.images[index].image_path;
     },
     prevThumbnail() {
-      this.currentThumbnail = (this.currentThumbnail - 1 + this.thumbnails.length) % this.thumbnails.length;
-      this.mainImage = this.thumbnails[this.currentThumbnail]; // Cập nhật hình ảnh lớn khi chuyển trước
+      this.currentThumbnail =
+        (this.currentThumbnail - 1 + this.book.images.length) %
+        this.book.images.length;
+      this.mainImage = this.book.images[this.currentThumbnail].image_path;
     },
     nextThumbnail() {
-      this.currentThumbnail = (this.currentThumbnail + 1) % this.thumbnails.length;
-      this.mainImage = this.thumbnails[this.currentThumbnail]; // Cập nhật hình ảnh lớn khi chuyển sau
+      this.currentThumbnail =
+        (this.currentThumbnail + 1) % this.book.images.length;
+      this.mainImage = this.book.images[this.currentThumbnail].image_path;
     },
   },
 };
 </script>
 
 <style scoped>
-/* Giữ nguyên các import CSS global */
+/* Import CSS global */
 @import "@/assets/css/ProductDetail.css";
 @import "@/assets/css/General.css";
 
-/* Thêm style cho form đánh giá */
-.customer-reviews {
-  margin-top: 20px;
+.product-detail-container {
+  max-width: 1200px;
+  margin: 0 auto;
   padding: 20px;
-  background-color: #fff;
-  border-radius: 5px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
-.review-list {
+.product-header .nav-tabs {
+  font-size: 14px;
+  color: #666;
   margin-bottom: 20px;
 }
 
-.pagination {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-  margin-top: 20px;
-}
-
-.pagination button {
-  padding: 8px 12px;
-  border: 1px solid #ddd;
-  border-radius: 5px;
-  background-color: white;
-  cursor: pointer;
-  font-size: 14px;
+.product-header .nav-tabs a {
   color: #2c3e50;
+  text-decoration: none;
 }
 
-.pagination button:disabled {
-  background-color: #f0f0f0;
-  cursor: not-allowed;
-  color: #999;
+.product-header .nav-tabs span {
+  color: #e74c3c;
 }
 
-.pagination button:hover:not(:disabled) {
-  background-color: #e0e0e0;
+.product-content {
+  display: flex;
+  gap: 30px;
 }
 
-.pagination .active button {
-  background-color: #2c3e50;
-  color: white;
-  border-color: #2c3e50;
+.product-left {
+  flex: 1;
 }
 
-.pagination .active button:hover {
-  background-color: #34495e;
+.product-right {
+  flex: 1.5;
 }
 
-.user-review-form {
-  margin-top: 20px;
-  padding: 15px;
-  background-color: #f9f9f9;
+.product-image img {
+  max-width: 100%;
+  height: auto;
   border-radius: 5px;
-  border: 1px solid #ddd;
 }
 
-.user-review-form h3 {
+.thumbnail-slider {
+  display: flex;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.thumbnail-container {
+  display: flex;
+  overflow-x: auto;
+  gap: 10px;
+}
+
+.thumbnail-container img {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  cursor: pointer;
+  border: 2px solid transparent;
+  border-radius: 5px;
+}
+
+.thumbnail-container img.active {
+  border: 2px solid #2c3e50;
+}
+
+.arrow-left,
+.arrow-right {
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 0 10px;
+}
+
+.highlight-section {
+  margin-top: 20px;
+}
+
+.highlight-section h3 {
   font-size: 18px;
   color: #2c3e50;
-  margin-bottom: 15px;
 }
 
-.rating-input, .comment-input {
-  margin-bottom: 15px;
+.highlight-section ul {
+  list-style-type: none;
+  padding-left: 0px;
 }
 
-.rating-input label, .comment-input label {
-  display: block;
-  margin-bottom: 5px;
-  font-size: 14px;
+.highlight-section li {
+  margin-bottom: 10px;
+}
+
+.product-right h1 {
+  font-size: 24px;
   color: #2c3e50;
+  margin-bottom: 10px;
 }
 
-.rating-input select {
-  width: 100%;
-  padding: 8px;
+.rating {
+  margin-bottom: 10px;
+}
+
+.rating span {
+  color: #f1c40f;
+}
+
+.price {
+  margin-bottom: 20px;
+}
+
+.current-price {
+  font-size: 24px;
+  color: #e74c3c;
+  margin-right: 10px;
+}
+
+.original-price {
+  font-size: 16px;
+  color: #999;
+  text-decoration: line-through;
+}
+
+.quantity {
+  margin-bottom: 20px;
+}
+
+.quantity label {
+  margin-right: 10px;
+}
+
+.quantity input {
+  width: 60px;
+  padding: 5px;
   border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 14px;
-  background-color: white;
-}
-
-.comment-input textarea {
-  width: 100%;
-  padding: 8px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 14px;
-  resize: vertical;
-}
-
-.submit-review {
-  padding: 8px 16px;
-  background-color: #27ae60;
-  color: white;
-  border: none;
   border-radius: 5px;
-  cursor: pointer;
-  font-size: 14px;
 }
 
-.submit-review:hover {
-  background-color: #219653;
-}
-
-/* Style cho nút yêu thích và actions */
 .actions {
   display: flex;
   gap: 10px;
   margin-bottom: 20px;
 }
 
-.buy-now, .add-to-cart, .favorite-button {
+.buy-now,
+.add-to-cart,
+.favorite-button {
   padding: 10px 20px;
   border: none;
   border-radius: 5px;
@@ -402,26 +524,141 @@ export default {
   background: none;
   border: 1px solid #e74c3c;
   color: #e74c3c;
+  width: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px; /* Kích thước nút yêu thích */
-  font-size: 16px;
-}
-
-.favorite-button i {
-  transition: color 0.3s ease;
-}
-
-.favorite-button .far.fa-heart {
-  color: #e74c3c; /* Màu đỏ nhạt cho icon yêu thích khi chưa chọn */
-}
-
-.favorite-button:hover .far.fa-heart {
-  color: #c0392b; /* Màu đỏ đậm hơn khi hover trên icon chưa chọn */
 }
 
 .favorite-button .fas.fa-heart {
-  color: #c0392b; /* Màu đỏ đậm khi đã yêu thích */
+  color: #c0392b;
+}
+
+.shipping-info {
+  margin-bottom: 20px;
+}
+
+.shipping-info p {
+  font-size: 14px;
+  color: #666;
+}
+
+.shipping-info i {
+  margin-right: 5px;
+}
+
+.product-details,
+.description {
+  margin-bottom: 20px;
+}
+
+.product-details h2,
+.description h2 {
+  font-size: 18px;
+  color: #2c3e50;
+  margin-bottom: 10px;
+}
+
+.product-details table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.product-details td {
+  padding: 8px;
+  border-bottom: 1px solid #ddd;
+}
+
+.description p {
+  font-size: 14px;
+  color: #666;
+}
+
+.read-more {
+  background: none;
+  border: none;
+  color: #3498db;
+  cursor: pointer;
+}
+
+.customer-reviews {
+  padding: 20px;
+  background-color: #fff;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.customer-reviews h2 {
+  font-size: 18px;
+  color: #2c3e50;
+  margin-bottom: 20px;
+}
+
+.review-list {
+  margin-bottom: 20px;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.pagination button {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  background-color: white;
+  cursor: pointer;
+}
+
+.pagination button:disabled {
+  background-color: #f0f0f0;
+  cursor: not-allowed;
+}
+
+.pagination .active button {
+  background-color: #2c3e50;
+  color: white;
+}
+
+.user-review-form {
+  margin-top: 20px;
+  padding: 15px;
+  background-color: #f9f9f9;
+  border-radius: 5px;
+  border: 1px solid #ddd;
+}
+
+.user-review-form h3 {
+  font-size: 18px;
+  color: #2c3e50;
+  margin-bottom: 15px;
+}
+
+.rating-input,
+.comment-input {
+  margin-bottom: 15px;
+}
+
+.rating-input select,
+.comment-input textarea {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.submit-review {
+  padding: 8px 16px;
+  background-color: #27ae60;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.submit-review:hover {
+  background-color: #219653;
 }
 </style>
