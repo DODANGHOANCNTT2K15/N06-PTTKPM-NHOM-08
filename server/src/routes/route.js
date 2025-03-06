@@ -47,13 +47,14 @@ router.delete('/booktype/delete', bookTypeController.deleteBookTypeController)
 
 // review route
 router.post('/review/add', reviewController.addReviewController)
-router.delete('/review/delete', reviewController.deleteReviewController)
+router.post('/review/delete', reviewController.deleteReviewController)
 
 // cart route
-router.get('/cart', cartController.getCartController)
+router.post('/cart/userid', cartController.getCartController)
+router.post('/cart/count', cartController.getCountController)
 router.post('/cart/add', cartController.addToCartController)
-router.post('/cart/update', cartController.updateCartController)
-router.post('/cart/delete', cartController.deleteCartItemController)
+router.put('/cart/update', cartController.updateCartController)
+router.delete('/cart/delete', cartController.deleteCartItemController)
 
 // customer route
 router.post('/customer/id', customerController.getCustomerController)

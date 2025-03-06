@@ -61,7 +61,7 @@ export const updateRatingReviewService = (book_id, rating) =>
                 ],
             });
 
-            console.log(stats);
+            // console.log(stats);
 
             const currentCount = parseInt(stats[0]?.dataValues?.count || 0, 10);
             const newRatingAvg = (book.rating_avg * currentCount + rating) / (currentCount + 1);
@@ -83,19 +83,52 @@ export const updateRatingReviewService = (book_id, rating) =>
 
 
 
-// xóa đánh giá    
+// xóa đánh giá
 export const deleteReviewService = (review_id) =>
     new Promise(async (resolve, reject) => {
         try {
-            // Xóa bản ghi đánh giá dựa trên review_id
+            // Tìm review trước khi xóa để lấy thông tin book_id và rating
+            const review = await db.Review.findOne({
+                where: { review_id: review_id },
+            });
+
+            if (!review) {
+                return resolve({
+                    err: 2,
+                    msg: 'Không tìm thấy đánh giá để xóa.',
+                });
+            }
+
+            // Lưu trữ book_id và rating trước khi xóa
+            const book_id = review.book_id;
+            const ratingToRemove = review.rating;
+
+            // Xóa bản ghi đánh giá
             const response = await db.Review.destroy({
                 where: { review_id: review_id },
             });
 
-            return resolve({
-                err: response ? 0 : 2,
-                msg: response ? 'Xóa đánh giá thành công!' : 'Không tìm thấy đánh giá để xóa.',
-            });
+            if (response) {
+                // Cập nhật lại rating_avg sau khi xóa
+                const update_rating = await updateRatingAfterDeleteService(book_id, ratingToRemove);
+
+                if (update_rating) {
+                    return resolve({
+                        err: 0,
+                        msg: 'Xóa đánh giá và cập nhật rating thành công!',
+                    });
+                } else {
+                    return resolve({
+                        err: 3,
+                        msg: 'Xóa đánh giá thành công nhưng cập nhật rating thất bại.',
+                    });
+                }
+            } else {
+                return resolve({
+                    err: 2,
+                    msg: 'Không tìm thấy đánh giá để xóa.',
+                });
+            }
         } catch (error) {
             console.log("Lỗi tại deleteReviewService: ", error);
             return reject({
@@ -106,3 +139,48 @@ export const deleteReviewService = (review_id) =>
         }
     });
 
+// Hàm cập nhật rating sau khi xóa
+export const updateRatingAfterDeleteService = (book_id, ratingToRemove) =>
+    new Promise(async (resolve, reject) => {
+        try {
+            const book = await db.Book.findOne({
+                where: { book_id },
+            });
+
+            if (!book) {
+                console.error(`Không tìm thấy sách với ID: ${book_id}`);
+                return resolve(false);
+            }
+
+            // Lấy tổng số đánh giá hiện tại
+            const stats = await db.Review.findAll({
+                where: { book_id },
+                attributes: [
+                    [db.Sequelize.fn('COUNT', db.Sequelize.col('rating')), 'count'],
+                ],
+            });
+
+            const currentCount = parseInt(stats[0]?.dataValues?.count || 0, 10);
+
+            if (currentCount === 0) {
+                // Nếu không còn review nào, đặt rating_avg về 0 hoặc giá trị mặc định
+                book.rating_avg = 0;
+            } else {
+                // Tính lại rating_avg bằng cách loại bỏ rating đã xóa
+                const newRatingAvg = (book.rating_avg * (currentCount + 1) - ratingToRemove) / currentCount;
+                book.rating_avg = parseFloat(newRatingAvg.toFixed(2)); // Làm tròn đến 2 chữ số thập phân
+            }
+
+            // Cập nhật lại rating_avg trong bảng Book
+            await book.save();
+
+            return resolve(true);
+        } catch (error) {
+            console.log('Lỗi tại updateRatingAfterDeleteService: ', error);
+            return reject({
+                err: 1,
+                msg: 'Lỗi khi cập nhật rating_avg sau khi xóa!',
+                error: error.message,
+            });
+        }
+    });

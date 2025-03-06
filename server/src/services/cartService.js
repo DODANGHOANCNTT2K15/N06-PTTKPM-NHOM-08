@@ -1,10 +1,34 @@
 import db from '../models';
 
-// Thêm sản phẩm vào giỏ hàng
+// lấy ra số lượng loại sản phẩm trong giỏ hàng
+export const getCountService = ({ user_id }) =>
+    new Promise(async (resolve, reject) => {
+        try {
+            const totalProductTypes = await db.Cart.count({
+                where: { user_id },
+                distinct: true,
+                col: 'book_id',
+            });
+
+            return resolve({
+                err: 0,
+                msg: 'Lấy số lượng loại sản phẩm thành công.',
+                total_product_types: totalProductTypes || 0,
+            });
+        } catch (error) {
+            console.error('Lỗi tại getCountService: ', error);
+            return reject({
+                err: 1,
+                msg: 'Lỗi khi lấy số lượng loại sản phẩm trong giỏ hàng.',
+                error: error.message,
+            });
+        }
+    });
+
+// thêm vào giỏ hàng
 export const addToCartService = ({ user_id, book_id, quantity, all_price }) =>
     new Promise(async (resolve, reject) => {
         try {
-            // Kiểm tra nếu sản phẩm đã có trong giỏ hàng
             const existingCartItem = await db.Cart.findOne({
                 where: { user_id, book_id },
             });
@@ -16,7 +40,6 @@ export const addToCartService = ({ user_id, book_id, quantity, all_price }) =>
                 });
             }
 
-            // Thêm sản phẩm mới vào giỏ hàng
             const newCartItem = await db.Cart.create({
                 user_id,
                 book_id,
@@ -24,10 +47,17 @@ export const addToCartService = ({ user_id, book_id, quantity, all_price }) =>
                 all_price,
             });
 
+            const totalProductTypes = await db.Cart.count({
+                where: { user_id },
+                distinct: true, 
+                col: 'book_id',
+            });
+
             return resolve({
                 err: 0,
                 msg: 'Thêm sản phẩm vào giỏ hàng thành công.',
                 data: newCartItem,
+                total_product_types: totalProductTypes || 0, 
             });
         } catch (error) {
             console.error('Lỗi tại addToCartService: ', error);
@@ -38,6 +68,7 @@ export const addToCartService = ({ user_id, book_id, quantity, all_price }) =>
             });
         }
     });
+
 
 // Lấy danh sách giỏ hàng theo user_id
 export const getCartService = (user_id) =>

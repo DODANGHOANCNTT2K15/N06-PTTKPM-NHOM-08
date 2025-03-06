@@ -1,6 +1,27 @@
 import * as cartService from '../services/cartService';
 
 // Thêm sản phẩm vào giỏ hàng
+export const getCountController = async (req, res) => {
+    const { user_id } = req.body;
+    try {
+        if (!user_id) {
+            return res.status(400).json({
+                err: 1,
+                msg: "Thiếu dữ liệu đầu vào."
+            });
+        }
+        const rs = await cartService.getCountService(req.body);
+        return res.status(200).json(rs);
+    } catch (error) {
+        return res.status(500).json({
+            err: 1,
+            msg: "Lỗi server.",
+            error: error.message,
+        });
+    }
+};
+
+// Thêm sản phẩm vào giỏ hàng
 export const addToCartController = async (req, res) => {
     const { user_id, book_id, quantity, all_price } = req.body;
     try {
@@ -23,7 +44,7 @@ export const addToCartController = async (req, res) => {
 
 // Lấy danh sách giỏ hàng
 export const getCartController = async (req, res) => {
-    const { user_id } = req.params;
+    const { user_id } = req.body;
     try {
         if (!user_id) {
             return res.status(400).json({
@@ -46,7 +67,7 @@ export const getCartController = async (req, res) => {
 export const updateCartController = async (req, res) => {
     const { cart_id, quantity, all_price } = req.body;
     try {
-        if (!cart_id|| !quantity || !all_price) {
+        if (!cart_id || !quantity || !all_price) {
             return res.status(400).json({
                 err: 1,
                 msg: "Thiếu dữ liệu đầu vào."
