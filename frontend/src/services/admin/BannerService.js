@@ -19,7 +19,10 @@ export const apiAddBanner = (payload) => new Promise((resolve, reject) => {
         const response = axiosConfig({
             method: 'post',
             url: 'api/v1/banner/add',
-            data: payload, // Payload chứa banner_name và các dữ liệu khác (như file ảnh nếu có)
+            data: payload,
+            headers: {
+                "Content-Type": "multipart/form-data",
+            },
         });
         resolve(response);
     } catch (error) {
