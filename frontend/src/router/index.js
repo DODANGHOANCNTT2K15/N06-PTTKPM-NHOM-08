@@ -13,6 +13,7 @@ import NotFound from '@/pages/client/NotFound.vue';
 import Banners from '@/pages/admin/Banners.vue';
 import Tags from '@/pages/admin/Tags.vue';
 import Promotions from '@/pages/admin/Promotions.vue';
+import SearchResults from '@/pages/client/SearchResults.vue';
 
 const routes = [
     {
@@ -25,7 +26,7 @@ const routes = [
           component: HomePage 
         },
         {
-          path: 'product/1',
+          path: 'product/:id',
           name: 'ProductPage',
           component: ProductDetail
         },
@@ -89,6 +90,11 @@ const routes = [
           path: '/address',
           name: 'Address',
           component: HomePage,
+        },
+        {
+          path: '/search-results',
+          name: 'SearchResults',
+          component: SearchResults, 
         },
         {
           path: '/filter',
