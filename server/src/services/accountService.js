@@ -22,6 +22,7 @@ export const getAllAccountService = () => new Promise(async (resolve, reject) =>
     }
 })
 
+// lấy thông tin tài khoản theo user_id
 export const getAccountService = ({ user_id }) =>
     new Promise(async (resolve, reject) => {
         try {
@@ -53,7 +54,7 @@ export const getAccountService = ({ user_id }) =>
     });
 
 
-// sửa
+// sửa thông tin tài khoản
 export const updateAccountService = (req) =>
     new Promise(async (resolve, reject) => {
         try {
@@ -113,7 +114,7 @@ export const updateAccountService = (req) =>
         }
     });
 
-// xóa
+// xóa tài khoản
 export const deleteAccountService = ({ email }) =>
     new Promise(async (resolve, reject) => {
         try {
@@ -136,7 +137,7 @@ export const deleteAccountService = ({ email }) =>
         }
     });
 
-
+// đổi mật khẩu
 export const changePasswordService = (req) =>
     new Promise(async (resolve, reject) => {
         try {

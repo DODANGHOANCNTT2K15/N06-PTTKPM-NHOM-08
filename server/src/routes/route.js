@@ -9,6 +9,7 @@ import * as cartController from "../controllers/cartController"
 import * as customerController from "../controllers/customerController"
 import * as orderController from "../controllers/orderController"
 import * as paymentService from "../services/paymentService"
+import * as discountController from "../controllers/discountController"
 import * as middleWare from "../middleware/authMiddleWare"
 import { upload } from "../middleware/multerMiddleWare";
 
@@ -38,6 +39,12 @@ router.delete('/book/delete', bookController.deleteBookController)
 // book image route
 router.post('/bookimage/add', upload.array('images', 10), bookImageController.addBookImageController)
 router.delete('/bookimage/delete', bookImageController.deleteBookImageController)
+
+// Discount route
+router.get('/discount', discountController.getAllDiscountsController)
+router.post('/discount/add', discountController.addDiscountController)
+router.put('/discount/update', discountController.updateDiscountController)
+router.delete('/discount/delete', discountController.deleteDiscountController)
 
 // bookType route
 router.get('/booktype', bookTypeController.getAllBookTypeController)
