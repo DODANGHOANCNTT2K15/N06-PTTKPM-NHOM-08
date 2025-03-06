@@ -60,7 +60,7 @@ export const apiDeleteUser = (payload) => new Promise((resolve, reject) => {
 export const apiChangePassword = (payload) => new Promise((resolve, reject) => {
     try {
         const response = axiosConfig({
-            method: 'delete',
+            method: 'post',
             url: 'api/v1/account/change',
             data: payload
         })

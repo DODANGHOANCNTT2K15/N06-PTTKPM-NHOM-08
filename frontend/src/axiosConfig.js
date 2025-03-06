@@ -8,29 +8,37 @@ const instance = axios.create({
   },
 });
 
-// Add a request interceptor
+// Request interceptor: Gắn token từ localStorage vào header
 instance.interceptors.request.use(
-  function (config) {
-    // Nếu có token, thêm vào request
+  (config) => {
     const token = localStorage.getItem("token");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
-  function (error) {
+  (error) => {
     console.error("Request Error:", error);
     return Promise.reject(error);
   }
 );
 
-// Add a response interceptor
+// Response interceptor: Xử lý phản hồi và lỗi từ server
 instance.interceptors.response.use(
-  function (response) {
-    return response;
+  (response) => {
+    return response; // Trả về phản hồi bình thường
   },
-  function (error) {
-    console.error("Response Error:", error.response || error);
+  (error) => {
+    const { response } = error;
+    console.error("Response Error:", response || error.message);
+
+    // Xử lý lỗi cụ thể nếu cần (ví dụ: token hết hạn)
+    if (response && response.status === 401) {
+      console.log("Token không hợp lệ hoặc hết hạn, cần đăng nhập lại.");
+      // Có thể thêm logic như: localStorage.removeItem("token") và chuyển hướng đến trang đăng nhập
+      // Ví dụ: window.location.href = '/login';
+    }
+
     return Promise.reject(error);
   }
 );
