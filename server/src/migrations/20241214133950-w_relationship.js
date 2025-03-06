@@ -6,7 +6,7 @@ module.exports = {
         await queryInterface.addConstraint('avatars', {
             fields: ['user_id'],
             type: 'foreign key',
-            name: 'fk_avatars_users_user_id', // Tên constraint duy nhất
+            name: 'fk_avatars_users_user_id',
             references: {
                 table: 'users',
                 field: 'user_id',
@@ -149,7 +149,7 @@ module.exports = {
         await queryInterface.addConstraint('carts', {
             fields: ['user_id'],
             type: 'foreign key',
-            name: 'fk_carts_users_user_id', // Tên constraint duy nhất
+            name: 'fk_carts_users_user_id',
             references: {
                 table: 'users',
                 field: 'user_id',
@@ -163,6 +163,32 @@ module.exports = {
             fields: ['book_id'],
             type: 'foreign key',
             name: 'fk_carts_books_book_id',
+            references: {
+                table: 'books',
+                field: 'book_id',
+            },
+            onDelete: 'CASCADE',
+            onUpdate: 'CASCADE',
+        });
+
+        // Thêm ràng buộc giữa 'favorites' và 'users'
+        await queryInterface.addConstraint('favorites', {
+            fields: ['user_id'],
+            type: 'foreign key',
+            name: 'fk_favorites_users_user_id',
+            references: {
+                table: 'users',
+                field: 'user_id',
+            },
+            onDelete: 'CASCADE',
+            onUpdate: 'CASCADE',
+        });
+
+        // Thêm ràng buộc giữa 'favorites' và 'books'
+        await queryInterface.addConstraint('favorites', {
+            fields: ['book_id'],
+            type: 'foreign key',
+            name: 'fk_favorites_books_book_id',
             references: {
                 table: 'books',
                 field: 'book_id',
@@ -187,5 +213,7 @@ module.exports = {
         await queryInterface.removeConstraint('book_images', 'fk_book_images_books_book_id');
         await queryInterface.removeConstraint('carts', 'fk_carts_users_user_id');
         await queryInterface.removeConstraint('carts', 'fk_carts_books_book_id');
-    }
+        await queryInterface.removeConstraint('favorites', 'fk_favorites_users_user_id');
+        await queryInterface.removeConstraint('favorites', 'fk_favorites_books_book_id');
+    },
 };
