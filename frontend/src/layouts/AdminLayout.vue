@@ -88,7 +88,7 @@ export default {
   display: block;
   padding: 20px;
   text-align: center;
-  background-color: #34495e;
+  background-color: #ffffff;
   width: 100%;
   text-decoration: none;
 }
