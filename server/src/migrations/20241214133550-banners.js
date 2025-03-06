@@ -17,7 +17,7 @@ module.exports = {
         allowNull: false
       },
       banner_path: {
-        type: Sequelize.BIGINT,
+        type: Sequelize.STRING,
         allowNull: false
       },
       createdAt: {

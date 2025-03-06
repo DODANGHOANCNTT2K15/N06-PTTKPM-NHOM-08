@@ -26,9 +26,9 @@ router.post('/auth/register', authController.registerController)
 router.get('/account', accountController.getAllAccountController)
 router.post('/account/id', accountController.getAccountController)
 router.post('/account/forgot', accountController.forgotPassWordController)
-router.put('/account/update',middleWare.authMiddleware, accountController.updateAccountController)
+router.put('/account/update', middleWare.authMiddleware, accountController.updateAccountController)
 router.delete('/account/delete', accountController.deleteAccountController)
-router.post('/account/change',middleWare.authMiddleware, accountController.changePassWordController)
+router.post('/account/change', middleWare.authMiddleware, accountController.changePassWordController)
 router.post('/account/avatar', upload.single('avatar'), accountController.uploadAvatatController);
 
 // books route
@@ -59,7 +59,7 @@ router.post('/review/add', reviewController.addReviewController)
 router.post('/review/delete', reviewController.deleteReviewController)
 
 // banner route
-router.get('/banner', bannerController.getAllBannerController)
+router.get('/banner', upload.single('banner'), bannerController.getAllBannerController)
 router.post('/banner/add', bannerController.addBannerController)
 router.delete('/banner/delete', bannerController.deleteBannerController)
 

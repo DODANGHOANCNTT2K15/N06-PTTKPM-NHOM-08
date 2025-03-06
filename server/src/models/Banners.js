@@ -25,7 +25,7 @@ module.exports = (sequelize) => {
       allowNull: false
     },
     banner_path: {
-      type: DataTypes.BIGINT,
+      type: DataTypes.STRING,
       allowNull: false
     }
   }, {
