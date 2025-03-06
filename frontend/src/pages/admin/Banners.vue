@@ -3,6 +3,12 @@
     <h1>Quản lý Banner</h1>
     <!-- Nút thêm banner và bảng danh sách -->
     <div class="banner-actions">
+      <input
+        v-model="searchQuery"
+        type="text"
+        placeholder="Tìm kiếm theo tên banner..."
+        class="search-input"
+      />
       <button @click="showAddBannerPopup = true" class="add-button">
         <i class="fas fa-plus"></i> Thêm Banner
       </button>
@@ -12,9 +18,9 @@
         <thead>
           <tr>
             <th><input type="checkbox" v-model="selectAll" @change="toggleSelectAll" /></th>
-            <th>STT</th>
+            <th>ID Banner <i class="fas fa-sort"></i></th>
             <th>Hình ảnh</th>
-            <th>Tên</th>
+            <th>Tên Banner <i class="fas fa-sort"></i></th>
             <th>Hành động</th>
           </tr>
         </thead>
@@ -101,34 +107,31 @@ export default {
     const showAddBannerPopup = ref(false);
     const editingBanner = ref(null);
     const bannerForm = ref({ name: '', image: null, imagePreview: '' });
-    const selectedBanners = ref([]); // Danh sách ID banner được chọn
-    const selectAll = ref(false); // Checkbox chọn tất cả
+    const selectedBanners = ref([]);
+    const selectAll = ref(false);
     const currentPage = ref(1);
     const itemsPerPage = ref(10);
-    const allowImageChange = ref(false); // Cho phép thay đổi ảnh khi sửa
+    const allowImageChange = ref(false);
 
     const fetchBanners = () => {
       // Trong thực tế, gọi API để lấy danh sách banner
-      // Ví dụ: await apiGetBanners();
     };
 
     const saveBanner = () => {
       if (editingBanner.value) {
-        // Cập nhật banner
         const index = banners.value.findIndex(b => b.id === editingBanner.value.id);
         if (index !== -1) {
           banners.value[index] = {
             ...editingBanner.value,
             name: bannerForm.value.name,
-            image: bannerForm.value.image || editingBanner.value.image, // Giữ ảnh cũ nếu không thay đổi
+            image: bannerForm.value.image || editingBanner.value.image,
           };
         }
       } else {
-        // Thêm mới banner
         const newBanner = {
-          id: Date.now(), // ID tạm thời, trong thực tế dùng API để tạo ID
+          id: Date.now(),
           name: bannerForm.value.name,
-          image: bannerForm.value.imagePreview, // Sử dụng URL preview hoặc đường dẫn ảnh tải lên
+          image: bannerForm.value.imagePreview,
           status: 'active',
         };
         banners.value.push(newBanner);
@@ -140,7 +143,7 @@ export default {
       const banner = banners.value.find(b => b.id === id);
       editingBanner.value = { ...banner };
       bannerForm.value = { name: banner.name, image: null, imagePreview: banner.image };
-      allowImageChange.value = false; // Mặc định không cho phép thay đổi ảnh khi sửa
+      allowImageChange.value = false;
       showAddBannerPopup.value = true;
     };
 
@@ -170,13 +173,13 @@ export default {
     const handleImageUpload = (event) => {
       const file = event.target.files[0];
       if (file) {
-        bannerForm.value.image = file; // Lưu file để upload
+        bannerForm.value.image = file;
         const reader = new FileReader();
         reader.onload = (e) => {
-          bannerForm.value.imagePreview = e.target.result; // Hiển thị preview
+          bannerForm.value.imagePreview = e.target.result;
         };
         reader.readAsDataURL(file);
-        allowImageChange.value = true; // Cho phép thay đổi ảnh
+        allowImageChange.value = true;
       }
     };
 
@@ -239,108 +242,123 @@ export default {
 </script>
 
 <style scoped>
+/* General Dashboard Styling */
 .dashboard {
   background-color: white;
   padding: 20px;
-  border-radius: 5px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
 }
 
 .dashboard h1 {
   font-size: 24px;
-  color: #2c3e50;
+  font-weight: 600;
+  color: #333;
   margin-bottom: 20px;
 }
 
-.dashboard-stats {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
-  margin-bottom: 20px;
-}
-
-.stat-card {
-  background-color: #ecf0f1;
-  padding: 20px;
-  border-radius: 5px;
-  text-align: center;
-}
-
-.stat-card h3 {
-  font-size: 16px;
-  color: #2c3e50;
-  margin-bottom: 10px;
-}
-
-.stat-card p {
-  font-size: 24px;
-  color: #2c3e50;
-  margin: 0;
-  font-weight: bold;
-}
-
+/* Banner Actions (Search and Add Button) */
 .banner-actions {
-  margin-bottom: 20px;
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.search-input {
+  padding: 10px 16px;
+  border: 1px solid #e0e0e0;
+  border-radius: 20px;
+  font-size: 14px;
+  color: #666;
+  width: 300px;
+  background-color: #f5f5f5;
+  transition: border-color 0.3s ease;
+}
+
+.search-input::placeholder {
+  color: #999;
+}
+
+.search-input:focus {
+  border-color: #007bff;
+  outline: none;
 }
 
 .add-button {
-  padding: 8px 16px;
+  padding: 10px 20px;
   background-color: #007bff;
   color: white;
   border: none;
   border-radius: 20px;
   cursor: pointer;
   font-size: 14px;
+  font-weight: 500;
   display: flex;
   align-items: center;
-  box-shadow: 0 2px 5px rgba(0, 123, 255, 0.2);
+  transition: background-color 0.3s ease;
+}
+
+.add-button i {
+  margin-right: 8px;
 }
 
 .add-button:hover {
   background-color: #0056b3;
 }
 
-.add-button i {
-  margin-right: 5px;
-}
-
+/* Banner Table Styling */
 .banner-table {
-  overflow-x: auto;
   background-color: white;
-  border-radius: 5px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  overflow-x: auto;
 }
 
 .banner-table table {
   width: 100%;
   border-collapse: collapse;
-  margin-bottom: 0;
 }
 
 .banner-table th,
 .banner-table td {
   padding: 12px 16px;
   text-align: left;
-  border-bottom: 1px solid #e9ecef;
   font-size: 14px;
-  color: #495057;
+  color: #333;
 }
 
 .banner-table th {
-  background-color: #f8f9fa;
-  color: #343a40;
-  font-weight: 600;
+  background-color: #fff;
+  font-weight: 500;
+  border-bottom: 1px solid #e0e0e0;
   position: sticky;
   top: 0;
   z-index: 1;
 }
 
-.banner-table td {
-  background-color: #ffffff;
+.banner-table th i.fa-sort {
+  margin-left: 5px;
+  color: #999;
 }
 
+.banner-table td {
+  background-color: #fff;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.banner-table tbody tr:hover {
+  background-color: #f9f9f9;
+}
+
+.banner-image {
+  width: 100px;
+  height: 50px;
+  object-fit: cover;
+  border-radius: 5px;
+}
+
+/* Action Buttons */
 .banner-table button.action-btn {
   border: none;
   background: none;
@@ -363,13 +381,6 @@ export default {
 .banner-table .delete-btn i {
   color: #dc3545;
   font-size: 16px;
-}
-
-.banner-image {
-  width: 100px;
-  height: 50px;
-  object-fit: cover;
-  border-radius: 5px;
 }
 
 /* Modal Styles */
@@ -397,7 +408,7 @@ export default {
 
 .modal-content h2 {
   font-size: 20px;
-  color: #2c3e50;
+  color: #333;
   margin-bottom: 15px;
   text-align: center;
 }
@@ -410,7 +421,7 @@ export default {
   display: block;
   margin-bottom: 5px;
   font-size: 14px;
-  color: #2c3e50;
+  color: #333;
   font-weight: 500;
 }
 
@@ -418,15 +429,15 @@ export default {
 .form-group input[type="file"] {
   width: 100%;
   padding: 8px 12px;
-  border: 1px solid #ddd;
+  border: 1px solid #e0e0e0;
   border-radius: 5px;
   font-size: 14px;
-  background-color: #f9f9f9;
+  background-color: #f5f5f5;
   transition: border-color 0.3s ease;
 }
 
 .form-group input:focus {
-  border-color: #3498db;
+  border-color: #007bff;
   outline: none;
 }
 
@@ -441,6 +452,7 @@ export default {
   border-radius: 5px;
 }
 
+/* Modal Actions */
 .modal-actions {
   display: flex;
   justify-content: space-between;
@@ -475,37 +487,44 @@ export default {
   background-color: #c0392b;
 }
 
-/* Phân trang */
+/* Pagination */
 .pagination {
   padding: 10px 16px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: #f8f9fa;
-  border-top: 1px solid #e9ecef;
-  border-radius: 0 0 5px 5px;
+  background-color: #fff;
+  border-top: 1px solid #e0e0e0;
+  border-radius: 0 0 10px 10px;
   font-size: 14px;
-  color: #495057;
-  margin-top: 20px;
+  color: #666;
+  margin-top: 0;
+}
+
+.pagination span {
+  font-size: 14px;
 }
 
 .pagination-btn {
-  padding: 6px 12px;
+  padding: 6px;
   border: none;
-  background-color: #007bff;
-  color: white;
-  border-radius: 20px;
+  background: none;
+  color: #666;
   cursor: pointer;
   margin-left: 10px;
-  transition: background-color 0.3s ease;
+  transition: color 0.3s ease;
 }
 
 .pagination-btn:disabled {
-  background-color: #6c757d;
+  color: #ccc;
   cursor: not-allowed;
 }
 
 .pagination-btn:hover:not(:disabled) {
-  background-color: #0056b3;
+  color: #007bff;
+}
+
+.pagination-btn i {
+  font-size: 14px;
 }
 </style>
