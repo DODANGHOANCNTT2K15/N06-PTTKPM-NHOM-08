@@ -171,9 +171,9 @@ export default {
       pieChartInstance = new Chart(pieChart.value, {
         type: 'pie',
         data: {
-          labels: ['Banner Hoạt động', 'Banner Tắt', 'Khuyến mại'],
+          labels: ['Banner Hoạt động', 'Khuyến mại'],
           datasets: [{
-            data: [activeBanners.value, 0, totalPromotions.value], // Không có banner tắt vì thiếu status
+            data: [activeBanners.value, totalPromotions.value], // Không có banner tắt vì thiếu status
             backgroundColor: ['#36A2EB', '#FF6384', '#4BC0C0'],
           }],
         },

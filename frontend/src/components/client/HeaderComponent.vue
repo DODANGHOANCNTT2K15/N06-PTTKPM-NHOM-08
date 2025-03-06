@@ -41,14 +41,13 @@
         </div>
         <div v-else class="account-dropdown">
           <button type="button" class="account-button">
-            <template v-if="authStore.user && authStore.user.avatar">
-              <img :src="authStore.user.avatar" alt="Avatar" class="avatar" />
-              <span>{{ authStore.user.user_name || 'Người dùng' }}</span>
+            <template v-if="authStore.user?.avatar">
+              <img :src="avatarStore.avatar" alt="Avatar" class="avatar" />
             </template>
             <template v-else>
               <i class="fa fa-user avatar-icon"></i>
-              <span>{{ authStore.user?.email || 'Email không xác định' }}</span>
             </template>
+            <span>{{ authStore.user?.user_name || authStore.user?.email || 'Người dùng' }}</span>
           </button>
           <div class="dropdown-content">
             <button @click="goToUserInfo">Thông tin tài khoản</button>
@@ -223,6 +222,7 @@ export default {
 </script>
 
 <style scoped>
+/* Style giữ nguyên */
 header {
   font-family: "Arial", sans-serif;
   background-color: #fff;

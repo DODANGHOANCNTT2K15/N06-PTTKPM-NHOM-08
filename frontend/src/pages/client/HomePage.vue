@@ -45,7 +45,10 @@
               :key="index"
               :class="{ active: index === currentBanner }"
             >
-              <img :src="banner" :alt="`Banner ${index + 1}`" />
+              <img
+                :src="require(`@/assets/images/${banner}`)"
+                :alt="`Banner ${index + 1}`"
+              />
             </div>
             <div id="arrow_left" class="arrow_banner" @click="prevBanner">
               <i class="fas fa-chevron-left"></i>
@@ -138,6 +141,7 @@
           <h1>Sản phẩm đã xem</h1>
         </div>
         <div id="viewed-products">
+          <!-- Hiển thị tối đa 4 sản phẩm, cuộn ngang nếu nhiều hơn -->
           <ProductCard
             v-for="product in viewedProducts.slice(0, 4)"
             :key="product.id"
@@ -151,6 +155,7 @@
             :tags="product.tags"
             @click="goToProductDetail(product.id)"
           />
+          <!-- Hiển thị thông báo nếu chưa có sản phẩm đã xem -->
           <div v-if="viewedProducts.length === 0">
             <p>Chưa có sản phẩm nào được xem.</p>
           </div>
@@ -454,7 +459,6 @@ import {
   apiForgotPass,
 } from "@/services/client/AuthService";
 import { apiGetAllBooks } from "@/services/client/BookService";
-import { apiGetAllBanners } from "@/services/admin/BannerService"; // Import API banner
 
 export default {
   name: "HomePage",
@@ -467,7 +471,7 @@ export default {
 
     const currentRouteName = computed(() => route.name);
     const showFilterPopup = ref(false);
-    const banners = ref([]); // Khởi tạo rỗng để lấy từ API
+    const banners = ref(["Banner_00.png", "Banner_01.jpg"]);
     const currentBanner = ref(0);
     let autoSlideInterval = null;
 
@@ -484,33 +488,13 @@ export default {
 
     // State cho sản phẩm và sản phẩm đã xem
     const products = ref([]);
+    // Khởi tạo viewedProducts với giá trị mặc định từ localStorage
     const viewedProducts = ref(
       JSON.parse(localStorage.getItem("viewedProducts")) || []
     );
     const sortOption = ref("newest");
     const itemsPerPage = ref(10);
     const currentPage = ref(1);
-
-    // Hàm lấy danh sách banner từ API
-    const fetchBanners = async () => {
-      try {
-        const response = await apiGetAllBanners();
-        if (response.data.err === 0) {
-          // Lấy banner_path từ mỗi banner
-          banners.value = response.data.data.map(banner => banner.banner_path);
-          if (banners.value.length === 0) {
-            // Nếu không có banner từ API, dùng mặc định
-            banners.value = ["Banner_00.png", "Banner_01.jpg"];
-          }
-        } else {
-          console.error("Lỗi khi lấy danh sách banner:", response.data.msg);
-          banners.value = ["Banner_00.png", "Banner_01.jpg"]; // Dùng mặc định nếu lỗi
-        }
-      } catch (error) {
-        console.error("Không thể lấy dữ liệu banner:", error);
-        banners.value = ["Banner_00.png", "Banner_01.jpg"]; // Dùng mặc định nếu lỗi
-      }
-    };
 
     // Hàm đăng nhập
     const login = async () => {
@@ -588,12 +572,16 @@ export default {
     const goToProductDetail = (id) => {
       const product = products.value.find((p) => p.id === id);
       if (product) {
-        let viewed = [...viewedProducts.value];
+        let viewed = [...viewedProducts.value]; // Lấy danh sách hiện tại
+        
+        // Kiểm tra xem sản phẩm đã có trong danh sách chưa
         if (!viewed.some((p) => p.id === id)) {
           viewed.push(product);
+          // Giới hạn số lượng sản phẩm đã xem (tối đa 5 sản phẩm)
           if (viewed.length > 5) {
-            viewed.shift();
+            viewed.shift(); // Xóa sản phẩm cũ nhất nếu vượt quá giới hạn
           }
+          // Cập nhật và lưu lại vào localStorage
           viewedProducts.value = viewed;
           localStorage.setItem("viewedProducts", JSON.stringify(viewed));
         }
@@ -674,16 +662,19 @@ export default {
     const filteredProducts = computed(() => {
       let filtered = [...products.value];
 
+      // Tag filter
       if (selectedTags.value.length > 0) {
         filtered = filtered.filter((product) =>
           product.tags.some((tag) => selectedTags.value.includes(tag))
         );
       }
 
+      // Free shipping filter
       if (filters.value.freeShipping) {
         filtered = filtered.filter((product) => product.freeShipping);
       }
 
+      // Rating filter
       const selectedRatings = Object.entries(filters.value.ratings)
         .filter(([, selected]) => selected)
         .map(([rating]) => Number(rating));
@@ -693,6 +684,7 @@ export default {
         );
       }
 
+      // Price range filter
       const selectedPriceRanges = Object.keys(filters.value.priceRanges).filter(
         (key) => filters.value.priceRanges[key]
       );
@@ -703,12 +695,14 @@ export default {
         filtered = filtered.filter((product) => {
           const price = product.discountedPrice;
 
+          // Custom price range
           if (customPriceRange.value.from && customPriceRange.value.to) {
             const from = Number(customPriceRange.value.from);
             const to = Number(customPriceRange.value.to);
             return price >= from && price <= to;
           }
 
+          // Predefined price ranges
           return selectedPriceRanges.some((range) => {
             switch (range) {
               case "under100k":
@@ -731,6 +725,7 @@ export default {
       return filtered;
     });
 
+    // Tính toán sản phẩm phân trang dựa trên filteredProducts
     const paginatedProducts = computed(() => {
       const start = (currentPage.value - 1) * itemsPerPage.value;
       const end = start + itemsPerPage.value;
@@ -793,12 +788,12 @@ export default {
       authStore.initializeAuth();
       avatarStore.initializeAvatar();
       fetchBooks();
-      fetchBanners(); // Gọi API lấy banner khi mount
     });
 
     onUnmounted(() => {
       if (autoSlideInterval) clearInterval(autoSlideInterval);
     });
+
 
     return {
       currentRouteName,
@@ -817,7 +812,7 @@ export default {
       forgetPassword,
       goToProductDetail,
       paginatedProducts,
-      viewedProducts,
+      viewedProducts, // Đảm bảo trả về viewedProducts
       currentPage,
       totalPages,
       sortOption,
@@ -904,6 +899,7 @@ export default {
   border-color: #007bff;
 }
 
+/* Style cho filter section */
 #filter {
   margin-bottom: 20px;
 }
