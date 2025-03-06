@@ -5,7 +5,6 @@
       <table class="favorite-table">
         <thead>
           <tr>
-            <th><input type="checkbox" v-model="selectAll" @change="toggleSelectAll" /></th>
             <th>STT</th>
             <th>Hình ảnh</th>
             <th>Tên sản phẩm</th>
@@ -15,14 +14,15 @@
         </thead>
         <tbody>
           <tr v-for="(product, index) in paginatedProducts" :key="product.favorite_id">
-            <td><input type="checkbox" v-model="product.selected" /></td>
             <td>{{ (currentPage - 1) * itemsPerPage + index + 1 }}</td>
             <td>
-              <img
-                :src="product.book && product.book.images && product.book.images[0] ? product.book.images[0].image_path : 'https://via.placeholder.com/50'"
-                alt="Product Image"
-                class="product-image"
-              />
+              <router-link :to="`/product/${product.book_id}`">
+                <img
+                  :src="product.book && product.book.images && product.book.images[0] ? product.book.images[0].image_path : 'https://via.placeholder.com/50'"
+                  alt="Product Image"
+                  class="product-image"
+                />
+              </router-link>
             </td>
             <td>
               <router-link :to="`/product/${product.book_id}`" class="product-name">
@@ -72,7 +72,6 @@ export default {
   setup() {
     const router = useRouter();
     const favoriteProducts = ref([]);
-    const selectAll = ref(false);
     const itemsPerPage = ref(5);
     const currentPage = ref(1);
 
@@ -105,10 +104,7 @@ export default {
         const response = await apiGetFavorites({ user_id: userId });
         console.log("API Response:", response); // Debug dữ liệu trả về
         if (response.status === 200 && response.data.err === 0) {
-          favoriteProducts.value = response.data.data.map(product => ({
-            ...product,
-            selected: false,
-          }));
+          favoriteProducts.value = response.data.data;
         } else {
           console.error("Lỗi từ API:", response.data.msg);
           favoriteProducts.value = [];
@@ -133,6 +129,9 @@ export default {
         if (response.status === 200 && response.data.err === 0) {
           favoriteProducts.value = favoriteProducts.value.filter(p => p.favorite_id !== favoriteId);
           alert('Đã xóa sản phẩm khỏi danh sách yêu thích!');
+          if (paginatedProducts.value.length === 0 && currentPage.value > 1) {
+            currentPage.value--;
+          }
         } else {
           alert(response.data.msg || 'Lỗi khi xóa sản phẩm');
         }
@@ -145,13 +144,6 @@ export default {
     // Format giá tiền
     const formatPrice = (price) => {
       return price ? Math.round(price).toLocaleString("vi-VN") + " VNĐ" : "N/A";
-    };
-
-    // Chọn tất cả checkbox
-    const toggleSelectAll = () => {
-      favoriteProducts.value.forEach(product => {
-        product.selected = selectAll.value;
-      });
     };
 
     onMounted(() => {
@@ -171,7 +163,6 @@ export default {
 
     return {
       favoriteProducts,
-      selectAll,
       itemsPerPage,
       currentPage,
       totalPages,
@@ -179,7 +170,6 @@ export default {
       fetchFavoriteProducts,
       removeProduct,
       formatPrice,
-      toggleSelectAll,
     };
   },
 };
@@ -233,15 +223,25 @@ export default {
   height: 50px;
   object-fit: cover;
   border-radius: 4px;
+  cursor: pointer; /* Thêm con trỏ tay khi hover vào ảnh */
+  transition: transform 0.2s; /* Hiệu ứng phóng to khi hover */
+}
+
+.product-image:hover {
+  transform: scale(1.1); /* Phóng to ảnh khi hover */
 }
 
 .product-name {
-  color: #007bff;
+  color: #2c3e50; /* Đổi màu chữ thành xanh đậm */
   text-decoration: none;
-  font-weight: 500;
+  font-weight: 600; /* Đậm hơn một chút */
+  font-family: 'Arial', sans-serif; /* Thay đổi kiểu chữ */
+  font-size: 15px; /* Tăng kích thước chữ một chút */
+  transition: color 0.3s ease; /* Hiệu ứng chuyển màu mượt mà */
 }
 
 .product-name:hover {
+  color: #e74c3c; /* Đổi màu khi hover thành đỏ nhạt */
   text-decoration: underline;
 }
 

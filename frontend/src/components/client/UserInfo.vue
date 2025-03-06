@@ -96,10 +96,12 @@ import {
   apiChangePassword,
   apiUpdateInfor
 } from "@/services/client/UserInforService";
+import { useAvatarStore } from "@/stores/avatar";
 
 export default {
   name: "UserInfo",
   setup() {
+    const avatarStore = useAvatarStore();
     const userInfo = ref({
       fullName: "",
     });
@@ -120,8 +122,7 @@ export default {
         return null;
       }
       try {
-        const payload = JSON.parse(atob(token.split(".")[1])); // Giải mã phần payload của JWT
-        console.log(payload.user_id); // Giả định user_id nằm trong payload (tùy backend)
+        const payload = JSON.parse(atob(token.split(".")[1]));
         return payload.user_id || payload.id;
       } catch (error) {
         console.log("Lỗi khi giải mã token:", error);
@@ -129,7 +130,7 @@ export default {
       }
     };
 
-    // Load dữ liệu người dùng từ API dựa trên user_id
+    // Load dữ liệu người dùng từ API và avatar từ store
     const loadUserData = async () => {
       userId.value = getUserIdFromToken();
       if (!userId.value) {
@@ -139,13 +140,14 @@ export default {
 
       try {
         const response = await apiGetUserInfor({ user_id: userId.value });
-        if (response.status == 200 && response.data.err === 0) {
+        if (response.status === 200 && response.data.err === 0) {
           userInfo.value.fullName = response.data.data.user_name;
           email.value = response.data.data.email;
-          console.log(response.data.data.avatar_path)
-          avatarSrc.value = response.data.data.avatar.avatar_path
-            ? `${response.data.data.avatar.avatar_path}`
-            : null; // Sử dụng avatar làm path
+          const apiAvatar = response.data.data.avatar?.avatar_path;
+          avatarSrc.value = apiAvatar || avatarStore.avatar;
+          if (apiAvatar) {
+            avatarStore.updateAvatar(apiAvatar); // Đồng bộ store với API
+          }
         } else {
           console.log("Lỗi khi tải dữ liệu: " + response.data.msg);
         }
@@ -154,16 +156,19 @@ export default {
       }
     };
 
-    // Gọi loadUserData khi component được mount
     onMounted(() => {
-      loadUserData();
+      avatarStore.initializeAvatar(); // Khởi tạo avatar từ localStorage
+      avatarSrc.value = avatarStore.avatar; // Hiển thị avatar từ store nếu có
+      loadUserData(); // Load dữ liệu từ API
     });
 
     const saveChanges = async () => {
       try {
-        const response = await apiUpdateInfor({ user_name: userInfo.value.fullName, email : email.value})
-        // { user_name: userInfo.value.fullName }
-        if (response.status == 200 && response.data.err === 0) {
+        const response = await apiUpdateInfor({
+          user_name: userInfo.value.fullName,
+          email: email.value
+        });
+        if (response.status === 200 && response.data.err === 0) {
           alert("Thông tin đã được lưu thành công!");
         } else {
           alert("Lỗi: " + response.data.msg);
@@ -190,7 +195,6 @@ export default {
       const fileInput = document.querySelector(".file-input");
       const file = fileInput.files[0];
       if (!file) {
-        console.log("Không có file được chọn!");
         alert("Vui lòng chọn một file ảnh!");
         return;
       }
@@ -199,16 +203,12 @@ export default {
       formData.append("avatar", file);
       formData.append("user_id", userId.value);
 
-      // Debug FormData để kiểm tra
-      console.log("FormData contents:");
-      for (let pair of formData.entries()) {
-        console.log(`${pair[0]}: ${pair[1]}`);
-      }
-
       try {
         const response = await apiUpdateAvatar(formData);
-        if (response.status == 200 && response.data.err === 0) {
-          avatarSrc.value = response.data.data.avatar_path || previewImage.value;
+        if (response.status === 200 && response.data.err === 0) {
+          const newAvatarUrl = response.data.data.avatar_path || previewImage.value;
+          avatarSrc.value = newAvatarUrl;
+          avatarStore.updateAvatar(newAvatarUrl); // Cập nhật avatar trong store
           alert("Ảnh đại diện đã được cập nhật!");
         } else {
           alert("Lỗi: " + response.data.msg);
@@ -222,12 +222,7 @@ export default {
     };
 
     const savePassword = async () => {
-      if (
-        !userId.value ||
-        !email.value ||
-        !oldPassword.value ||
-        !newPassword.value
-      ) {
+      if (!userId.value || !email.value || !oldPassword.value || !newPassword.value) {
         alert("Vui lòng điền đầy đủ thông tin!");
         return;
       }
@@ -237,7 +232,7 @@ export default {
           old_pass_word: oldPassword.value,
           new_pass_word: newPassword.value,
         });
-        if (response.status == 200 && response.data.err === 0) {
+        if (response.status === 200 && response.data.err === 0) {
           alert("Mật khẩu đã được thay đổi!");
         } else {
           alert("Lỗi: " + response.data.msg);
