@@ -49,35 +49,45 @@ export const addOrderService = ({
     total_price,
     payment_method_id,
     payment_status,
-    order_details = [],
+    order_details,
 }) =>
     new Promise(async (resolve, reject) => {
         const transaction = await db.sequelize.transaction();
         try {
             // Thêm đơn hàng
-            const newOrder = await db.Orders.create(
+            const newOrder = await db.Order.create(
                 {
                     customer_id,
                     order_date,
                     delivery_date,
-                    delivery_price,
+                    delivery_price: delivery_price || 0, 
                     total_price,
+                    status: 0, 
                     payment_method_id,
-                    payment_status,
+                    payment_status: payment_status || 0, 
                 },
                 { transaction }
             );
 
-            // Thêm danh sách chi tiết đơn hàng nếu có
+            // Thêm danh sách chi tiết đơn hàng
             if (order_details.length > 0) {
-                const orderDetailsData = order_details.map((detail) => ({
-                    order_id: newOrder.order_id,
-                    book_id: detail.book_id,
-                    quantity: detail.quantity,
-                    price: detail.price,
-                }));
+                const orderDetailsData = order_details.map((detail) => {
+                    if (!detail.book_id || !detail.quantity || !detail.price) {
+                        throw new Error("Invalid order detail data");
+                    }
+                    
+                    return {
+                        order_id: newOrder.order_id,
+                        book_id: detail.book_id,
+                        quantity: detail.quantity,
+                        price: detail.price,
+                    };
+                });
 
-                await db.OrderDetails.bulkCreate(orderDetailsData, { transaction });
+                await db.OrderDetails.bulkCreate(orderDetailsData, { 
+                    transaction,
+                    validate: true 
+                });
             }
 
             // Commit transaction
@@ -86,14 +96,17 @@ export const addOrderService = ({
             return resolve({
                 err: 0,
                 msg: "Thêm đơn hàng và chi tiết đơn hàng thành công.",
-                data: newOrder,
+                data: {
+                    order: newOrder,
+                    details: order_details 
+                },
             });
         } catch (error) {
             await transaction.rollback();
             console.error("Lỗi tại addOrderService: ", error);
             return reject({
                 err: 1,
-                msg: "Lỗi khi thêm đơn hàng.",
+                msg: error.message || "Lỗi khi thêm đơn hàng.",
                 error: error.message,
             });
         }

@@ -79,8 +79,8 @@ router.delete('/customer/delete', customerController.deleteCustomerController)
 // order route
 router.post("/order/get", orderController.getOrderController);
 router.post("/order/add", orderController.addOrderController);
-router.post("/order/update", orderController.updateOrderController);
-router.post("/order/delete", orderController.deleteOrderController);
+router.put("/order/update", orderController.updateOrderController);
+router.delete("/order/delete", orderController.deleteOrderController);
 
 // payment method
 

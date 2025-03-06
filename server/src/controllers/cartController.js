@@ -25,7 +25,7 @@ export const getCountController = async (req, res) => {
 export const addToCartController = async (req, res) => {
     const { user_id, book_id, quantity, all_price } = req.body;
     try {
-        if (!user_id || !book_id || !quantity || !all_price) {
+        if (!user_id || !book_id || !quantity || !all_price ) {
             return res.status(400).json({
                 err: 1,
                 msg: "Thiếu dữ liệu đầu vào."

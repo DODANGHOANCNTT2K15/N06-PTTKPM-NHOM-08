@@ -31,10 +31,11 @@ export const addOrderController = async (req, res) => {
         total_price,
         payment_method_id,
         payment_status,
+        order_details
     } = req.body;
 
     try {
-        if (!customer_id || !order_date || !total_price || !payment_method_id || !payment_status) {
+        if (!customer_id || !order_date || !total_price || payment_method_id === undefined || payment_status === undefined || order_details.length < 0) {
             return res.status(400).json({
                 err: 1,
                 msg: "Thiếu dữ liệu đầu vào bắt buộc!",

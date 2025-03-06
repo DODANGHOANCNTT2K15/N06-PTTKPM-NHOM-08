@@ -31,6 +31,13 @@ export const addToFavoriteService = ({ user_id, book_id }) =>
         try {
             const existingFavorite = await db.Favorite.findOne({
                 where: { user_id, book_id },
+                include: [
+                    {
+                        model: db.BookImage,
+                        as: "images",
+                        attributes: ['image_public_id', 'image_path'],
+                    }
+                ]
             });
 
             if (existingFavorite) {
