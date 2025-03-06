@@ -54,6 +54,7 @@ import {
 } from "@/services/client/UserAddressService";
 import AddAddressModal from "@/components/client/AddAddressModal.vue";
 import EditAddressModal from "@/components/client/EditAddressModal.vue";
+import Swal from "sweetalert2"; // Import SweetAlert2
 
 export default {
   name: "UserAddress",
@@ -94,8 +95,8 @@ export default {
         return null;
       }
       try {
-        const payload = JSON.parse(atob(token.split(".")[1])); // Giải mã phần payload của JWT
-        console.log(payload.user_id); // Giả định user_id nằm trong payload (tùy backend)
+        const payload = JSON.parse(atob(token.split(".")[1]));
+        console.log(payload.user_id);
         return payload.user_id || payload.id;
       } catch (error) {
         console.log("Lỗi khi giải mã token:", error);
@@ -138,84 +139,115 @@ export default {
 
     const saveNewAddress = async (newAddress) => {
       try {
-        // Gọi API để thêm thông tin khách hàng với user_id
         const response = await apiAddCustomerInfor({
           ...newAddress,
           user_id: userId.value,
         });
 
         if (response.status === 200 && response.data.err === 0) {
-          console.log("Thông tin mới đã lưu:", newAddress);
-          alert("Thông tin mới đã được lưu thành công!");
-          await fetchCustomerInfo(); // Đảm bảo fetchCustomerInfo là async nếu cần
+          Swal.fire({
+            icon: "success",
+            title: "Thành công",
+            text: "Thông tin mới đã được lưu thành công!",
+          });
+          await fetchCustomerInfo();
           showAddAddressPopup.value = false;
         } else {
           const errorMessage =
-            response.data.msg ||
-            "Đã xảy ra lỗi không xác định khi lưu Thông tin!";
-          console.error("Lỗi từ API:", errorMessage);
-          alert(`Có lỗi xảy ra: ${errorMessage}`);
+            response.data.msg || "Đã xảy ra lỗi không xác định khi lưu thông tin!";
+          Swal.fire({
+            icon: "error",
+            title: "Lỗi",
+            text: `Có lỗi xảy ra: ${errorMessage}`,
+          });
         }
       } catch (error) {
-        console.error("Lỗi khi lưu Thông tin:", error);
-        alert("Có lỗi sảy ra. Vui lòng thử lại sau!!!");
+        console.error("Lỗi khi lưu thông tin:", error);
+        Swal.fire({
+          icon: "error",
+          title: "Lỗi",
+          text: "Có lỗi xảy ra. Vui lòng thử lại sau!",
+        });
       }
     };
 
     const updateCustomerInfor = async (updatedAddress) => {
       try {
-        // Gọi API để thêm thông tin khách hàng với user_id
         const response = await apiUpdateCustomerInfor({
           ...updatedAddress,
           user_id: userId.value,
         });
 
         if (response.status === 200 && response.data.err === 0) {
-          console.log("Thông tin mới đã lưu:", updatedAddress);
-          alert("Thông tin mới đã được lưu thành công!");
-          await fetchCustomerInfo(); // Đảm bảo fetchCustomerInfo là async nếu cần
+          Swal.fire({
+            icon: "success",
+            title: "Thành công",
+            text: "Thông tin đã được cập nhật thành công!",
+          });
+          await fetchCustomerInfo();
           showEditAddressPopup.value = false;
         } else {
           const errorMessage =
-            response.data.msg ||
-            "Đã xảy ra lỗi không xác định khi lưu Thông tin!";
-          console.error("Lỗi từ API:", errorMessage);
-          alert(`Có lỗi xảy ra: ${errorMessage}`);
+            response.data.msg || "Đã xảy ra lỗi không xác định khi cập nhật thông tin!";
+          Swal.fire({
+            icon: "error",
+            title: "Lỗi",
+            text: `Có lỗi xảy ra: ${errorMessage}`,
+          });
         }
       } catch (error) {
-        console.error("Lỗi khi lưu Thông tin:", error);
-        alert("Có lỗi sảy ra. Vui lòng thử lại sau!!!");
+        console.error("Lỗi khi cập nhật thông tin:", error);
+        Swal.fire({
+          icon: "error",
+          title: "Lỗi",
+          text: "Có lỗi xảy ra. Vui lòng thử lại sau!",
+        });
       }
     };
 
-    const deleteAddress = async () => {
-      const confirmed = window.confirm(
-        "Bạn có chắc chắn muốn xóa thông tin giao hàng này không?"
-      );
-      if (!confirmed) {
-        return; 
-      }
+    const deleteAddress = () => {
+      Swal.fire({
+        title: "Xác nhận xóa",
+        text: "Bạn có chắc chắn muốn xóa thông tin giao hàng này không?",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Có",
+        cancelButtonText: "Không",
+      }).then(async (result) => {
+        if (result.isConfirmed) {
+          try {
+            const response = await apiDeleteCustomerInfor({
+              user_id: userId.value,
+            });
 
-      try {
-        const response = await apiDeleteCustomerInfor({
-          user_id: userId.value,
-        });
-
-        if (response.status === 200 && response.data.err === 0) {
-          console.log("Thông tin đã xóa");
-          alert("Thông tin hiện tại đã được xóa!");
-          fetchCustomerInfo();
-        } else {
-          const errorMessage =
-            response.data.msg ||
-            "Đã xảy ra lỗi không xác định khi xóa thông tin!";
-          console.error("Lỗi từ API:", errorMessage);
-          alert(`Có lỗi xảy ra: ${errorMessage}`);
+            if (response.status === 200 && response.data.err === 0) {
+              Swal.fire({
+                icon: "success",
+                title: "Thành công",
+                text: "Thông tin hiện tại đã được xóa!",
+              });
+              fetchCustomerInfo();
+            } else {
+              const errorMessage =
+                response.data.msg || "Đã xảy ra lỗi không xác định khi xóa thông tin!";
+              Swal.fire({
+                icon: "error",
+                title: "Lỗi",
+                text: `Có lỗi xảy ra: ${errorMessage}`,
+              });
+            }
+          } catch (error) {
+            console.error("Lỗi khi xóa thông tin:", error);
+            Swal.fire({
+              icon: "error",
+              title: "Lỗi",
+              text: "Có lỗi xảy ra khi xóa thông tin!",
+            });
+          }
         }
-      } catch (error) {
-        console.error("Lỗi khi xóa thông tin:", error);
-        alert("Có lỗi xảy ra khi xóa thông tin!");
-      }
+      });
     };
 
     return {

@@ -140,7 +140,32 @@
             Tổng tiền thanh toán: <span>{{ formatPrice(totalPayment) }}</span>
           </p>
         </div>
-        <button class="checkout-btn" @click="checkout">THANH TOÁN</button>
+        <button class="checkout-btn" @click="showConfirmationModal">THANH TOÁN</button>
+      </div>
+
+      <!-- Modal xác nhận thông tin -->
+      <div v-if="showModal" class="modal-overlay">
+        <div class="modal-content">
+          <h2>Xác nhận thông tin đặt hàng</h2>
+          <div class="customer-info">
+            <p><strong>Họ tên:</strong> {{ customer?.full_name || 'Chưa có thông tin' }}</p>
+            <p><strong>Số điện thoại:</strong> {{ customer?.phone || 'Chưa có thông tin' }}</p>
+            <p><strong>Địa chỉ:</strong> {{ customer?.address || 'Chưa có thông tin' }}</p>
+            <p><strong>Tổng tiền:</strong> {{ formatPrice(totalPayment) }}</p>
+            <p><strong>Phương thức thanh toán:</strong> 
+              {{ 
+                paymentMethod === '0' ? 'MoMo' : 
+                paymentMethod === '1' ? 'Thẻ ngân hàng' : 
+                'Thanh toán khi nhận hàng' 
+              }}
+            </p>
+          </div>
+          <div class="modal-actions">
+            <button class="confirm-btn" @click="confirmCheckout">Xác nhận</button>
+            <button class="edit-btn" @click="goToEditInfo">Chỉnh sửa thông tin</button>
+            <button class="cancel-btn" @click="closeModal">Hủy</button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -159,6 +184,7 @@ import { apiGetAllDiscounts } from "@/services/client/DiscountService";
 import { addOrderService } from "@/services/client/OrderService";
 import { useCartStore } from "@/stores/cart";
 import router from "@/router";
+import Swal from 'sweetalert2';
 
 export default {
   name: "CartPage",
@@ -171,6 +197,7 @@ export default {
     const currentPage = ref(1);
     const selectedPromotion = ref("");
     const paymentMethod = ref("");
+    const showModal = ref(false);
     const cartStore = useCartStore();
 
     onMounted(async () => {
@@ -332,53 +359,100 @@ export default {
       const item = cartItems.value.find((item) => item.id === id);
       if (!item) return;
 
-      try {
-        const response = await apiDeleteCartItem({ cart_id: item.cart_id });
-        if (response.status === 200 && response.data.err === 0) {
-          // Xóa sản phẩm khỏi danh sách local
-          const index = cartItems.value.findIndex((i) => i.id === id);
-          if (index !== -1) {
-            cartItems.value.splice(index, 1);
-            if (paginatedCartItems.value.length === 0 && currentPage.value > 1) {
-              currentPage.value--;
-            }
-          }
-          // Cập nhật số lượng sản phẩm trên header
-          const userId = getUserIdFromToken();
-          if (userId) {
-            const countResponse = await apiGetCountProductOfCart({ user_id: userId });
-            if (countResponse.data.err === 0) {
-              cartStore.updatetotal_product_type(countResponse.data.total_product_types || 0);
+      Swal.fire({
+        title: 'Xác nhận',
+        text: 'Bạn có chắc muốn xóa sản phẩm này khỏi giỏ hàng?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Có',
+        cancelButtonText: 'Không'
+      }).then(async (result) => {
+        if (result.isConfirmed) {
+          try {
+            const response = await apiDeleteCartItem({ cart_id: item.cart_id });
+            if (response.status === 200 && response.data.err === 0) {
+              const index = cartItems.value.findIndex((i) => i.id === id);
+              if (index !== -1) {
+                cartItems.value.splice(index, 1);
+                if (paginatedCartItems.value.length === 0 && currentPage.value > 1) {
+                  currentPage.value--;
+                }
+              }
+              const userId = getUserIdFromToken();
+              if (userId) {
+                const countResponse = await apiGetCountProductOfCart({ user_id: userId });
+                if (countResponse.data.err === 0) {
+                  cartStore.updatetotal_product_type(countResponse.data.total_product_types || 0);
+                } else {
+                  cartStore.updatetotal_product_type(cartItems.value.length);
+                }
+              }
+              Swal.fire({
+                icon: 'success',
+                title: 'Thành công',
+                text: 'Xóa sản phẩm khỏi giỏ hàng thành công!',
+                timer: 1500,
+                showConfirmButton: false
+              });
             } else {
-              cartStore.updatetotal_product_type(cartItems.value.length);
+              Swal.fire({
+                icon: 'error',
+                title: 'Lỗi',
+                text: 'Xóa sản phẩm thất bại: ' + response.data.msg,
+              });
             }
+          } catch (error) {
+            console.error("Lỗi khi xóa sản phẩm khỏi giỏ hàng:", error);
+            Swal.fire({
+              icon: 'error',
+              title: 'Lỗi',
+              text: 'Có lỗi xảy ra khi xóa sản phẩm!',
+            });
           }
-          alert("Xóa sản phẩm khỏi giỏ hàng thành công!");
-        } else {
-          alert("Xóa sản phẩm thất bại: " + response.data.msg);
         }
-      } catch (error) {
-        console.error("Lỗi khi xóa sản phẩm khỏi giỏ hàng:", error);
-        alert("Có lỗi xảy ra khi xóa sản phẩm!");
-      }
+      });
     };
 
-    const checkout = async () => {
+    const showConfirmationModal = () => {
       const selectedItems = cartItems.value.filter((item) => item.selected);
       if (selectedItems.length === 0) {
-        alert("Vui lòng chọn ít nhất một sản phẩm để thanh toán!");
+        Swal.fire({
+          icon: 'warning',
+          title: 'Chưa chọn sản phẩm',
+          text: 'Vui lòng chọn ít nhất một sản phẩm để thanh toán!',
+        });
         return;
       }
       if (!paymentMethod.value) {
-        alert("Vui lòng chọn phương thức thanh toán!");
+        Swal.fire({
+          icon: 'warning',
+          title: 'Chưa chọn phương thức',
+          text: 'Vui lòng chọn phương thức thanh toán!',
+        });
         return;
       }
       if (!customer.value) {
-        alert("Vui lòng cập nhật thông tin trước khi thanh toán!!");
-        router.push("/user/address");
+        Swal.fire({
+          icon: 'warning',
+          title: 'Thiếu thông tin',
+          text: 'Vui lòng cập nhật thông tin trước khi thanh toán!',
+          showCancelButton: true,
+          confirmButtonText: 'Cập nhật ngay',
+          cancelButtonText: 'Để sau'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            router.push("/user/address");
+          }
+        });
         return;
       }
+      showModal.value = true;
+    };
 
+    const confirmCheckout = async () => {
+      const selectedItems = cartItems.value.filter((item) => item.selected);
       const selectedPromo = promotions.value.find(
         (promo) => promo.discount_id === selectedPromotion.value
       );
@@ -406,19 +480,43 @@ export default {
         const response = await addOrderService(orderData);
         if (response.status === 200 && response.data.err === 0) {
           cartStore.updatetotal_product_type(response.data.data.count);
-          await fetchCartItems(); // Fetch lại dữ liệu giỏ hàng sau khi thanh toán
-          alert("Đặt hàng thành công!");
+          await fetchCartItems();
+          Swal.fire({
+            icon: 'success',
+            title: 'Thành công',
+            text: 'Đặt hàng thành công!',
+            timer: 2000,
+            showConfirmButton: false
+          });
           selectAll.value = false;
           selectedPromotion.value = "";
           paymentMethod.value = "";
           currentPage.value = 1;
+          showModal.value = false;
         } else {
-          alert("Đã xảy ra lỗi khi đặt hàng: " + response.data.msg);
+          Swal.fire({
+            icon: 'error',
+            title: 'Lỗi',
+            text: 'Đã xảy ra lỗi khi đặt hàng: ' + response.data.msg,
+          });
         }
       } catch (error) {
         console.error("Checkout error:", error);
-        alert("Đã xảy ra lỗi khi xử lý thanh toán!");
+        Swal.fire({
+          icon: 'error',
+          title: 'Lỗi',
+          text: 'Đã xảy ra lỗi khi xử lý thanh toán!',
+        });
       }
+    };
+
+    const goToEditInfo = () => {
+      showModal.value = false;
+      router.push("/user/address");
+    };
+
+    const closeModal = () => {
+      showModal.value = false;
     };
 
     return {
@@ -432,6 +530,7 @@ export default {
       paginatedCartItems,
       selectedPromotion,
       paymentMethod,
+      showModal,
       subtotal,
       deliveryPrice,
       discount,
@@ -442,7 +541,10 @@ export default {
       updateQuantity,
       toggleSelectAll,
       removeCartItem,
-      checkout,
+      showConfirmationModal,
+      confirmCheckout,
+      goToEditInfo,
+      closeModal,
     };
   },
 };
@@ -660,5 +762,87 @@ export default {
 .pagination span {
   font-size: 14px;
   color: #333;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  width: 400px;
+  max-width: 90%;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.modal-content h2 {
+  margin-bottom: 15px;
+  color: #333;
+}
+
+.customer-info p {
+  margin: 10px 0;
+  color: #666;
+}
+
+.customer-info strong {
+  color: #333;
+}
+
+.modal-actions {
+  margin-top: 20px;
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.confirm-btn {
+  padding: 8px 16px;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.confirm-btn:hover {
+  background-color: #218838;
+}
+
+.edit-btn {
+  padding: 8px 16px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.edit-btn:hover {
+  background-color: #0069d9;
+}
+
+.cancel-btn {
+  padding: 8px 16px;
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.cancel-btn:hover {
+  background-color: #c82333;
 }
 </style>

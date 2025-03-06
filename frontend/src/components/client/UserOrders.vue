@@ -7,7 +7,7 @@
           <tr>
             <th>STT</th>
             <th>Mã đơn hàng</th>
-            <th>Tên sách</th>
+            <!-- <th>Tên sách</th> -->
             <th>Tổng tiền</th>
             <th>Ngày đặt</th>
             <th>Ngày giao</th>
@@ -19,13 +19,10 @@
           <tr v-for="(order, index) in paginatedOrders" :key="order.order_id">
             <td>{{ (currentPage - 1) * itemsPerPage + index + 1 }}</td>
             <td>{{ order.order_id }}</td>
-            <td>
-              <img :src="getBookImage(order)" alt="Book Image" class="product-image" />
-              <a :href="getBookLink(order)" class="product-name">{{ getBookTitle(order) }}</a>
-            </td>
+            <!-- <td>{{ order.order_details[[]].book.title }}</td> -->
             <td>{{ formatPrice(order.total_price) }}</td>
             <td>{{ formatDate(order.order_date) }}</td>
-            <td>{{ formatDate(order.delivery_date) }}</td>
+            <td>{{ formatDate(order.delivery_date) || "Chưa giao" }}</td>
             <td>
               <span :class="getStatusClass(order.status)">
                 {{ getStatusText(order.status) }}
@@ -42,7 +39,7 @@
               <span v-else>-</span>
             </td>
           </tr>
-          <tr v-if="orders.length === 0">
+          <tr v-if="!orders.length">
             <td colspan="8" class="no-products">
               Không có dữ liệu đơn hàng.
             </td>
@@ -78,6 +75,7 @@ import {
   apiGetOrderByUserId,
   apiDeleteOrderService,
 } from "@/services/client/OrderService";
+import Swal from "sweetalert2"; // Import SweetAlert2
 
 export default {
   name: "UserOrders",
@@ -103,23 +101,23 @@ export default {
       return new Intl.NumberFormat("vi-VN", {
         style: "currency",
         currency: "VND",
-      }).format(price);
+      }).format(price || 0);
     };
 
     // Format ngày tháng
     const formatDate = (date) => {
-      return new Date(date).toLocaleDateString("vi-VN");
+      return date ? new Date(date).toLocaleDateString("vi-VN") : null;
     };
 
     // Chuyển đổi trạng thái thành văn bản
     const getStatusText = (status) => {
       switch (status) {
         case 0:
-          return "Đang xử lý";
+          return "Chờ xác nhận";
         case 1:
-          return "Đang giao";
+          return "Đã xác nhận";
         case 2:
-          return "Đã giao";
+          return "Từ chối";
         default:
           return "Không xác định";
       }
@@ -130,6 +128,8 @@ export default {
       switch (status) {
         case 0:
           return "status-pending";
+        case 1:
+          return "status-shipping";
         case 2:
           return "status-delivered";
         default:
@@ -139,24 +139,24 @@ export default {
 
     // Lấy tiêu đề sách từ order_details
     const getBookTitle = (order) => {
-      if (order.order_details && order.order_details.length > 0) {
-        return order.order_details[0].book.title;
+      if (order.order_details?.length > 0) {
+        return order.order_details[0].book?.title || "Không xác định";
       }
       return "Không xác định";
     };
 
-    // Lấy ảnh sách từ order_details (giả định có trường image)
+    // Lấy ảnh sách từ order_details
     const getBookImage = (order) => {
-      if (order.order_details && order.order_details.length > 0) {
-        return order.order_details[0].book.image || "default-image.jpg"; // Thay "default-image.jpg" bằng đường dẫn ảnh mặc định nếu cần
+      if (order.order_details?.length > 0) {
+        return order.order_details[0].book?.image || "default-image.jpg";
       }
       return "default-image.jpg";
     };
 
-    // Lấy liên kết sách (giả định có trường link)
+    // Lấy liên kết sách
     const getBookLink = (order) => {
-      if (order.order_details && order.order_details.length > 0) {
-        return order.order_details[0].book.link || "#"; // Thay bằng đường dẫn thực tế nếu có
+      if (order.order_details?.length > 0) {
+        return order.order_details[0].book?.link || "#";
       }
       return "#";
     };
@@ -182,36 +182,69 @@ export default {
       try {
         const response = await apiGetOrderByUserId({ user_id: getUserIdFromToken() });
         if (response.status === 200 && response.data.err === 0) {
-          orders.value = response.data.data;
+          orders.value = response.data.data || [];
         } else {
-          orders.value = []; // Không có dữ liệu thì để mảng rỗng
+          orders.value = [];
+          Swal.fire({
+            icon: "warning",
+            title: "Cảnh báo",
+            text: "Không tìm thấy dữ liệu đơn hàng.",
+          });
         }
       } catch (error) {
         console.error("Lỗi khi lấy danh sách đơn hàng:", error);
-        orders.value = []; // Lỗi thì để mảng rỗng
-        alert("Không thể tải danh sách đơn hàng.");
+        orders.value = [];
+        Swal.fire({
+          icon: "error",
+          title: "Lỗi",
+          text: "Không thể tải danh sách đơn hàng.",
+        });
       }
     };
 
     // Hủy đơn hàng qua API
     const cancelOrder = async (orderId) => {
-      try {
-        if (confirm("Bạn có chắc chắn muốn hủy đơn hàng này không?")) {
-          const response = await apiDeleteOrderService({ order_id: orderId });
-          if (response.status === 200 && response.data.err === 0) {
-            alert("Đã hủy đơn hàng thành công!");
-            if (paginatedOrders.value.length === 0 && currentPage.value > 1) {
-              currentPage.value--;
+      Swal.fire({
+        title: "Xác nhận hủy đơn hàng",
+        text: "Bạn có chắc chắn muốn hủy đơn hàng này không?",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Có",
+        cancelButtonText: "Không",
+      }).then(async (result) => {
+        if (result.isConfirmed) {
+          try {
+            const response = await apiDeleteOrderService({ order_id: orderId });
+            if (response.status === 200 && response.data.err === 0) {
+              Swal.fire({
+                icon: "success",
+                title: "Thành công",
+                text: "Đã hủy đơn hàng thành công!",
+              });
+              // Kiểm tra nếu trang hiện tại không còn đơn hàng thì giảm trang
+              await fetchOrders();
+              if (paginatedOrders.value.length === 0 && currentPage.value > 1) {
+                currentPage.value--;
+              }
+            } else {
+              Swal.fire({
+                icon: "error",
+                title: "Lỗi",
+                text: "Không thể hủy đơn hàng. Vui lòng thử lại sau.",
+              });
             }
-            await fetchOrders();
-          } else {
-            alert("Không thể hủy đơn hàng. Vui lòng thử lại sau.");
+          } catch (error) {
+            console.error("Lỗi khi hủy đơn hàng:", error);
+            Swal.fire({
+              icon: "error",
+              title: "Lỗi",
+              text: "Không thể hủy đơn hàng. Vui lòng thử lại sau.",
+            });
           }
         }
-      } catch (error) {
-        console.error("Lỗi khi hủy đơn hàng:", error);
-        alert("Không thể hủy đơn hàng. Vui lòng thử lại sau.");
-      }
+      });
     };
 
     onMounted(() => {
@@ -308,7 +341,7 @@ export default {
   color: #2c3e50;
   text-decoration: none;
   font-weight: 600;
-  font-family: 'Arial', sans-serif;
+  font-family: "Arial", sans-serif;
   font-size: 15px;
   transition: color 0.3s ease;
 }
@@ -337,7 +370,7 @@ export default {
   text-align: center;
   font-size: 14px;
   color: #666;
-  margin-top: 0; /* Loại bỏ margin-top để thông báo nằm gọn trong ô */
+  padding: 20px;
 }
 
 .pagination {
@@ -372,10 +405,18 @@ export default {
   color: #333;
 }
 
-/* Giữ các lớp trạng thái hiện tại */
+/* Các lớp trạng thái */
 .status-pending {
   background-color: #fff3cd;
   color: #856404;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.status-shipping {
+  background-color: #cce5ff;
+  color: #004085;
   padding: 4px 8px;
   border-radius: 4px;
   font-weight: 500;

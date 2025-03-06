@@ -13,25 +13,42 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="(product, index) in paginatedProducts" :key="product.favorite_id">
+          <tr
+            v-for="(product, index) in paginatedProducts"
+            :key="product.favorite_id"
+          >
             <td>{{ (currentPage - 1) * itemsPerPage + index + 1 }}</td>
             <td>
               <router-link :to="`/product/${product.book_id}`">
                 <img
-                  :src="product.book && product.book.images && product.book.images[0] ? product.book.images[0].image_path : 'https://via.placeholder.com/50'"
+                  :src="
+                    product.book &&
+                    product.book.images &&
+                    product.book.images[0]
+                      ? product.book.images[0].image_path
+                      : 'https://via.placeholder.com/50'
+                  "
                   alt="Product Image"
                   class="product-image"
                 />
               </router-link>
             </td>
             <td>
-              <router-link :to="`/product/${product.book_id}`" class="product-name">
-                {{ product.book ? product.book.title : 'Không có tiêu đề' }}
+              <router-link
+                :to="`/product/${product.book_id}`"
+                class="product-name"
+              >
+                {{ product.book ? product.book.title : "Không có tiêu đề" }}
               </router-link>
             </td>
             <td>{{ formatPrice(product.book ? product.book.price : 0) }}</td>
             <td>
-              <button class="delete-btn" @click="removeProduct(product.favorite_id)">Xóa</button>
+              <button
+                class="delete-btn"
+                @click="removeProduct(product.favorite_id)"
+              >
+                Xóa
+              </button>
             </td>
           </tr>
         </tbody>
@@ -63,19 +80,22 @@
 </template>
 
 <script>
-import { ref, computed, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
-import { apiGetFavorites, apiDeleteFavorite } from '@/services/client/FavoriteService';
+import { ref, computed, onMounted } from "vue";
+import { useRouter } from "vue-router";
+import {
+  apiGetFavorites,
+  apiDeleteFavorite,
+} from "@/services/client/FavoriteService";
+import Swal from "sweetalert2"; // Import SweetAlert2
 
 export default {
-  name: 'UserLike',
+  name: "UserLike",
   setup() {
     const router = useRouter();
     const favoriteProducts = ref([]);
     const itemsPerPage = ref(5);
     const currentPage = ref(1);
 
-    // Hàm lấy userId từ token
     const getUserIdFromToken = () => {
       const token = localStorage.getItem("token");
       if (!token) {
@@ -91,18 +111,25 @@ export default {
       }
     };
 
-    // Lấy danh sách sản phẩm yêu thích từ API
     const fetchFavoriteProducts = async () => {
       const userId = getUserIdFromToken();
       if (!userId) {
-        alert("Vui lòng đăng nhập để xem danh sách yêu thích!");
-        router.push("/login");
+        Swal.fire({
+          icon: "warning",
+          title: "Cần đăng nhập",
+          text: "Vui lòng đăng nhập để xem danh sách yêu thích!",
+          confirmButtonText: "Đi đến đăng nhập",
+        }).then((result) => {
+          if (result.isConfirmed) {
+            router.push("/login");
+          }
+        });
         return;
       }
 
       try {
         const response = await apiGetFavorites({ user_id: userId });
-        console.log("API Response:", response); // Debug dữ liệu trả về
+        console.log("API Response:", response);
         if (response.status === 200 && response.data.err === 0) {
           favoriteProducts.value = response.data.data;
         } else {
@@ -110,38 +137,84 @@ export default {
           favoriteProducts.value = [];
         }
       } catch (error) {
-        console.error('Lỗi khi lấy danh sách yêu thích:', error);
+        console.error("Lỗi khi lấy danh sách yêu thích:", error);
+        Swal.fire({
+          icon: "error",
+          title: "Lỗi",
+          text: "Không thể tải danh sách yêu thích!",
+        });
         favoriteProducts.value = [];
       }
     };
 
-    // Xóa sản phẩm yêu thích
     const removeProduct = async (favoriteId) => {
       const userId = getUserIdFromToken();
       if (!userId) {
-        alert("Vui lòng đăng nhập để xóa sản phẩm yêu thích!");
-        router.push("/login");
+        Swal.fire({
+          icon: "warning",
+          title: "Cần đăng nhập",
+          text: "Vui lòng đăng nhập để xóa sản phẩm yêu thích!",
+          confirmButtonText: "Đi đến đăng nhập",
+        }).then((result) => {
+          if (result.isConfirmed) {
+            router.push("/login");
+          }
+        });
         return;
       }
 
-      try {
-        const response = await apiDeleteFavorite({ favorite_id: favoriteId });
-        if (response.status === 200 && response.data.err === 0) {
-          favoriteProducts.value = favoriteProducts.value.filter(p => p.favorite_id !== favoriteId);
-          alert('Đã xóa sản phẩm khỏi danh sách yêu thích!');
-          if (paginatedProducts.value.length === 0 && currentPage.value > 1) {
-            currentPage.value--;
+      // Thêm xác nhận trước khi xóa
+      Swal.fire({
+        title: "Xác nhận",
+        text: "Bạn có chắc muốn xóa sản phẩm này khỏi danh sách yêu thích?",
+        icon: "question",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Có",
+        cancelButtonText: "Không",
+      }).then(async (result) => {
+        if (result.isConfirmed) {
+          try {
+            const response = await apiDeleteFavorite({
+              favorite_id: favoriteId,
+            });
+            if (response.status === 200 && response.data.err === 0) {
+              favoriteProducts.value = favoriteProducts.value.filter(
+                (p) => p.favorite_id !== favoriteId
+              );
+              Swal.fire({
+                icon: "success",
+                title: "Thành công",
+                text: "Đã xóa sản phẩm khỏi danh sách yêu thích!",
+                timer: 1500,
+                showConfirmButton: false,
+              });
+              if (
+                paginatedProducts.value.length === 0 &&
+                currentPage.value > 1
+              ) {
+                currentPage.value--;
+              }
+            } else {
+              Swal.fire({
+                icon: "error",
+                title: "Lỗi",
+                text: response.data.msg || "Lỗi khi xóa sản phẩm",
+              });
+            }
+          } catch (error) {
+            console.error("Lỗi khi xóa sản phẩm:", error);
+            Swal.fire({
+              icon: "error",
+              title: "Lỗi",
+              text: "Có lỗi xảy ra khi xóa sản phẩm!",
+            });
           }
-        } else {
-          alert(response.data.msg || 'Lỗi khi xóa sản phẩm');
         }
-      } catch (error) {
-        console.error('Lỗi khi xóa sản phẩm:', error);
-        alert("Có lỗi xảy ra khi xóa sản phẩm!");
-      }
+      });
     };
 
-    // Format giá tiền
     const formatPrice = (price) => {
       return price ? Math.round(price).toLocaleString("vi-VN") + " VNĐ" : "N/A";
     };
@@ -150,12 +223,10 @@ export default {
       fetchFavoriteProducts();
     });
 
-    // Tính tổng số trang
     const totalPages = computed(() =>
       Math.ceil(favoriteProducts.value.length / itemsPerPage.value)
     );
 
-    // Lấy danh sách sản phẩm theo trang hiện tại
     const paginatedProducts = computed(() => {
       const start = (currentPage.value - 1) * itemsPerPage.value;
       return favoriteProducts.value.slice(start, start + itemsPerPage.value);
@@ -235,7 +306,7 @@ export default {
   color: #2c3e50; /* Đổi màu chữ thành xanh đậm */
   text-decoration: none;
   font-weight: 600; /* Đậm hơn một chút */
-  font-family: 'Arial', sans-serif; /* Thay đổi kiểu chữ */
+  font-family: "Arial", sans-serif; /* Thay đổi kiểu chữ */
   font-size: 15px; /* Tăng kích thước chữ một chút */
   transition: color 0.3s ease; /* Hiệu ứng chuyển màu mượt mà */
 }

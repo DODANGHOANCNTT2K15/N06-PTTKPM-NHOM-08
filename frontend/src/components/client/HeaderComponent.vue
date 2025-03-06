@@ -19,10 +19,10 @@
           />
           <button type="submit">Tìm kiếm</button>
         </form>
-        <div class="tag-search-container">
+        <!-- <div class="tag-search-container">
           <div class="tag_search">Truyện</div>
           <div class="tag_search">Tiểu thuyết</div>
-        </div>
+        </div> -->
         <!-- Gợi ý tìm kiếm -->
         <div v-if="showOverlay" class="search-suggestions">
           <div v-if="searchQuery" class="suggestion-item">
@@ -431,6 +431,8 @@ header {
   background-color: #fff;
   border-radius: 20px;
   cursor: pointer;
+  width: 100%;
+  min-width: 180px;
   transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 

@@ -182,6 +182,7 @@ import { apiAddReview, apiDeleteReview } from "@/services/client/ReviewService";
 import { apiAddToCart, apiGetCountProductOfCart } from "@/services/client/CartService";
 import { apiAddToFavorite, apiDeleteFavorite, apiGetFavorites } from "@/services/client/FavoriteService";
 import { useCartStore } from "@/stores/cart";
+import Swal from 'sweetalert2'; // Import SweetAlert2
 
 export default {
   name: "ProductPage",
@@ -203,7 +204,7 @@ export default {
       },
       quantity: 1,
       isFavorite: false,
-      favoriteId: null, // Thêm để lưu favorite_id nếu đã yêu thích
+      favoriteId: null,
       currentThumbnail: 0,
       mainImage: "",
       reviews: [],
@@ -234,7 +235,7 @@ export default {
   created() {
     this.fetchBookData();
     this.loadCurrentUser();
-    this.checkFavoriteStatus(); // Thêm kiểm tra trạng thái yêu thích khi tải trang
+    this.checkFavoriteStatus();
   },
   setup() {
     const cartStore = useCartStore();
@@ -273,7 +274,11 @@ export default {
     },
     async submitReview() {
       if (!this.newReview.reviewText.trim() || !this.newReview.rating) {
-        alert("Vui lòng nhập đánh giá và bình luận!");
+        Swal.fire({
+          icon: 'warning',
+          title: 'Thiếu thông tin',
+          text: 'Vui lòng nhập đánh giá và bình luận!',
+        });
         return;
       }
 
@@ -292,12 +297,25 @@ export default {
           this.newReview.reviewText = "";
           this.newReview.rating = 5;
           this.currentPage = Math.ceil(this.reviews.length / this.itemsPerPage);
+          Swal.fire({
+            icon: 'success',
+            title: 'Thành công',
+            text: 'Đánh giá của bạn đã được gửi!',
+          });
         } else {
-          alert(response.data.msg);
+          Swal.fire({
+            icon: 'error',
+            title: 'Lỗi',
+            text: response.data.msg || 'Có lỗi xảy ra khi gửi đánh giá.',
+          });
         }
       } catch (error) {
         console.error("Lỗi khi gửi đánh giá:", error);
-        alert("Có lỗi xảy ra khi gửi đánh giá.");
+        Swal.fire({
+          icon: 'error',
+          title: 'Lỗi',
+          text: 'Có lỗi xảy ra khi gửi đánh giá.',
+        });
       }
     },
     async deleteReview(reviewId) {
@@ -305,12 +323,25 @@ export default {
         const response = await apiDeleteReview({ review_id: reviewId });
         if (response.status === 200 && response.data.err === 0) {
           this.fetchBookData();
+          Swal.fire({
+            icon: 'success',
+            title: 'Thành công',
+            text: 'Đã xóa đánh giá thành công!',
+          });
         } else {
-          alert(response.data.msg);
+          Swal.fire({
+            icon: 'error',
+            title: 'Lỗi',
+            text: response.data.msg || 'Có lỗi xảy ra khi xóa đánh giá.',
+          });
         }
       } catch (error) {
         console.error("Lỗi khi xóa đánh giá:", error);
-        alert("Có lỗi xảy ra khi xóa đánh giá.");
+        Swal.fire({
+          icon: 'error',
+          title: 'Lỗi',
+          text: 'Có lỗi xảy ra khi xóa đánh giá.',
+        });
       }
     },
     updateQuantity() {
@@ -326,10 +357,19 @@ export default {
     },
     buyNow() {
       console.log("Mua ngay:", this.quantity, "sách:", this.book.title);
+      Swal.fire({
+        icon: 'info',
+        title: 'Mua ngay',
+        text: `Bạn đã chọn mua ${this.quantity} cuốn sách: ${this.book.title}`,
+      });
     },
     async addToCart() {
       if (!this.currentUserId) {
-        alert("Vui lòng đăng nhập để thêm vào giỏ hàng!");
+        Swal.fire({
+          icon: 'warning',
+          title: 'Chưa đăng nhập',
+          text: 'Vui lòng đăng nhập để thêm vào giỏ hàng!',
+        });
         this.$router.push("/login");
         return;
       }
@@ -345,14 +385,26 @@ export default {
       try {
         const response = await apiAddToCart(cartItem);
         if (response.status === 200 && response.data.err === 0) {
-          alert('Đã thêm vào giỏ hàng thành công!');
+          Swal.fire({
+            icon: 'success',
+            title: 'Thành công',
+            text: 'Đã thêm vào giỏ hàng thành công!',
+          });
           await this.updateCartCount();
         } else {
-          alert(response.data.msg || 'Lỗi khi thêm vào giỏ hàng');
+          Swal.fire({
+            icon: 'error',
+            title: 'Lỗi',
+            text: response.data.msg || 'Lỗi khi thêm vào giỏ hàng',
+          });
         }
       } catch (error) {
         console.error("Lỗi khi thêm vào giỏ hàng:", error);
-        alert("Có lỗi xảy ra khi thêm vào giỏ hàng.");
+        Swal.fire({
+          icon: 'error',
+          title: 'Lỗi',
+          text: 'Có lỗi xảy ra khi thêm vào giỏ hàng.',
+        });
       }
     },
     async updateCartCount() {
@@ -392,14 +444,17 @@ export default {
     },
     async toggleFavorite() {
       if (!this.currentUserId) {
-        alert("Vui lòng đăng nhập để thêm vào danh sách yêu thích!");
+        Swal.fire({
+          icon: 'warning',
+          title: 'Chưa đăng nhập',
+          text: 'Vui lòng đăng nhập để thêm vào danh sách yêu thích!',
+        });
         this.$router.push("/login");
         return;
       }
 
       const bookId = this.$route.params.id;
       if (!this.isFavorite) {
-        // Thêm vào yêu thích
         const favoriteData = {
           user_id: this.currentUserId,
           book_id: bookId
@@ -408,29 +463,52 @@ export default {
           const response = await apiAddToFavorite(favoriteData);
           if (response.status === 200 && response.data.err === 0) {
             this.isFavorite = true;
-            this.favoriteId = response.data.favorite_id; // Giả sử API trả về favorite_id
-            alert("Đã thêm vào danh sách yêu thích!");
+            this.favoriteId = response.data.favorite_id;
+            Swal.fire({
+              icon: 'success',
+              title: 'Thành công',
+              text: 'Đã thêm vào danh sách yêu thích!',
+            });
           } else {
-            alert(response.data.msg || "Lỗi khi thêm vào yêu thích");
+            Swal.fire({
+              icon: 'error',
+              title: 'Lỗi',
+              text: response.data.msg || 'Lỗi khi thêm vào yêu thích',
+            });
           }
         } catch (error) {
           console.error("Lỗi khi thêm vào yêu thích:", error);
-          alert("Có lỗi xảy ra khi thêm vào yêu thích.");
+          Swal.fire({
+            icon: 'error',
+            title: 'Lỗi',
+            text: 'Có lỗi xảy ra khi thêm vào yêu thích.',
+          });
         }
       } else {
-        // Xóa khỏi yêu thích
         try {
           const response = await apiDeleteFavorite({ favorite_id: this.favoriteId });
           if (response.status === 200 && response.data.err === 0) {
             this.isFavorite = false;
             this.favoriteId = null;
-            alert("Đã xóa khỏi danh sách yêu thích!");
+            Swal.fire({
+              icon: 'success',
+              title: 'Thành công',
+              text: 'Đã xóa khỏi danh sách yêu thích!',
+            });
           } else {
-            alert(response.data.msg || "Lỗi khi xóa khỏi yêu thích");
+            Swal.fire({
+              icon: 'error',
+              title: 'Lỗi',
+              text: response.data.msg || 'Lỗi khi xóa khỏi yêu thích',
+            });
           }
         } catch (error) {
           console.error("Lỗi khi xóa khỏi yêu thích:", error);
-          alert("Có lỗi xảy ra khi xóa khỏi yêu thích.");
+          Swal.fire({
+            icon: 'error',
+            title: 'Lỗi',
+            text: 'Có lỗi xảy ra khi xóa khỏi yêu thích.',
+          });
         }
       }
     },

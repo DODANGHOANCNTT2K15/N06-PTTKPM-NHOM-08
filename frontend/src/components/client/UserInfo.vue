@@ -97,6 +97,7 @@ import {
   apiUpdateInfor
 } from "@/services/client/UserInforService";
 import { useAvatarStore } from "@/stores/avatar";
+import Swal from "sweetalert2"; // Import SweetAlert2
 
 export default {
   name: "UserInfo",
@@ -169,13 +170,25 @@ export default {
           email: email.value
         });
         if (response.status === 200 && response.data.err === 0) {
-          alert("Thông tin đã được lưu thành công!");
+          Swal.fire({
+            icon: "success",
+            title: "Thành công",
+            text: "Thông tin đã được lưu thành công!",
+          });
         } else {
-          alert("Lỗi: " + response.data.msg);
+          Swal.fire({
+            icon: "error",
+            title: "Lỗi",
+            text: "Lỗi: " + response.data.msg,
+          });
         }
       } catch (error) {
         console.error("Lỗi khi lưu thông tin:", error);
-        alert("Có lỗi xảy ra khi lưu thông tin!");
+        Swal.fire({
+          icon: "error",
+          title: "Lỗi",
+          text: "Có lỗi xảy ra khi lưu thông tin!",
+        });
       }
     };
 
@@ -195,7 +208,11 @@ export default {
       const fileInput = document.querySelector(".file-input");
       const file = fileInput.files[0];
       if (!file) {
-        alert("Vui lòng chọn một file ảnh!");
+        Swal.fire({
+          icon: "warning",
+          title: "Cảnh báo",
+          text: "Vui lòng chọn một file ảnh!",
+        });
         return;
       }
 
@@ -209,13 +226,25 @@ export default {
           const newAvatarUrl = response.data.data.avatar_path || previewImage.value;
           avatarSrc.value = newAvatarUrl;
           avatarStore.updateAvatar(newAvatarUrl); // Cập nhật avatar trong store
-          alert("Ảnh đại diện đã được cập nhật!");
+          Swal.fire({
+            icon: "success",
+            title: "Thành công",
+            text: "Ảnh đại diện đã được cập nhật!",
+          });
         } else {
-          alert("Lỗi: " + response.data.msg);
+          Swal.fire({
+            icon: "error",
+            title: "Lỗi",
+            text: "Lỗi: " + response.data.msg,
+          });
         }
       } catch (error) {
         console.error("Lỗi khi upload avatar:", error);
-        alert("Có lỗi xảy ra khi cập nhật ảnh đại diện!");
+        Swal.fire({
+          icon: "error",
+          title: "Lỗi",
+          text: "Có lỗi xảy ra khi cập nhật ảnh đại diện!",
+        });
       }
       showImagePopup.value = false;
       previewImage.value = null;
@@ -223,7 +252,11 @@ export default {
 
     const savePassword = async () => {
       if (!userId.value || !email.value || !oldPassword.value || !newPassword.value) {
-        alert("Vui lòng điền đầy đủ thông tin!");
+        Swal.fire({
+          icon: "warning",
+          title: "Cảnh báo",
+          text: "Vui lòng điền đầy đủ thông tin!",
+        });
         return;
       }
       try {
@@ -233,13 +266,25 @@ export default {
           new_pass_word: newPassword.value,
         });
         if (response.status === 200 && response.data.err === 0) {
-          alert("Mật khẩu đã được thay đổi!");
+          Swal.fire({
+            icon: "success",
+            title: "Thành công",
+            text: "Mật khẩu đã được thay đổi!",
+          });
         } else {
-          alert("Lỗi: " + response.data.msg);
+          Swal.fire({
+            icon: "error",
+            title: "Lỗi",
+            text: "Lỗi: " + response.data.msg,
+          });
         }
       } catch (error) {
         console.error("Lỗi khi đổi mật khẩu:", error);
-        alert("Có lỗi xảy ra khi thay đổi mật khẩu!");
+        Swal.fire({
+          icon: "error",
+          title: "Lỗi",
+          text: "Có lỗi xảy ra khi thay đổi mật khẩu!",
+        });
       }
       showPasswordPopup.value = false;
       oldPassword.value = "";
