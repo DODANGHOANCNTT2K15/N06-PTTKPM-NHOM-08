@@ -10,6 +10,7 @@ import * as customerController from "../controllers/customerController"
 import * as orderController from "../controllers/orderController"
 import * as paymentService from "../services/paymentService"
 import * as discountController from "../controllers/discountController"
+import * as favoriteController from "../controllers/favoriteController"
 import * as middleWare from "../middleware/authMiddleWare"
 import { upload } from "../middleware/multerMiddleWare";
 
@@ -62,6 +63,12 @@ router.post('/cart/count', cartController.getCountController)
 router.post('/cart/add', cartController.addToCartController)
 router.put('/cart/update', cartController.updateCartController)
 router.delete('/cart/delete', cartController.deleteCartItemController)
+
+// favorite route
+router.post('/favorite/userid', favoriteController.getFavoritesController)
+// router.post('/cart/count', cartController.getCountController)
+router.post('/favorite/add', favoriteController.addToFavoriteController)
+router.delete('/favorite/delete', favoriteController.deleteFavoriteItemController)
 
 // customer route
 router.post('/customer/id', customerController.getCustomerController)
