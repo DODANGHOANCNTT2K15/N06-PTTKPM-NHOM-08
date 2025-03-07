@@ -5,11 +5,15 @@ export const useLoadingStore = defineStore('loading', () => {
   const isLoading = ref(false);
 
   function showLoading() {
-    isLoading.value = true;
+    if (!isLoading.value) {
+      isLoading.value = true;
+    }
   }
 
   function hideLoading() {
-    isLoading.value = false;
+    if (isLoading.value) {
+      isLoading.value = false;
+    }
   }
 
   return {

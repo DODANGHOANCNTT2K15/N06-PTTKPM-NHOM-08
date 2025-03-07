@@ -1,5 +1,17 @@
 <template>
   <div class="search-results-container">
+    <!-- Loading Overlay -->
+    <div v-if="isLoading" class="loading-overlay">
+      <div class="loading-content">
+        <div class="book">
+          <div class="book-page"></div>
+          <div class="book-page"></div>
+          <div class="book-page"></div>
+        </div>
+        <p>Đang tải<span class="dots"></span></p>
+      </div>
+    </div>
+
     <div id="filter">
       <div><h1>Tất cả sản phẩm</h1></div>
 
@@ -131,7 +143,9 @@
         :key="product.book_id"
         :id="product.book_id"
         :image="product.images[0]?.image_path"
-        :discountedPrice="calculateDiscountedPrice(product.price, product.discount_price)"
+        :discountedPrice="
+          calculateDiscountedPrice(product.price, product.discount_price)
+        "
         :originalPrice="product.price"
         :author="product.author"
         :title="product.title"
@@ -170,6 +184,7 @@ export default {
   },
   data() {
     return {
+      isLoading: false, // Thêm trạng thái loading
       showFilterPopup: false,
       filterTags: ["Truyện tranh", "Công nghệ thông tin", "Ngoại ngữ"],
       selectedTags: [],
@@ -235,7 +250,10 @@ export default {
         (this.customPriceRange.from && this.customPriceRange.to)
       ) {
         filtered = filtered.filter((product) => {
-          const price = this.calculateDiscountedPrice(product.price, product.discount_price);
+          const price = this.calculateDiscountedPrice(
+            product.price,
+            product.discount_price
+          );
 
           if (this.customPriceRange.from && this.customPriceRange.to) {
             const from = Number(this.customPriceRange.from);
@@ -278,6 +296,7 @@ export default {
       return Math.round(price * (1 - discount / 100));
     },
     async fetchProducts() {
+      this.isLoading = true; // Hiển thị loading
       try {
         const response = await apiSearchBooks({ key: this.searchKey });
         if (response?.status === 200 && response?.data?.err === 0) {
@@ -288,6 +307,8 @@ export default {
       } catch (error) {
         console.error("Error fetching products:", error);
         this.products = [];
+      } finally {
+        this.isLoading = false; // Ẩn loading
       }
     },
     toggleTag(tag) {
@@ -300,30 +321,42 @@ export default {
       this.currentPage = 1;
     },
     sortFilteredProducts(products) {
+      this.isLoading = true; // Hiển thị loading khi sắp xếp
+      let sortedProducts;
       switch (this.sortOption) {
         case "popular":
-          return products.sort((a, b) => b.rating_avg - a.rating_avg);
+          sortedProducts = products.sort((a, b) => b.rating_avg - a.rating_avg);
+          break;
         case "best-seller":
-          return products.sort((a, b) => 
-            b.warehouses[0].sold_quantity - a.warehouses[0].sold_quantity
+          sortedProducts = products.sort(
+            (a, b) =>
+              b.warehouses[0].sold_quantity - a.warehouses[0].sold_quantity
           );
+          break;
         case "low-to-high":
-          return products.sort((a, b) => 
-            this.calculateDiscountedPrice(a.price, a.discount_price) - 
+          sortedProducts = products.sort((a, b) =>
+            this.calculateDiscountedPrice(a.price, a.discount_price) -
             this.calculateDiscountedPrice(b.price, b.discount_price)
           );
+          break;
         case "high-to-low":
-          return products.sort((a, b) => 
-            this.calculateDiscountedPrice(b.price, b.discount_price) - 
+          sortedProducts = products.sort((a, b) =>
+            this.calculateDiscountedPrice(b.price, b.discount_price) -
             this.calculateDiscountedPrice(a.price, a.discount_price)
           );
+          break;
         case "newest":
-          return products.sort((a, b) => 
-            new Date(b.createdAt) - new Date(a.createdAt)
+          sortedProducts = products.sort(
+            (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
           );
+          break;
         default:
-          return products;
+          sortedProducts = products;
       }
+      setTimeout(() => {
+        this.isLoading = false; // Ẩn loading sau khi sắp xếp
+      }, 300); // Giả lập độ trễ nhỏ để thấy hiệu ứng loading
+      return sortedProducts;
     },
     sortProducts() {
       this.currentPage = 1;
@@ -332,6 +365,7 @@ export default {
       this.$router.push(`/product/${productId}`);
     },
     clearAllFilters() {
+      this.isLoading = true; // Hiển thị loading khi xóa bộ lọc
       this.filters.freeShipping = false;
       Object.keys(this.filters.ratings).forEach((key) => {
         this.filters.ratings[key] = false;
@@ -342,6 +376,9 @@ export default {
       this.customPriceRange = { from: "", to: "" };
       this.selectedTags = [];
       this.currentPage = 1;
+      setTimeout(() => {
+        this.isLoading = false; // Ẩn loading
+      }, 300); // Giả lập độ trễ
     },
     clearCustomPriceRange() {
       this.customPriceRange = { from: "", to: "" };
@@ -349,6 +386,10 @@ export default {
     showResults() {
       this.showFilterPopup = false;
       this.currentPage = 1;
+      this.isLoading = true; // Hiển thị loading khi áp dụng bộ lọc
+      setTimeout(() => {
+        this.isLoading = false; // Ẩn loading
+      }, 300); // Giả lập độ trễ
     },
   },
   mounted() {
@@ -368,11 +409,11 @@ export default {
 </script>
 
 <style scoped>
-/* Giữ nguyên style cũ */
 .search-results-container {
   max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
+  position: relative; /* Để overlay hoạt động trong container */
 }
 
 #filter {
@@ -452,5 +493,99 @@ export default {
   background-color: #007bff;
   color: white;
   border-color: #007bff;
+}
+
+/* CSS cho Loading Overlay */
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.loading-content {
+  text-align: center;
+  color: #fff;
+}
+
+.book {
+  position: relative;
+  width: 60px;
+  height: 80px;
+  margin: 0 auto 20px;
+}
+
+.book-page {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: #fff;
+  border-radius: 2px;
+  transform-origin: left center;
+  animation: flip 1.5s infinite ease-in-out;
+}
+
+.book-page:nth-child(1) {
+  animation-delay: 0s;
+  background: #f5f5f5;
+}
+
+.book-page:nth-child(2) {
+  animation-delay: 0.3s;
+  background: #e0e0e0;
+}
+
+.book-page:nth-child(3) {
+  animation-delay: 0.6s;
+  background: #d0d0d0;
+}
+
+@keyframes flip {
+  0% {
+    transform: rotateY(0deg);
+  }
+  50% {
+    transform: rotateY(-180deg);
+  }
+  100% {
+    transform: rotateY(0deg);
+  }
+}
+
+p {
+  font-size: 18px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dots::after {
+  content: "...";
+  display: inline-block;
+  width: 1em;
+  text-align: left;
+  animation: dots 1.5s infinite;
+}
+
+@keyframes dots {
+  0% {
+    content: ".";
+  }
+  33% {
+    content: "..";
+  }
+  66% {
+    content: "...";
+  }
+  100% {
+    content: ".";
+  }
 }
 </style>

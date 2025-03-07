@@ -1,5 +1,17 @@
 <template>
   <div class="dashboard">
+    <!-- Loading Overlay -->
+    <div v-if="isLoading" class="loading-overlay">
+      <div class="loading-content">
+        <div class="book">
+          <div class="book-page"></div>
+          <div class="book-page"></div>
+          <div class="book-page"></div>
+        </div>
+        <p>Đang tải<span class="dots"></span></p>
+      </div>
+    </div>
+
     <h1>Dashboard Quản lý</h1>
 
     <!-- Thống kê nhanh -->
@@ -68,15 +80,18 @@ import { apiGetAllUsers } from '@/services/admin/UserService';
 import { apiGetAllBooks } from '@/services/admin/BookService';
 import { apiGetAllDiscounts } from '@/services/admin/DiscountService';
 import { apiGetAllBanners } from '@/services/admin/BannerService';
-import { apiGetAllOrderService } from '@/services/admin/OrderService'; // Thêm import mới
+import { apiGetAllOrderService } from '@/services/admin/OrderService';
 
 export default {
   name: 'AdminDashboard',
   setup() {
+    // Thêm trạng thái loading
+    const isLoading = ref(false);
+
     // Dữ liệu sẽ được cập nhật từ API
     const totalBooks = ref(0);
     const totalUsers = ref(0);
-    const totalOrders = ref(0); // Khởi tạo là 0 thay vì giá trị giả định
+    const totalOrders = ref(0);
     const banners = ref([]);
     const promotions = ref([]);
 
@@ -94,7 +109,6 @@ export default {
       { id: 10, text: 'Khuyến mại "Giảm giá hè" đã hết hạn' },
       { id: 11, text: 'Người dùng "Lan Nhi" đã đặt đơn hàng mới' },
       { id: 12, text: 'Đơn hàng #12347 đã được giao thành công' },
-      // Danh sách activities mẫu giữ nguyên
     ]);
 
     const activeBanners = computed(() => {
@@ -182,8 +196,9 @@ export default {
       });
     };
 
-    // Hàm lấy dữ liệu từ API đã được cập nhật
+    // Hàm lấy dữ liệu từ API với loading
     const fetchStats = async () => {
+      isLoading.value = true; // Hiển thị loading
       try {
         // Lấy tổng người dùng
         const usersResponse = await apiGetAllUsers();
@@ -221,7 +236,7 @@ export default {
           banners.value = [];
         }
 
-        // Lấy tổng đơn hàng - Thêm mới
+        // Lấy tổng đơn hàng
         const ordersResponse = await apiGetAllOrderService();
         if (ordersResponse.data.err === 0) {
           totalOrders.value = ordersResponse.data.data.length;
@@ -234,9 +249,11 @@ export default {
         console.error('Lỗi khi lấy dữ liệu thống kê:', error);
         totalUsers.value = 0;
         totalBooks.value = 0;
-        totalOrders.value = 0; // Thêm vào xử lý lỗi
+        totalOrders.value = 0;
         promotions.value = [];
         banners.value = [];
+      } finally {
+        isLoading.value = false; // Ẩn loading
       }
     };
 
@@ -260,18 +277,19 @@ export default {
       nextActivityPage,
       barChart,
       pieChart,
+      isLoading, // Trả về isLoading để template sử dụng
     };
   },
 };
 </script>
 
 <style scoped>
-/* Style giữ nguyên */
 .dashboard {
   background-color: white;
   padding: 20px;
   border-radius: 5px;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  position: relative; /* Để overlay hoạt động trong container */
 }
 
 .dashboard h1 {
@@ -388,5 +406,99 @@ export default {
 
 .pagination-btn:hover:not(:disabled) {
   background-color: #0056b3;
+}
+
+/* CSS cho Loading Overlay */
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.loading-content {
+  text-align: center;
+  color: #fff;
+}
+
+.book {
+  position: relative;
+  width: 60px;
+  height: 80px;
+  margin: 0 auto 20px;
+}
+
+.book-page {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: #fff;
+  border-radius: 2px;
+  transform-origin: left center;
+  animation: flip 1.5s infinite ease-in-out;
+}
+
+.book-page:nth-child(1) {
+  animation-delay: 0s;
+  background: #f5f5f5;
+}
+
+.book-page:nth-child(2) {
+  animation-delay: 0.3s;
+  background: #e0e0e0;
+}
+
+.book-page:nth-child(3) {
+  animation-delay: 0.6s;
+  background: #d0d0d0;
+}
+
+@keyframes flip {
+  0% {
+    transform: rotateY(0deg);
+  }
+  50% {
+    transform: rotateY(-180deg);
+  }
+  100% {
+    transform: rotateY(0deg);
+  }
+}
+
+p {
+  font-size: 18px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dots::after {
+  content: "...";
+  display: inline-block;
+  width: 1em;
+  text-align: left;
+  animation: dots 1.5s infinite;
+}
+
+@keyframes dots {
+  0% {
+    content: ".";
+  }
+  33% {
+    content: "..";
+  }
+  66% {
+    content: "...";
+  }
+  100% {
+    content: ".";
+  }
 }
 </style>
