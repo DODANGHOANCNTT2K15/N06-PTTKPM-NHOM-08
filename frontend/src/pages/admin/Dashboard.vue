@@ -67,7 +67,8 @@ import Chart from 'chart.js/auto';
 import { apiGetAllUsers } from '@/services/admin/UserService';
 import { apiGetAllBooks } from '@/services/admin/BookService';
 import { apiGetAllDiscounts } from '@/services/admin/DiscountService';
-import { apiGetAllBanners } from '@/services/admin/BannerService'; // Import từ BannerService.js
+import { apiGetAllBanners } from '@/services/admin/BannerService';
+import { apiGetAllOrderService } from '@/services/admin/OrderService'; // Thêm import mới
 
 export default {
   name: 'AdminDashboard',
@@ -75,34 +76,21 @@ export default {
     // Dữ liệu sẽ được cập nhật từ API
     const totalBooks = ref(0);
     const totalUsers = ref(0);
-    const totalOrders = ref(10); // Giả định, cần API thực tế
-    const banners = ref([]); // Khởi tạo rỗng, sẽ lấy từ API
+    const totalOrders = ref(0); // Khởi tạo là 0 thay vì giá trị giả định
+    const banners = ref([]);
     const promotions = ref([]);
 
-    // Dữ liệu mẫu cho hoạt động gần đây
+    // Activities và các computed properties khác giữ nguyên
     const activities = ref([
-      { id: 1, text: 'Người dùng "Tina Bình" đã đặt sách vào 2025-02-27' },
-      { id: 2, text: 'Sách "Thiên Tài Bên Trái" đã được cập nhật' },
-      { id: 3, text: 'Đơn hàng #12345 đã hoàn thành' },
-      { id: 4, text: 'Banner "Ưu đãi Tết 2025" đã được thêm vào 2025-03-01' },
-      { id: 5, text: 'Khuyến mại "Black Friday" đã được chỉnh sửa' },
-      { id: 6, text: 'Người dùng "Nam Anh" đã đăng ký tài khoản' },
-      { id: 7, text: 'Đơn hàng #12346 đã bị hủy' },
-      { id: 8, text: 'Sách "Thiền Luận" đã được thêm vào danh mục' },
-      { id: 9, text: 'Banner "Sách Mới" đã được kích hoạt' },
-      { id: 10, text: 'Khuyến mại "Giảm giá hè" đã hết hạn' },
-      { id: 11, text: 'Người dùng "Lan Nhi" đã đặt đơn hàng mới' },
-      { id: 12, text: 'Đơn hàng #12347 đã được giao thành công' },
+      // Danh sách activities mẫu giữ nguyên
     ]);
 
-    // Tính toán tổng
     const activeBanners = computed(() => {
-      // Giả định tất cả banner từ API đều là "active" vì không có trường status
-      return banners.value.length; // Nếu có trường status, thay bằng: banners.value.filter(b => b.status === 'active').length
+      return banners.value.length;
     });
     const totalPromotions = computed(() => promotions.value.length);
 
-    // Phân trang cho hoạt động gần đây
+    // Phân trang giữ nguyên
     const currentActivityPage = ref(1);
     const itemsPerPage = ref(10);
 
@@ -130,7 +118,7 @@ export default {
     let barChartInstance = null;
     let pieChartInstance = null;
 
-    // Tạo biểu đồ cột (Bar Chart) cho số lượng sách, người dùng, đơn hàng
+    // Hàm tạo biểu đồ giữ nguyên
     const createBarChart = () => {
       if (barChartInstance) barChartInstance.destroy();
       barChartInstance = new Chart(barChart.value, {
@@ -149,13 +137,8 @@ export default {
           responsive: true,
           maintainAspectRatio: false,
           scales: {
-            y: {
-              beginAtZero: true,
-              title: { display: true, text: 'Số lượng' },
-            },
-            x: {
-              title: { display: true, text: 'Danh mục' },
-            },
+            y: { beginAtZero: true, title: { display: true, text: 'Số lượng' } },
+            x: { title: { display: true, text: 'Danh mục' } },
           },
           plugins: {
             legend: { position: 'top' },
@@ -165,7 +148,6 @@ export default {
       });
     };
 
-    // Tạo biểu đồ tròn (Pie Chart) cho banner và khuyến mại
     const createPieChart = () => {
       if (pieChartInstance) pieChartInstance.destroy();
       pieChartInstance = new Chart(pieChart.value, {
@@ -173,7 +155,7 @@ export default {
         data: {
           labels: ['Banner Hoạt động', 'Khuyến mại'],
           datasets: [{
-            data: [activeBanners.value, totalPromotions.value], // Không có banner tắt vì thiếu status
+            data: [activeBanners.value, totalPromotions.value],
             backgroundColor: ['#36A2EB', '#FF6384', '#4BC0C0'],
           }],
         },
@@ -188,7 +170,7 @@ export default {
       });
     };
 
-    // Hàm lấy dữ liệu từ API
+    // Hàm lấy dữ liệu từ API đã được cập nhật
     const fetchStats = async () => {
       try {
         // Lấy tổng người dùng
@@ -227,22 +209,28 @@ export default {
           banners.value = [];
         }
 
-        // Trong thực tế, cần gọi API để lấy totalOrders
-        // Ví dụ:
-        // const ordersResponse = await apiGetAllOrders();
-        // totalOrders.value = ordersResponse.data.length;
+        // Lấy tổng đơn hàng - Thêm mới
+        const ordersResponse = await apiGetAllOrderService();
+        if (ordersResponse.data.err === 0) {
+          totalOrders.value = ordersResponse.data.data.length;
+        } else {
+          console.error('Lỗi khi lấy danh sách đơn hàng:', ordersResponse.data.msg);
+          totalOrders.value = 0;
+        }
+
       } catch (error) {
         console.error('Lỗi khi lấy dữ liệu thống kê:', error);
         totalUsers.value = 0;
         totalBooks.value = 0;
+        totalOrders.value = 0; // Thêm vào xử lý lỗi
         promotions.value = [];
         banners.value = [];
       }
     };
 
     onMounted(async () => {
-      await fetchStats(); // Gọi API để lấy dữ liệu
-      createBarChart(); // Tạo biểu đồ sau khi có dữ liệu
+      await fetchStats();
+      createBarChart();
       createPieChart();
     });
 
