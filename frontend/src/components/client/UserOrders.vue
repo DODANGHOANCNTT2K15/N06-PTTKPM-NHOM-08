@@ -1,13 +1,12 @@
 <template>
   <div class="profile-info-content">
     <h2>Đơn hàng của bạn</h2>
-    <div class="favorite-table-container">
-      <table class="favorite-table">
+    <div class="order-table-container">
+      <table class="order-table">
         <thead>
           <tr>
             <th>STT</th>
             <th>Mã đơn hàng</th>
-            <!-- <th>Tên sách</th> -->
             <th>Tổng tiền</th>
             <th>Ngày đặt</th>
             <th>Ngày giao</th>
@@ -19,7 +18,6 @@
           <tr v-for="(order, index) in paginatedOrders" :key="order.order_id">
             <td>{{ (currentPage - 1) * itemsPerPage + index + 1 }}</td>
             <td>{{ order.order_id }}</td>
-            <!-- <td>{{ order.order_details[[]].book.title }}</td> -->
             <td>{{ formatPrice(order.total_price) }}</td>
             <td>{{ formatDate(order.order_date) }}</td>
             <td>{{ formatDate(order.delivery_date) || "Chưa giao" }}</td>
@@ -29,6 +27,12 @@
               </span>
             </td>
             <td>
+              <button
+                @click="showOrderDetails(order)"
+                class="view-details-btn"
+              >
+                <i class="fas fa-eye"></i> Xem chi tiết
+              </button>
               <button
                 class="delete-btn"
                 @click="cancelOrder(order.order_id)"
@@ -40,7 +44,7 @@
             </td>
           </tr>
           <tr v-if="!orders.length">
-            <td colspan="8" class="no-products">
+            <td colspan="7" class="no-products">
               Không có dữ liệu đơn hàng.
             </td>
           </tr>
@@ -54,7 +58,7 @@
           @click="currentPage--"
           class="pagination-btn"
         >
-          Trước
+          <i class="fas fa-chevron-left"></i>
         </button>
         <span>Trang {{ currentPage }} / {{ totalPages }}</span>
         <button
@@ -62,8 +66,35 @@
           @click="currentPage++"
           class="pagination-btn"
         >
-          Sau
+          <i class="fas fa-chevron-right"></i>
         </button>
+      </div>
+    </div>
+
+    <!-- Popup Xem chi tiết Đơn hàng -->
+    <div v-if="showOrderDetailPopup" class="modal">
+      <div class="modal-content">
+        <h2>Chi tiết Đơn hàng #{{ selectedOrder.order_id }}</h2>
+        <div class="order-details">
+          <p><strong>Tổng tiền:</strong> {{ formatPrice(selectedOrder.total_price) }}</p>
+          <p><strong>Ngày đặt:</strong> {{ formatDate(selectedOrder.order_date) }}</p>
+          <p><strong>Ngày giao:</strong> {{ formatDate(selectedOrder.delivery_date) || "Chưa giao" }}</p>
+          <p><strong>Trạng thái:</strong> {{ getStatusText(selectedOrder.status) }}</p>
+          <p><strong>Phí giao hàng:</strong> {{ formatPrice(selectedOrder.delivery_price || 0) }}</p>
+          <p><strong>Thông tin giao hàng:</strong></p>
+          <p>Địa chỉ: {{ selectedOrder.customer?.address || "Không có thông tin" }}</p>
+          <p>SĐT: {{ selectedOrder.customer?.phone || "Không có thông tin" }}</p>
+          <h3>Danh sách Sách</h3>
+          <ul class="order-books">
+            <li v-for="item in selectedOrder.order_details" :key="item.book_id">
+              {{ item.book?.title || "Không xác định" }} (Số lượng: {{ item.quantity }} x
+              {{ formatPrice(item.price) }} = {{ formatPrice(item.quantity * item.price) }})
+            </li>
+          </ul>
+        </div>
+        <div class="modal-actions">
+          <button @click="showOrderDetailPopup = false">Đóng</button>
+        </div>
       </div>
     </div>
   </div>
@@ -75,28 +106,27 @@ import {
   apiGetOrderByUserId,
   apiDeleteOrderService,
 } from "@/services/client/OrderService";
-import Swal from "sweetalert2"; // Import SweetAlert2
+import Swal from "sweetalert2";
 
 export default {
   name: "UserOrders",
   setup() {
     const orders = ref([]);
-    const itemsPerPage = ref(5); // Số đơn hàng mỗi trang
-    const currentPage = ref(1); // Trang hiện tại
+    const itemsPerPage = ref(5);
+    const currentPage = ref(1);
+    const showOrderDetailPopup = ref(false);
+    const selectedOrder = ref({});
 
-    // Tính tổng số trang
     const totalPages = computed(() =>
       Math.ceil(orders.value.length / itemsPerPage.value)
     );
 
-    // Lấy danh sách đơn hàng cho trang hiện tại
     const paginatedOrders = computed(() => {
       const start = (currentPage.value - 1) * itemsPerPage.value;
       const end = start + itemsPerPage.value;
       return orders.value.slice(start, end);
     });
 
-    // Format giá tiền
     const formatPrice = (price) => {
       return new Intl.NumberFormat("vi-VN", {
         style: "currency",
@@ -104,12 +134,10 @@ export default {
       }).format(price || 0);
     };
 
-    // Format ngày tháng
     const formatDate = (date) => {
       return date ? new Date(date).toLocaleDateString("vi-VN") : null;
     };
 
-    // Chuyển đổi trạng thái thành văn bản
     const getStatusText = (status) => {
       switch (status) {
         case 0:
@@ -123,7 +151,6 @@ export default {
       }
     };
 
-    // Áp dụng lớp CSS cho trạng thái
     const getStatusClass = (status) => {
       switch (status) {
         case 0:
@@ -137,31 +164,6 @@ export default {
       }
     };
 
-    // Lấy tiêu đề sách từ order_details
-    const getBookTitle = (order) => {
-      if (order.order_details?.length > 0) {
-        return order.order_details[0].book?.title || "Không xác định";
-      }
-      return "Không xác định";
-    };
-
-    // Lấy ảnh sách từ order_details
-    const getBookImage = (order) => {
-      if (order.order_details?.length > 0) {
-        return order.order_details[0].book?.image || "default-image.jpg";
-      }
-      return "default-image.jpg";
-    };
-
-    // Lấy liên kết sách
-    const getBookLink = (order) => {
-      if (order.order_details?.length > 0) {
-        return order.order_details[0].book?.link || "#";
-      }
-      return "#";
-    };
-
-    // Lấy user_id từ token
     const getUserIdFromToken = () => {
       const token = localStorage.getItem("token");
       if (!token) {
@@ -177,7 +179,6 @@ export default {
       }
     };
 
-    // Lấy dữ liệu đơn hàng từ API
     const fetchOrders = async () => {
       try {
         const response = await apiGetOrderByUserId({ user_id: getUserIdFromToken() });
@@ -202,7 +203,6 @@ export default {
       }
     };
 
-    // Hủy đơn hàng qua API
     const cancelOrder = async (orderId) => {
       Swal.fire({
         title: "Xác nhận hủy đơn hàng",
@@ -223,7 +223,6 @@ export default {
                 title: "Thành công",
                 text: "Đã hủy đơn hàng thành công!",
               });
-              // Kiểm tra nếu trang hiện tại không còn đơn hàng thì giảm trang
               await fetchOrders();
               if (paginatedOrders.value.length === 0 && currentPage.value > 1) {
                 currentPage.value--;
@@ -247,6 +246,11 @@ export default {
       });
     };
 
+    const showOrderDetails = (order) => {
+      selectedOrder.value = JSON.parse(JSON.stringify(order)); // Deep copy
+      showOrderDetailPopup.value = true;
+    };
+
     onMounted(() => {
       fetchOrders();
     });
@@ -261,102 +265,87 @@ export default {
       formatDate,
       getStatusText,
       getStatusClass,
-      getBookTitle,
-      getBookImage,
-      getBookLink,
       cancelOrder,
+      showOrderDetailPopup,
+      selectedOrder,
+      showOrderDetails,
     };
   },
 };
 </script>
 
 <style scoped>
+.profile-info-content {
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
 .profile-info-content h2 {
   font-size: 24px;
-  color: #333;
+  color: #2c3e50;
   margin-bottom: 20px;
 }
 
-.favorite-table-container {
-  width: 100%;
+.order-table-container {
   overflow-x: auto;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
-.favorite-table {
+.order-table {
   width: 100%;
   border-collapse: collapse;
-  background-color: white;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  border-radius: 8px;
+  margin-bottom: 0;
 }
 
-.favorite-table th,
-.favorite-table td {
-  padding: 12px 15px;
+.order-table th,
+.order-table td {
+  padding: 12px 16px;
   text-align: left;
-  border-bottom: 1px solid #ddd;
+  border-bottom: 1px solid #e9ecef;
+  font-size: 14px;
+  color: #495057;
 }
 
-.favorite-table th {
-  background-color: #f5f5f5;
-  font-size: 14px;
-  color: #333;
+.order-table th {
+  background-color: #f8f9fa;
+  color: #343a40;
   font-weight: 600;
 }
 
-.favorite-table td {
-  font-size: 14px;
-  color: #666;
+.order-table td {
+  background-color: #ffffff;
 }
 
-/* Căn chỉnh cột cụ thể */
-.favorite-table td:nth-child(1) { /* Cột STT */
-  text-align: center;
-}
-.favorite-table td:nth-child(4) { /* Cột Tổng tiền */
-  text-align: right;
-}
-.favorite-table td:nth-child(8) { /* Cột Hành động */
-  text-align: center;
-}
-
-.favorite-table tr:hover {
+.order-table tr:hover {
   background-color: #f9f9f9;
 }
 
-.product-image {
-  width: 50px;
-  height: 50px;
-  object-fit: cover;
-  border-radius: 4px;
+.view-details-btn {
+  padding: 5px 10px;
+  margin-right: 10px;
+  border: none;
+  background-color: #3498db;
+  color: white;
+  border-radius: 3px;
   cursor: pointer;
-  transition: transform 0.2s;
+  font-size: 12px;
+  transition: background-color 0.3s ease;
 }
 
-.product-image:hover {
-  transform: scale(1.1);
-}
-
-.product-name {
-  color: #2c3e50;
-  text-decoration: none;
-  font-weight: 600;
-  font-family: "Arial", sans-serif;
-  font-size: 15px;
-  transition: color 0.3s ease;
-}
-
-.product-name:hover {
-  color: #e74c3c;
-  text-decoration: underline;
+.view-details-btn:hover {
+  background-color: #2980b9;
 }
 
 .delete-btn {
-  padding: 6px 12px;
+  padding: 5px 10px;
+  border: none;
   background-color: #e74c3c;
   color: white;
-  border: none;
-  border-radius: 5px;
+  border-radius: 3px;
   cursor: pointer;
   font-size: 12px;
   transition: background-color 0.3s ease;
@@ -374,25 +363,29 @@ export default {
 }
 
 .pagination {
+  padding: 10px 16px;
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
-  gap: 15px;
-  margin-top: 20px;
+  background-color: #f8f9fa;
+  border-top: 1px solid #e9ecef;
+  border-radius: 0 0 8px 8px;
+  font-size: 14px;
+  color: #495057;
 }
 
 .pagination-btn {
   padding: 6px 12px;
+  border: none;
   background-color: #007bff;
   color: white;
-  border: none;
-  border-radius: 5px;
+  border-radius: 20px;
   cursor: pointer;
   transition: background-color 0.3s ease;
 }
 
 .pagination-btn:disabled {
-  background-color: #ccc;
+  background-color: #6c757d;
   cursor: not-allowed;
 }
 
@@ -400,12 +393,6 @@ export default {
   background-color: #0056b3;
 }
 
-.pagination span {
-  font-size: 14px;
-  color: #333;
-}
-
-/* Các lớp trạng thái */
 .status-pending {
   background-color: #fff3cd;
   color: #856404;
@@ -428,5 +415,79 @@ export default {
   padding: 4px 8px;
   border-radius: 4px;
   font-weight: 500;
+}
+
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background-color: white;
+  padding: 20px;
+  border-radius: 10px;
+  width: 600px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border: 1px solid #ddd;
+}
+
+.modal-content h2 {
+  font-size: 20px;
+  color: #2c3e50;
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+.order-details {
+  margin-bottom: 20px;
+}
+
+.order-details p,
+.order-details h3 {
+  font-size: 14px;
+  color: #495057;
+  margin-bottom: 10px;
+}
+
+.order-books {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+.order-books li {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 5px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+.modal-actions button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  background-color: #3498db;
+  color: white;
+  transition: background-color 0.3s ease;
+}
+
+.modal-actions button:hover {
+  background-color: #2980b9;
 }
 </style>
