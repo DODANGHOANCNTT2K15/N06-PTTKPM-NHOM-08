@@ -45,7 +45,6 @@
               :key="index"
               :class="{ active: index === currentBanner }"
             >
-              <!-- Sử dụng banner_path từ API thay vì require -->
               <img :src="banner" :alt="`Banner ${index + 1}`" />
             </div>
             <div id="arrow_left" class="arrow_banner" @click="prevBanner">
@@ -266,33 +265,34 @@
 
 <script>
 import ProductCard from "@/components/client/ProductCard.vue";
-import Loading from "@/components/Loading.vue"; // Import Loading component
+import Loading from "@/components/Loading.vue";
 import { computed, ref, onMounted, onUnmounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
 import { useAvatarStore } from "@/stores/avatar";
-import { useLoadingStore } from "@/stores/loading"; // Import Loading store
+import { useLoadingStore } from "@/stores/loading";
 import {
   apiLogin,
   apiRegister,
   apiForgotPass,
 } from "@/services/client/AuthService";
 import { apiGetAllBooks } from "@/services/client/BookService";
-import { apiGetAllBanners } from "@/services/admin/BannerService"; // Import API banner
+import { apiGetAllBanners } from "@/services/admin/BannerService";
+import Swal from "sweetalert2"; // Import SweetAlert2
 
 export default {
   name: "HomePage",
-  components: { ProductCard, Loading }, // Đăng ký Loading component
+  components: { ProductCard, Loading },
   setup() {
     const route = useRoute();
     const router = useRouter();
     const authStore = useAuthStore();
     const avatarStore = useAvatarStore();
-    const loadingStore = useLoadingStore(); // Khởi tạo Loading store
+    const loadingStore = useLoadingStore();
 
     const currentRouteName = computed(() => route.name);
     const showFilterPopup = ref(false);
-    const banners = ref([]); // Khởi tạo banners rỗng, sẽ lấy từ API
+    const banners = ref([]);
     const currentBanner = ref(0);
     let autoSlideInterval = null;
 
@@ -300,10 +300,10 @@ export default {
     const loginForm = ref({ email: "", pass_word: "" });
     const signupForm = ref({ user_name: "", email: "", pass_word: "" });
     const forgetPasswordForm = ref({ email: "" });
-    const errorMessage = ref("");
-    const successMessage = ref("");
+    const errorMessage = ref(""); // Vẫn giữ để hiển thị trong template nếu cần
+    const successMessage = ref(""); // Vẫn giữ để hiển thị trong template nếu cần
 
-    // Filter states
+    // Filter states (giữ nguyên như cũ)
     const filterTags = ref(["Truyện", "Tiểu thuyết", "Trinh thám"]);
     const selectedTags = ref([]);
     const filters = ref({
@@ -320,41 +320,39 @@ export default {
     });
     const customPriceRange = ref({ from: "", to: "" });
 
-    // Product states
+    // Product states (giữ nguyên như cũ)
     const products = ref([]);
     const viewedProducts = ref(JSON.parse(localStorage.getItem("viewedProducts")) || []);
     const sortOption = ref("newest");
     const itemsPerPage = ref(10);
     const currentPage = ref(1);
 
-    // Hàm lấy danh sách banner từ API
+    // Hàm lấy danh sách banner từ API (giữ nguyên)
     const fetchBanners = async () => {
       try {
-        loadingStore.showLoading(); // Bật loading
+        loadingStore.showLoading();
         const response = await apiGetAllBanners();
         if (response.data.err === 0) {
-          // Lấy danh sách banner_path từ response
           banners.value = response.data.data.map(banner => banner.banner_path);
           if (banners.value.length === 0) {
-            // Fallback nếu không có banner từ API
             banners.value = ["Banner_00.png", "Banner_01.jpg"];
           }
         } else {
           console.error("Lỗi từ API banner:", response.data.msg);
-          banners.value = ["Banner_00.png", "Banner_01.jpg"]; // Fallback
+          banners.value = ["Banner_00.png", "Banner_01.jpg"];
         }
       } catch (error) {
         console.error("Không thể lấy danh sách banner:", error);
-        banners.value = ["Banner_00.png", "Banner_01.jpg"]; // Fallback
+        banners.value = ["Banner_00.png", "Banner_01.jpg"];
       } finally {
-        loadingStore.hideLoading(); // Tắt loading
+        loadingStore.hideLoading();
       }
     };
 
-    // Authentication functions
+    // Authentication functions với SweetAlert2
     const login = async () => {
       try {
-        loadingStore.showLoading(); // Bật loading
+        loadingStore.showLoading();
         const response = await apiLogin({
           email: loginForm.value.email,
           pass_word: loginForm.value.pass_word,
@@ -363,83 +361,141 @@ export default {
           authStore.login(response.data.token);
           const avatarUrl = response.data?.avatar || response.data?.avata;
           avatarStore.updateAvatar(avatarUrl || null);
-          successMessage.value = "Đăng nhập thành công!";
+          Swal.fire({
+            icon: "success",
+            title: "Đăng nhập thành công!",
+            showConfirmButton: false,
+            timer: 1500,
+          });
           errorMessage.value = "";
           loginForm.value = { email: "", pass_word: "" };
+          setTimeout(() => router.push("/"), 1500); // Chuyển hướng sau khi thông báo
         } else {
-          errorMessage.value = response.data.msg || "Đăng nhập thất bại";
+          Swal.fire({
+            icon: "error",
+            title: "Đăng nhập thất bại",
+            text: response.data.msg || "Vui lòng kiểm tra lại thông tin!",
+          });
           successMessage.value = "";
         }
       } catch (error) {
-        errorMessage.value = error.response?.data?.message || "Lỗi server";
+        Swal.fire({
+          icon: "error",
+          title: "Lỗi",
+          text: error.response?.data?.message || "Lỗi server, vui lòng thử lại sau!",
+        });
         successMessage.value = "";
       } finally {
-        loadingStore.hideLoading(); // Tắt loading
+        loadingStore.hideLoading();
       }
     };
 
     const signup = async () => {
       try {
-        loadingStore.showLoading(); // Bật loading
+        loadingStore.showLoading();
         const response = await apiRegister({
           user_name: signupForm.value.user_name,
           email: signupForm.value.email,
           pass_word: signupForm.value.pass_word,
         });
         if (response.status === 200 && response.data.err === 0) {
-          localStorage.setItem("token", response.data.token);
-          authStore.login();
+          authStore.login(response.data.token);
           const avatarUrl = response.data.data?.avatar || response.data.data?.avata;
           avatarStore.updateAvatar(avatarUrl || null);
-          successMessage.value = "Đăng ký thành công!";
+          Swal.fire({
+            icon: "success",
+            title: "Đăng ký thành công!",
+            showConfirmButton: false,
+            timer: 1500,
+          });
           errorMessage.value = "";
           signupForm.value = { user_name: "", email: "", pass_word: "" };
-          setTimeout(() => router.push("/"), 1000);
+          setTimeout(() => router.push("/"), 1500);
         } else {
-          errorMessage.value = response.data.msg || "Đăng ký thất bại";
+          Swal.fire({
+            icon: "error",
+            title: "Đăng ký thất bại",
+            text: response.data.msg || "Vui lòng kiểm tra lại thông tin!",
+          });
           successMessage.value = "";
         }
       } catch (error) {
-        errorMessage.value = error.response?.data?.message || "Lỗi server";
+        Swal.fire({
+          icon: "error",
+          title: "Lỗi",
+          text: error.response?.data?.message || "Lỗi server, vui lòng thử lại sau!",
+        });
         successMessage.value = "";
       } finally {
-        loadingStore.hideLoading(); // Tắt loading
+        loadingStore.hideLoading();
       }
     };
 
     const forgetPassword = async () => {
       try {
-        loadingStore.showLoading(); // Bật loading
+        loadingStore.showLoading();
         const response = await apiForgotPass({
           email: forgetPasswordForm.value.email,
         });
         if (response.status === 200 && response.data.err === 0) {
-          successMessage.value = "Mật khẩu mới đã được gửi tới email!";
+          Swal.fire({
+            icon: "success",
+            title: "Thành công!",
+            text: "Mật khẩu mới đã được gửi tới email của bạn!",
+            showConfirmButton: false,
+            timer: 2000,
+          });
           errorMessage.value = "";
           forgetPasswordForm.value = { email: "" };
-          setTimeout(() => router.push("/login"), 1000);
+          setTimeout(() => router.push("/login"), 2000);
         } else {
-          errorMessage.value = response.data.msg || "Gửi mã thất bại";
+          Swal.fire({
+            icon: "error",
+            title: "Gửi mã thất bại",
+            text: response.data.msg || "Vui lòng kiểm tra lại email!",
+          });
           successMessage.value = "";
         }
       } catch (error) {
-        errorMessage.value = error.response?.data?.message || "Lỗi server";
+        Swal.fire({
+          icon: "error",
+          title: "Lỗi",
+          text: error.response?.data?.message || "Lỗi server, vui lòng thử lại sau!",
+        });
         successMessage.value = "";
       } finally {
-        loadingStore.hideLoading(); // Tắt loading
+        loadingStore.hideLoading();
       }
     };
 
     const logout = () => {
-      authStore.logout();
-      avatarStore.updateAvatar(null);
-      localStorage.removeItem("token");
-      localStorage.removeItem("viewedProducts");
-      viewedProducts.value = [];
-      router.push("/login");
+      Swal.fire({
+        title: "Bạn có chắc muốn đăng xuất?",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Đăng xuất",
+        cancelButtonText: "Hủy",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          authStore.logout();
+          avatarStore.updateAvatar(null);
+          localStorage.removeItem("token");
+          localStorage.removeItem("viewedProducts");
+          viewedProducts.value = [];
+          Swal.fire({
+            icon: "success",
+            title: "Đã đăng xuất!",
+            showConfirmButton: false,
+            timer: 1500,
+          });
+          router.push("/login");
+        }
+      });
     };
 
-    // Product functions
+    // Các hàm còn lại giữ nguyên như cũ
     const goToProductDetail = (id) => {
       const product = products.value.find((p) => p.id === id);
       if (product) {
@@ -456,7 +512,7 @@ export default {
 
     const fetchBooks = async () => {
       try {
-        loadingStore.showLoading(); // Bật loading
+        loadingStore.showLoading();
         const response = await apiGetAllBooks();
         if (response.data.err === 0) {
           products.value = response.data.data.map((book) => ({
@@ -477,7 +533,7 @@ export default {
       } catch (error) {
         console.error("Lỗi khi lấy sách:", error);
       } finally {
-        loadingStore.hideLoading(); // Tắt loading
+        loadingStore.hideLoading();
       }
     };
 
@@ -501,7 +557,6 @@ export default {
       products.value = sorted;
     };
 
-    // Filter computed properties
     const hasPriceRangeSelected = computed(() =>
       Object.values(filters.value.priceRanges).some((value) => value)
     );
@@ -563,7 +618,6 @@ export default {
       Math.ceil(filteredProducts.value.length / itemsPerPage.value)
     );
 
-    // Filter methods
     const clearCustomPriceRange = () => {
       customPriceRange.value = { from: "", to: "" };
     };
@@ -594,7 +648,6 @@ export default {
       currentPage.value = 1;
     };
 
-    // Banner methods
     const nextBanner = () => {
       currentBanner.value = (currentBanner.value + 1) % banners.value.length;
     };
@@ -605,16 +658,15 @@ export default {
     };
 
     const startAutoSlide = () => {
-      autoSlideInterval = setInterval(nextBanner, 10000);
+      autoSlideInterval = setInterval(nextBanner, 20000);
     };
 
-    // Lifecycle hooks
     onMounted(() => {
       startAutoSlide();
       authStore.initializeAuth();
       avatarStore.initializeAvatar();
       fetchBooks();
-      fetchBanners(); // Gọi API banner khi trang được mount
+      fetchBanners();
     });
 
     onUnmounted(() => {
@@ -668,8 +720,64 @@ export default {
 @import "@/assets/css/General.css";
 @import "@/assets/css/Forget_Pass_popup.css";
 @import "@/assets/css/Signup_popup.css";
-@import "@/assets/css/BannerHome.css";
 @import "@/assets/css/PaginationHome.css";
+
+#banner {
+  position: relative;
+  width: 100%;
+  height: 400px; /* Điều chỉnh chiều cao theo thiết kế của bạn */
+  overflow: hidden;
+}
+
+.div_banner {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  transition: opacity 0.5s ease-in-out;
+}
+
+.div_banner.active {
+  opacity: 1;
+  animation: slide 0.5s linear; /* Animation với duration 0.5s */
+}
+
+.div_banner img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+@keyframes slide {
+  0% {
+    transform: translateX(100%); /* Bắt đầu từ bên phải */
+  }
+  100% {
+    transform: translateX(-100%); /* Kết thúc ở bên trái */
+  }
+}
+
+.arrow_banner {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 24px;
+  color: white;
+  background: rgba(0, 0, 0, 0.5);
+  padding: 10px;
+  cursor: pointer;
+  z-index: 10;
+}
+
+#arrow_left {
+  left: 10px;
+}
+
+#arrow_right {
+  right: 10px;
+}
 
 .user-section {
   display: flex;
