@@ -16,21 +16,66 @@
             v-model="searchQuery"
             @focus="showOverlay = true"
             @blur="hideOverlayWithDelay"
+            @input="handleInput"
           />
           <button type="submit">Tìm kiếm</button>
         </form>
-        <!-- <div class="tag-search-container">
-          <div class="tag_search">Truyện</div>
-          <div class="tag_search">Tiểu thuyết</div>
-        </div> -->
-        <!-- Gợi ý tìm kiếm -->
         <div v-if="showOverlay" class="search-suggestions">
-          <div v-if="searchQuery" class="suggestion-item">
-            Kết quả cho "{{ searchQuery }}"
+          <!-- Trạng thái đang tải -->
+          <div v-if="isLoading" class="suggestion-item">
+            Đang tìm kiếm "{{ searchQuery }}"
           </div>
-          <div class="suggestion-item">Truyện tranh nổi bật</div>
-          <div class="suggestion-item">Tiểu thuyết lãng mạn</div>
-          <div class="suggestion-item">Sách kỹ năng sống</div>
+
+          <!-- Hiển thị kết quả tìm kiếm -->
+          <template v-else>
+            <!-- Tiêu đề kết quả khi có query và suggestions -->
+            <div
+              v-if="searchQuery && suggestions.length"
+              class="suggestion-item suggestion-header"
+            >
+              Kết quả cho "{{ searchQuery }}"
+            </div>
+
+            <!-- Danh sách gợi ý -->
+            <div
+              v-for="suggestion in suggestions"
+              :key="suggestion.book_id"
+              class="suggestion-item"
+              @click="selectSuggestion(suggestion)"
+            >
+              {{ suggestion.title }} - {{ suggestion.author }}
+            </div>
+
+            <!-- Hiển thị không có kết quả -->
+            <div
+              v-if="searchQuery && !suggestions.length"
+              class="suggestion-item no-results"
+            >
+              Không có kết quả cho "{{ searchQuery }}"
+            </div>
+
+            <!-- Gợi ý mặc định khi không có query và suggestions -->
+            <template v-if="!searchQuery && !suggestions.length">
+              <div
+                class="suggestion-item"
+                @click="searchQuery = 'Truyện tranh nổi bật'"
+              >
+                Truyện tranh nổi bật
+              </div>
+              <div
+                class="suggestion-item"
+                @click="searchQuery = 'Tiểu thuyết lãng mạn'"
+              >
+                Tiểu thuyết lãng mạn
+              </div>
+              <div
+                class="suggestion-item"
+                @click="searchQuery = 'Sách kỹ năng sống'"
+              >
+                Sách kỹ năng sống
+              </div>
+            </template>
+          </template>
         </div>
       </div>
       <div class="header-actions">
@@ -42,12 +87,19 @@
         <div v-else class="account-dropdown">
           <button type="button" class="account-button">
             <template v-if="avatarStore.avatar">
-              <img :src="avatarStore.avatar" alt="Avatar" class="avatar" @error="avatarStore.updateAvatar(null)" />
+              <img
+                :src="avatarStore.avatar"
+                alt="Avatar"
+                class="avatar"
+                @error="avatarStore.updateAvatar(null)"
+              />
             </template>
             <template v-else>
               <i class="fa fa-user avatar-icon"></i>
             </template>
-            <span>{{ authStore.user?.user_name || authStore.user?.email || 'Người dùng' }}</span>
+            <span>{{
+              authStore.user?.user_name || authStore.user?.email || "Người dùng"
+            }}</span>
           </button>
           <div class="dropdown-content">
             <button @click="goToUserInfo">Thông tin tài khoản</button>
@@ -65,7 +117,6 @@
         </div>
       </div>
     </div>
-    <!-- Overlay đặt ngoài header-main -->
     <div v-if="showOverlay" class="overlay" @click="showOverlay = false"></div>
   </header>
 </template>
@@ -77,6 +128,7 @@ import { onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import { useCartStore } from "@/stores/cart";
 import { apiGetCountProductOfCart } from "@/services/client/CartService";
+import { apiSearchBookSuggestions } from "@/services/client/SearchService";
 
 export default {
   name: "HeaderComponent",
@@ -87,14 +139,16 @@ export default {
     const avatarStore = useAvatarStore();
     const showOverlay = ref(false);
     const searchQuery = ref("");
+    const suggestions = ref([]);
+    const isLoading = ref(false);
+    let searchTimeout = null;
 
-    // Khởi tạo thông tin người dùng từ token hoặc API
+    // Khởi tạo thông tin người dùng
     const initializeUserInfo = () => {
       const token = localStorage.getItem("token");
       if (token && authStore.isLoggedIn) {
         const userInfo = getUserInfoFromToken(token);
         authStore.user = userInfo || {};
-        // Đồng bộ avatar từ authStore sang avatarStore nếu có
         if (userInfo?.avatar) {
           avatarStore.updateAvatar(userInfo.avatar);
         }
@@ -106,34 +160,18 @@ export default {
     onMounted(() => {
       authStore.initializeAuth();
       cartStore.initializeCart();
-      avatarStore.initializeAvatar(); // Khởi tạo avatar từ localStorage
-      initializeUserInfo(); // Khởi tạo thông tin người dùng
+      avatarStore.initializeAvatar();
+      initializeUserInfo();
       fetchCountOfCart();
     });
 
-    const goToHome = () => {
-      router.push("/");
-    };
-
-    const gotoLogin = () => {
-      router.push("/login");
-    };
-
-    const goToUserInfo = () => {
-      router.push("/user/info");
-    };
-
-    const goToOrders = () => {
-      router.push("/user/orders");
-    };
-
-    const goToLikes = () => {
-      router.push("/user/like");
-    };
-
-    const goToAddresss = () => {
-      router.push("/user/address");
-    };
+    // Điều hướng
+    const goToHome = () => router.push("/");
+    const gotoLogin = () => router.push("/login");
+    const goToUserInfo = () => router.push("/user/info");
+    const goToOrders = () => router.push("/user/orders");
+    const goToLikes = () => router.push("/user/like");
+    const goToAddresss = () => router.push("/user/address");
 
     const hideOverlayWithDelay = () => {
       setTimeout(() => {
@@ -144,18 +182,63 @@ export default {
     const handleSearch = () => {
       if (searchQuery.value.trim()) {
         router.push({
-          path: "/search",
+          path: "/search-results",
           query: { q: searchQuery.value.trim() },
         });
         showOverlay.value = false;
+        clearTimeout(searchTimeout);
+      } else {
+        router.push('/');
       }
     };
 
-    const getUserInfoFromToken = (token) => {
-      if (!token) {
-        console.log("Không tìm thấy token trong localStorage");
-        return null;
+    // Xử lý khi nhập
+    const handleInput = () => {
+      if (searchTimeout) {
+        clearTimeout(searchTimeout);
       }
+
+      suggestions.value = [];
+      if (searchQuery.value.trim()) {
+        isLoading.value = true;
+        searchTimeout = setTimeout(() => {
+          fetchSearchSuggestions();
+        }, 2000);
+      } else {
+        isLoading.value = false;
+      }
+    };
+
+    // Gọi API tìm kiếm gợi ý
+    const fetchSearchSuggestions = async () => {
+      try {
+        isLoading.value = true;
+        const response = await apiSearchBookSuggestions({
+          key: searchQuery.value,
+        });
+        const data = response.data;
+
+        if (data.err === 0) {
+          suggestions.value = data.data || [];
+        } else {
+          console.error("Lỗi từ API:", data.msg);
+          suggestions.value = [];
+        }
+      } catch (error) {
+        console.error("Lỗi khi lấy gợi ý tìm kiếm:", error);
+        suggestions.value = [];
+      } finally {
+        isLoading.value = false;
+      }
+    };
+
+    const selectSuggestion = (suggestion) => {
+      router.push(`/product/${suggestion.book_id}`);
+      showOverlay.value = false;
+    };
+
+    const getUserInfoFromToken = (token) => {
+      if (!token) return null;
       try {
         const payload = JSON.parse(atob(token.split(".")[1]));
         return {
@@ -165,28 +248,30 @@ export default {
           avatar: payload.avatar,
         };
       } catch (error) {
-        console.log("Lỗi khi giải mã token:", error);
+        console.error("Lỗi khi giải mã token:", error);
         return null;
       }
     };
 
     const fetchCountOfCart = async () => {
       try {
-        const userId = authStore.user?.user_id || getUserInfoFromToken(localStorage.getItem("token"))?.user_id;
+        const userId =
+          authStore.user?.user_id ||
+          getUserInfoFromToken(localStorage.getItem("token"))?.user_id;
         if (userId) {
           const response = await apiGetCountProductOfCart({ user_id: userId });
           if (response.data.err === 0) {
-            const count = response.data.total_product_types || 0;
-            cartStore.updatetotal_product_type(count);
+            cartStore.updatetotal_product_type(
+              response.data.total_product_types || 0
+            );
           } else {
-            console.error("Lỗi từ API:", response.data.msg);
             cartStore.updatetotal_product_type(0);
           }
         } else {
           cartStore.updatetotal_product_type(0);
         }
       } catch (error) {
-        console.error("Không thể lấy dữ liệu count of cart:", error);
+        console.error("Lỗi khi lấy số lượng giỏ hàng:", error);
         cartStore.updatetotal_product_type(0);
       }
     };
@@ -194,7 +279,7 @@ export default {
     const handleLogout = () => {
       authStore.logout();
       cartStore.updatetotal_product_type(0);
-      avatarStore.updateAvatar(null); // Reset avatar khi đăng xuất
+      avatarStore.updateAvatar(null);
       authStore.user = {};
       alert("Đăng xuất thành công!");
       router.push("/");
@@ -202,11 +287,11 @@ export default {
 
     authStore.$subscribe((mutation, state) => {
       if (state.isLoggedIn) {
-        initializeUserInfo(); // Cập nhật lại thông tin người dùng khi đăng nhập
+        initializeUserInfo();
         fetchCountOfCart();
       } else {
         cartStore.updatetotal_product_type(0);
-        avatarStore.updateAvatar(null); // Reset avatar khi đăng xuất
+        avatarStore.updateAvatar(null);
         authStore.user = {};
       }
     });
@@ -223,8 +308,12 @@ export default {
       goToAddresss,
       showOverlay,
       searchQuery,
+      suggestions,
+      isLoading,
       hideOverlayWithDelay,
       handleSearch,
+      handleInput,
+      selectSuggestion,
       handleLogout,
     };
   },
@@ -330,28 +419,6 @@ header {
   font-size: 1em;
 }
 
-.tag-search-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.tag_search {
-  padding: 6px 18px;
-  background-color: #e9ecef;
-  color: #007bff;
-  border-radius: 20px;
-  font-size: 0.9em;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-.tag_search:hover {
-  background-color: #007bff;
-  color: white;
-}
-
 .overlay {
   position: fixed;
   top: 0;
@@ -373,6 +440,8 @@ header {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   z-index: 999;
   padding: 10px 0;
+  max-height: 300px;
+  overflow-y: auto;
 }
 
 .suggestion-item {
@@ -385,6 +454,15 @@ header {
 
 .suggestion-item:hover {
   background-color: #f5f5f5;
+}
+
+.no-results {
+  cursor: default;
+  color: #666;
+}
+
+.no-results:hover {
+  background-color: transparent;
 }
 
 .header-actions {

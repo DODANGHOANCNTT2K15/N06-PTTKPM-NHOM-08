@@ -2,12 +2,12 @@
   <div class="search-results-container">
     <div id="filter">
       <div><h1>Tất cả sản phẩm</h1></div>
-      
+
       <div class="filter-controls">
         <div id="filter_tag_cover">
-          <div 
-            class="filter_tag" 
-            v-for="tag in filterTags" 
+          <div
+            class="filter_tag"
+            v-for="tag in filterTags"
             :key="tag"
             @click="toggleTag(tag)"
             :class="{ active: selectedTags.includes(tag) }"
@@ -15,12 +15,9 @@
             {{ tag }}
           </div>
         </div>
-        
+
         <div>
-          <div 
-            id="filter_tag_all" 
-            @click="showFilterPopup = true"
-          >
+          <div id="filter_tag_all" @click="showFilterPopup = true">
             <div>
               <i class="fas fa-filter"></i>
               Tất cả
@@ -31,11 +28,7 @@
 
       <div class="sort-container">
         <label for="sort-options">Sắp xếp</label>
-        <select 
-          id="sort-options" 
-          v-model="sortOption"
-          @change="sortProducts"
-        >
+        <select id="sort-options" v-model="sortOption" @change="sortProducts">
           <option value="popular">Phổ biến</option>
           <option value="best-seller">Bán chạy nhất</option>
           <option value="low-to-high">Giá thấp đến cao</option>
@@ -54,7 +47,11 @@
             <h1>Dịch vụ</h1>
             <div>
               <div>
-                <input type="checkbox" v-model="filters.freeShipping" id="freeShipping" />
+                <input
+                  type="checkbox"
+                  v-model="filters.freeShipping"
+                  id="freeShipping"
+                />
                 <label for="freeShipping">Giao hàng miễn phí</label>
               </div>
             </div>
@@ -63,13 +60,19 @@
           <div class="filter_group_cover">
             <h1>Đánh giá</h1>
             <div>
-              <div class="checkbox_cover" v-for="rating in [1,2,3,4,5]" :key="rating">
-                <input 
-                  type="checkbox" 
-                  v-model="filters.ratings[rating]" 
+              <div
+                class="checkbox_cover"
+                v-for="rating in [1, 2, 3, 4, 5]"
+                :key="rating"
+              >
+                <input
+                  type="checkbox"
+                  v-model="filters.ratings[rating]"
                   :id="`rating${rating}`"
                 />
-                <label :for="`rating${rating}`">{{ '⭐'.repeat(rating) }} {{ rating }} Sao</label>
+                <label :for="`rating${rating}`"
+                  >{{ "⭐".repeat(rating) }} {{ rating }} Sao</label
+                >
               </div>
             </div>
           </div>
@@ -77,10 +80,14 @@
           <div class="filter_group_cover">
             <h1>Giá</h1>
             <div>
-              <div class="checkbox_cover" v-for="(label, key) in priceRangeLabels" :key="key">
-                <input 
-                  type="checkbox" 
-                  v-model="filters.priceRanges[key]" 
+              <div
+                class="checkbox_cover"
+                v-for="(label, key) in priceRangeLabels"
+                :key="key"
+              >
+                <input
+                  type="checkbox"
+                  v-model="filters.priceRanges[key]"
                   :id="key"
                 />
                 <label :for="key">{{ label }}</label>
@@ -89,10 +96,20 @@
             <div v-if="!hasPriceRangeSelected">
               <h1>Tự nhập khoảng giá</h1>
               <div id="about_price">
-                <input type="text" v-model="customPriceRange.from" placeholder="Từ" />
+                <input
+                  type="text"
+                  v-model="customPriceRange.from"
+                  placeholder="Từ"
+                />
                 <span>_</span>
-                <input type="text" v-model="customPriceRange.to" placeholder="Đến" />
-                <button type="button" @click="clearCustomPriceRange">Xóa</button>
+                <input
+                  type="text"
+                  v-model="customPriceRange.to"
+                  placeholder="Đến"
+                />
+                <button type="button" @click="clearCustomPriceRange">
+                  Xóa
+                </button>
               </div>
             </div>
           </div>
@@ -111,16 +128,16 @@
     <div id="products">
       <ProductCard
         v-for="product in paginatedProducts"
-        :key="product.id"
-        :id="product.id"
-        :image="product.image"
-        :discountedPrice="product.discountedPrice"
-        :originalPrice="product.originalPrice"
+        :key="product.book_id"
+        :id="product.book_id"
+        :image="product.images[0]?.image_path"
+        :discountedPrice="calculateDiscountedPrice(product.price, product.discount_price)"
+        :originalPrice="product.price"
         :author="product.author"
         :title="product.title"
-        :sold="product.sold"
-        :tags="product.tags"
-        @click="goToProductDetail(product.id)"
+        :sold="product.warehouses[0]?.sold_quantity"
+        :tags="[product.bookType.name]"
+        @click="goToProductDetail(product.book_id)"
       />
     </div>
 
@@ -144,16 +161,17 @@
 
 <script>
 import ProductCard from "@/components/client/ProductCard.vue";
+import { apiSearchBooks } from "@/services/client/SearchService";
 
 export default {
   name: "SearchResults",
   components: {
-    ProductCard
+    ProductCard,
   },
   data() {
     return {
       showFilterPopup: false,
-      filterTags: ["Truyện", "Tiểu thuyết", "Trinh thám"],
+      filterTags: ["Truyện tranh", "Công nghệ thông tin", "Ngoại ngữ"],
       selectedTags: [],
       sortOption: "popular",
       currentPage: 1,
@@ -162,97 +180,89 @@ export default {
         freeShipping: false,
         ratings: { 1: false, 2: false, 3: false, 4: false, 5: false },
         priceRanges: {
-          'under100k': false,
-          '100k-200k': false,
-          '200k-500k': false,
-          '500k-1m': false,
-          '1m-2m': false,
-          'over2m': false
-        }
+          under100k: false,
+          "100k-200k": false,
+          "200k-500k": false,
+          "500k-1m": false,
+          "1m-2m": false,
+          over2m: false,
+        },
       },
-      customPriceRange: { from: '', to: '' },
+      customPriceRange: { from: "", to: "" },
       priceRangeLabels: {
-        'under100k': 'Dưới 100.000₫',
-        '100k-200k': '100.000₫ - 200.000₫',
-        '200k-500k': '200.000₫ - 500.000₫',
-        '500k-1m': '500.000₫ - 1.000.000₫',
-        '1m-2m': '1.000.000₫ - 2.000.000₫',
-        'over2m': 'Trên 2.000.000₫'
+        under100k: "Dưới 100.000₫",
+        "100k-200k": "100.000₫ - 200.000₫",
+        "200k-500k": "200.000₫ - 500.000₫",
+        "500k-1m": "500.000₫ - 1.000.000₫",
+        "1m-2m": "1.000.000₫ - 2.000.000₫",
+        over2m: "Trên 2.000.000₫",
       },
-      products: [
-        {
-          id: 1,
-          image: "Product_00.png",
-          discountedPrice: 150000,
-          originalPrice: 200000,
-          author: "Author Name",
-          title: "Product Title",
-          sold: 100,
-          tags: ["Truyện", "Trinh thám"],
-          rating: 4,
-          freeShipping: true
-        }
-      ]
+      products: [],
+      searchKey: "",
     };
   },
   computed: {
     hasPriceRangeSelected() {
-      return Object.values(this.filters.priceRanges).some(val => val);
+      return Object.values(this.filters.priceRanges).some((val) => val);
     },
     filteredProducts() {
-      let filtered = this.products;
+      let filtered = [...this.products];
 
-      // Tag filter
       if (this.selectedTags.length > 0) {
-        filtered = filtered.filter(product =>
-          product.tags.some(tag => this.selectedTags.includes(tag))
+        filtered = filtered.filter((product) =>
+          this.selectedTags.includes(product.bookType.name)
         );
       }
 
-      // Free shipping filter
       if (this.filters.freeShipping) {
-        filtered = filtered.filter(product => product.freeShipping);
+        filtered = filtered.filter((product) => product.freeShipping);
       }
 
-      // Rating filter
       const selectedRatings = Object.entries(this.filters.ratings)
         .filter(([, selected]) => selected)
         .map(([rating]) => Number(rating));
       if (selectedRatings.length > 0) {
-        filtered = filtered.filter(product => 
-          selectedRatings.includes(Math.round(product.rating))
+        filtered = filtered.filter((product) =>
+          selectedRatings.includes(Math.round(product.rating_avg))
         );
       }
 
-      // Price range filter
-      const selectedPriceRanges = Object.keys(this.filters.priceRanges)
-        .filter(key => this.filters.priceRanges[key]);
-      if (selectedPriceRanges.length > 0 || (this.customPriceRange.from && this.customPriceRange.to)) {
-        filtered = filtered.filter(product => {
-          const price = product.discountedPrice;
-          
-          // Custom price range
+      const selectedPriceRanges = Object.keys(this.filters.priceRanges).filter(
+        (key) => this.filters.priceRanges[key]
+      );
+      if (
+        selectedPriceRanges.length > 0 ||
+        (this.customPriceRange.from && this.customPriceRange.to)
+      ) {
+        filtered = filtered.filter((product) => {
+          const price = this.calculateDiscountedPrice(product.price, product.discount_price);
+
           if (this.customPriceRange.from && this.customPriceRange.to) {
             const from = Number(this.customPriceRange.from);
             const to = Number(this.customPriceRange.to);
             return price >= from && price <= to;
           }
 
-          // Predefined price ranges
-          return selectedPriceRanges.some(range => {
-            switch(range) {
-              case 'under100k': return price < 100000;
-              case '100k-200k': return price >= 100000 && price <= 200000;
-              case '200k-500k': return price >= 200000 && price <= 500000;
-              case '500k-1m': return price >= 500000 && price <= 1000000;
-              case '1m-2m': return price >= 1000000 && price <= 2000000;
-              case 'over2m': return price > 2000000;
+          return selectedPriceRanges.some((range) => {
+            switch (range) {
+              case "under100k":
+                return price < 100000;
+              case "100k-200k":
+                return price >= 100000 && price <= 200000;
+              case "200k-500k":
+                return price >= 200000 && price <= 500000;
+              case "500k-1m":
+                return price >= 500000 && price <= 1000000;
+              case "1m-2m":
+                return price >= 1000000 && price <= 2000000;
+              case "over2m":
+                return price > 2000000;
             }
           });
         });
       }
 
-      return filtered;
+      return this.sortFilteredProducts(filtered);
     },
     paginatedProducts() {
       const start = (this.currentPage - 1) * this.itemsPerPage;
@@ -261,9 +271,25 @@ export default {
     },
     totalPages() {
       return Math.ceil(this.filteredProducts.length / this.itemsPerPage);
-    }
+    },
   },
   methods: {
+    calculateDiscountedPrice(price, discount) {
+      return Math.round(price * (1 - discount / 100));
+    },
+    async fetchProducts() {
+      try {
+        const response = await apiSearchBooks({ key: this.searchKey });
+        if (response?.status === 200 && response?.data?.err === 0) {
+          this.products = response.data.data || [];
+        } else {
+          this.products = [];
+        }
+      } catch (error) {
+        console.error("Error fetching products:", error);
+        this.products = [];
+      }
+    },
     toggleTag(tag) {
       const index = this.selectedTags.indexOf(tag);
       if (index === -1) {
@@ -273,35 +299,76 @@ export default {
       }
       this.currentPage = 1;
     },
+    sortFilteredProducts(products) {
+      switch (this.sortOption) {
+        case "popular":
+          return products.sort((a, b) => b.rating_avg - a.rating_avg);
+        case "best-seller":
+          return products.sort((a, b) => 
+            b.warehouses[0].sold_quantity - a.warehouses[0].sold_quantity
+          );
+        case "low-to-high":
+          return products.sort((a, b) => 
+            this.calculateDiscountedPrice(a.price, a.discount_price) - 
+            this.calculateDiscountedPrice(b.price, b.discount_price)
+          );
+        case "high-to-low":
+          return products.sort((a, b) => 
+            this.calculateDiscountedPrice(b.price, b.discount_price) - 
+            this.calculateDiscountedPrice(a.price, a.discount_price)
+          );
+        case "newest":
+          return products.sort((a, b) => 
+            new Date(b.createdAt) - new Date(a.createdAt)
+          );
+        default:
+          return products;
+      }
+    },
     sortProducts() {
-      // ... (giữ nguyên method cũ)
+      this.currentPage = 1;
     },
     goToProductDetail(productId) {
       this.$router.push(`/product/${productId}`);
     },
     clearAllFilters() {
       this.filters.freeShipping = false;
-      Object.keys(this.filters.ratings).forEach(key => {
+      Object.keys(this.filters.ratings).forEach((key) => {
         this.filters.ratings[key] = false;
       });
-      Object.keys(this.filters.priceRanges).forEach(key => {
+      Object.keys(this.filters.priceRanges).forEach((key) => {
         this.filters.priceRanges[key] = false;
       });
-      this.customPriceRange = { from: '', to: '' };
+      this.customPriceRange = { from: "", to: "" };
       this.selectedTags = [];
+      this.currentPage = 1;
     },
     clearCustomPriceRange() {
-      this.customPriceRange = { from: '', to: '' };
+      this.customPriceRange = { from: "", to: "" };
     },
     showResults() {
       this.showFilterPopup = false;
       this.currentPage = 1;
+    },
+  },
+  mounted() {
+    this.searchKey = this.$route.query.q || "";
+    if (this.searchKey) {
+      this.fetchProducts();
     }
-  }
+  },
+  watch: {
+    $route(to) {
+      this.searchKey = to.query.q || "";
+      this.currentPage = 1;
+      this.fetchProducts();
+    },
+  },
 };
 </script>
 
 <style scoped>
+/* Giữ nguyên style cũ */
 .search-results-container {
   max-width: 1200px;
   margin: 0 auto;
