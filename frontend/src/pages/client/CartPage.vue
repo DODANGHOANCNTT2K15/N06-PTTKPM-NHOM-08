@@ -1,5 +1,17 @@
 <template>
   <div class="cart-container">
+    <!-- Loading Overlay -->
+    <div v-if="isLoading" class="loading-overlay">
+      <div class="loading-content">
+        <div class="book">
+          <div class="book-page"></div>
+          <div class="book-page"></div>
+          <div class="book-page"></div>
+        </div>
+        <p>Đang tải<span class="dots"></span></p>
+      </div>
+    </div>
+
     <h1>Giỏ hàng</h1>
     <div class="cart-content">
       <div class="cart-items">
@@ -140,7 +152,9 @@
             Tổng tiền thanh toán: <span>{{ formatPrice(totalPayment) }}</span>
           </p>
         </div>
-        <button class="checkout-btn" @click="showConfirmationModal">THANH TOÁN</button>
+        <button class="checkout-btn" @click="showConfirmationModal">
+          THANH TOÁN
+        </button>
       </div>
 
       <!-- Modal xác nhận thông tin -->
@@ -148,21 +162,37 @@
         <div class="modal-content">
           <h2>Xác nhận thông tin đặt hàng</h2>
           <div class="customer-info">
-            <p><strong>Họ tên:</strong> {{ customer?.full_name || 'Chưa có thông tin' }}</p>
-            <p><strong>Số điện thoại:</strong> {{ customer?.phone || 'Chưa có thông tin' }}</p>
-            <p><strong>Địa chỉ:</strong> {{ customer?.address || 'Chưa có thông tin' }}</p>
+            <p>
+              <strong>Họ tên:</strong>
+              {{ customer?.full_name || "Chưa có thông tin" }}
+            </p>
+            <p>
+              <strong>Số điện thoại:</strong>
+              {{ customer?.phone || "Chưa có thông tin" }}
+            </p>
+            <p>
+              <strong>Địa chỉ:</strong>
+              {{ customer?.address || "Chưa có thông tin" }}
+            </p>
             <p><strong>Tổng tiền:</strong> {{ formatPrice(totalPayment) }}</p>
-            <p><strong>Phương thức thanh toán:</strong> 
-              {{ 
-                paymentMethod === '0' ? 'MoMo' : 
-                paymentMethod === '1' ? 'Thẻ ngân hàng' : 
-                'Thanh toán khi nhận hàng' 
+            <p>
+              <strong>Phương thức thanh toán:</strong>
+              {{
+                paymentMethod === "0"
+                  ? "MoMo"
+                  : paymentMethod === "1"
+                  ? "Thẻ ngân hàng"
+                  : "Thanh toán khi nhận hàng"
               }}
             </p>
           </div>
           <div class="modal-actions">
-            <button class="confirm-btn" @click="confirmCheckout">Xác nhận</button>
-            <button class="edit-btn" @click="goToEditInfo">Chỉnh sửa thông tin</button>
+            <button class="confirm-btn" @click="confirmCheckout">
+              Xác nhận
+            </button>
+            <button class="edit-btn" @click="goToEditInfo">
+              Chỉnh sửa thông tin
+            </button>
             <button class="cancel-btn" @click="closeModal">Hủy</button>
           </div>
         </div>
@@ -184,7 +214,7 @@ import { apiGetAllDiscounts } from "@/services/client/DiscountService";
 import { addOrderService } from "@/services/client/OrderService";
 import { useCartStore } from "@/stores/cart";
 import router from "@/router";
-import Swal from 'sweetalert2';
+import Swal from "sweetalert2";
 
 export default {
   name: "CartPage",
@@ -199,13 +229,27 @@ export default {
     const paymentMethod = ref("");
     const showModal = ref(false);
     const cartStore = useCartStore();
+    const isLoading = ref(false); // Thêm trạng thái loading
+
+    // Hàm điều khiển loading
+    const showLoading = () => {
+      if (!isLoading.value) isLoading.value = true;
+    };
+    const hideLoading = () => {
+      if (isLoading.value) isLoading.value = false;
+    };
 
     onMounted(async () => {
-      await Promise.all([
-        fetchCartItems(),
-        fetchCustomer(),
-        fetchPromotions(),
-      ]);
+      showLoading();
+      try {
+        await Promise.all([
+          fetchCartItems(),
+          fetchCustomer(),
+          fetchPromotions(),
+        ]);
+      } finally {
+        hideLoading();
+      }
     });
 
     const getUserIdFromToken = () => {
@@ -274,6 +318,7 @@ export default {
     };
 
     const updateCartInDatabase = async (item) => {
+      showLoading();
       try {
         const response = await apiUpdateCartItem({
           cart_id: item.cart_id,
@@ -285,6 +330,8 @@ export default {
         }
       } catch (error) {
         console.error("Lỗi khi cập nhật giỏ hàng:", error);
+      } finally {
+        hideLoading();
       }
     };
 
@@ -360,56 +407,66 @@ export default {
       if (!item) return;
 
       Swal.fire({
-        title: 'Xác nhận',
-        text: 'Bạn có chắc muốn xóa sản phẩm này khỏi giỏ hàng?',
-        icon: 'question',
+        title: "Xác nhận",
+        text: "Bạn có chắc muốn xóa sản phẩm này khỏi giỏ hàng?",
+        icon: "question",
         showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Có',
-        cancelButtonText: 'Không'
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Có",
+        cancelButtonText: "Không",
       }).then(async (result) => {
         if (result.isConfirmed) {
+          showLoading();
           try {
             const response = await apiDeleteCartItem({ cart_id: item.cart_id });
             if (response.status === 200 && response.data.err === 0) {
               const index = cartItems.value.findIndex((i) => i.id === id);
               if (index !== -1) {
                 cartItems.value.splice(index, 1);
-                if (paginatedCartItems.value.length === 0 && currentPage.value > 1) {
+                if (
+                  paginatedCartItems.value.length === 0 &&
+                  currentPage.value > 1
+                ) {
                   currentPage.value--;
                 }
               }
               const userId = getUserIdFromToken();
               if (userId) {
-                const countResponse = await apiGetCountProductOfCart({ user_id: userId });
+                const countResponse = await apiGetCountProductOfCart({
+                  user_id: userId,
+                });
                 if (countResponse.data.err === 0) {
-                  cartStore.updatetotal_product_type(countResponse.data.total_product_types || 0);
+                  cartStore.updatetotal_product_type(
+                    countResponse.data.total_product_types || 0
+                  );
                 } else {
                   cartStore.updatetotal_product_type(cartItems.value.length);
                 }
               }
               Swal.fire({
-                icon: 'success',
-                title: 'Thành công',
-                text: 'Xóa sản phẩm khỏi giỏ hàng thành công!',
+                icon: "success",
+                title: "Thành công",
+                text: "Xóa sản phẩm khỏi giỏ hàng thành công!",
                 timer: 1500,
-                showConfirmButton: false
+                showConfirmButton: false,
               });
             } else {
               Swal.fire({
-                icon: 'error',
-                title: 'Lỗi',
-                text: 'Xóa sản phẩm thất bại: ' + response.data.msg,
+                icon: "error",
+                title: "Lỗi",
+                text: "Xóa sản phẩm thất bại: " + response.data.msg,
               });
             }
           } catch (error) {
             console.error("Lỗi khi xóa sản phẩm khỏi giỏ hàng:", error);
             Swal.fire({
-              icon: 'error',
-              title: 'Lỗi',
-              text: 'Có lỗi xảy ra khi xóa sản phẩm!',
+              icon: "error",
+              title: "Lỗi",
+              text: "Có lỗi xảy ra khi xóa sản phẩm!",
             });
+          } finally {
+            hideLoading();
           }
         }
       });
@@ -419,28 +476,28 @@ export default {
       const selectedItems = cartItems.value.filter((item) => item.selected);
       if (selectedItems.length === 0) {
         Swal.fire({
-          icon: 'warning',
-          title: 'Chưa chọn sản phẩm',
-          text: 'Vui lòng chọn ít nhất một sản phẩm để thanh toán!',
+          icon: "warning",
+          title: "Chưa chọn sản phẩm",
+          text: "Vui lòng chọn ít nhất một sản phẩm để thanh toán!",
         });
         return;
       }
       if (!paymentMethod.value) {
         Swal.fire({
-          icon: 'warning',
-          title: 'Chưa chọn phương thức',
-          text: 'Vui lòng chọn phương thức thanh toán!',
+          icon: "warning",
+          title: "Chưa chọn phương thức",
+          text: "Vui lòng chọn phương thức thanh toán!",
         });
         return;
       }
       if (!customer.value) {
         Swal.fire({
-          icon: 'warning',
-          title: 'Thiếu thông tin',
-          text: 'Vui lòng cập nhật thông tin trước khi thanh toán!',
+          icon: "warning",
+          title: "Thiếu thông tin",
+          text: "Vui lòng cập nhật thông tin trước khi thanh toán!",
           showCancelButton: true,
-          confirmButtonText: 'Cập nhật ngay',
-          cancelButtonText: 'Để sau'
+          confirmButtonText: "Cập nhật ngay",
+          cancelButtonText: "Để sau",
         }).then((result) => {
           if (result.isConfirmed) {
             router.push("/user/address");
@@ -476,17 +533,18 @@ export default {
         })),
       };
 
+      showLoading();
       try {
         const response = await addOrderService(orderData);
         if (response.status === 200 && response.data.err === 0) {
           cartStore.updatetotal_product_type(response.data.data.count);
           await fetchCartItems();
           Swal.fire({
-            icon: 'success',
-            title: 'Thành công',
-            text: 'Đặt hàng thành công!',
+            icon: "success",
+            title: "Thành công",
+            text: "Đặt hàng thành công!",
             timer: 2000,
-            showConfirmButton: false
+            showConfirmButton: false,
           });
           selectAll.value = false;
           selectedPromotion.value = "";
@@ -495,18 +553,20 @@ export default {
           showModal.value = false;
         } else {
           Swal.fire({
-            icon: 'error',
-            title: 'Lỗi',
-            text: 'Đã xảy ra lỗi khi đặt hàng: ' + response.data.msg,
+            icon: "error",
+            title: "Lỗi",
+            text: "Đã xảy ra lỗi khi đặt hàng: " + response.data.msg,
           });
         }
       } catch (error) {
         console.error("Checkout error:", error);
         Swal.fire({
-          icon: 'error',
-          title: 'Lỗi',
-          text: 'Đã xảy ra lỗi khi xử lý thanh toán!',
+          icon: "error",
+          title: "Lỗi",
+          text: "Đã xảy ra lỗi khi xử lý thanh toán!",
         });
+      } finally {
+        hideLoading();
       }
     };
 
@@ -535,6 +595,7 @@ export default {
       deliveryPrice,
       discount,
       totalPayment,
+      isLoading, // Trả về isLoading để template sử dụng
       formatPrice,
       decreaseQuantity,
       increaseQuantity,
@@ -557,6 +618,7 @@ export default {
   font-family: Arial, sans-serif;
   max-width: 1200px;
   margin: 0 auto;
+  position: relative; /* Để overlay hoạt động trong container */
 }
 
 .cart-container h1 {
@@ -844,5 +906,99 @@ export default {
 
 .cancel-btn:hover {
   background-color: #c82333;
+}
+
+/* CSS cho Loading Overlay */
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.loading-content {
+  text-align: center;
+  color: #fff;
+}
+
+.book {
+  position: relative;
+  width: 60px;
+  height: 80px;
+  margin: 0 auto 20px;
+}
+
+.book-page {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: #fff;
+  border-radius: 2px;
+  transform-origin: left center;
+  animation: flip 1.5s infinite ease-in-out;
+}
+
+.book-page:nth-child(1) {
+  animation-delay: 0s;
+  background: #f5f5f5;
+}
+
+.book-page:nth-child(2) {
+  animation-delay: 0.3s;
+  background: #e0e0e0;
+}
+
+.book-page:nth-child(3) {
+  animation-delay: 0.6s;
+  background: #d0d0d0;
+}
+
+@keyframes flip {
+  0% {
+    transform: rotateY(0deg);
+  }
+  50% {
+    transform: rotateY(-180deg);
+  }
+  100% {
+    transform: rotateY(0deg);
+  }
+}
+
+p {
+  font-size: 18px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dots::after {
+  content: "...";
+  display: inline-block;
+  width: 1em;
+  text-align: left;
+  animation: dots 1.5s infinite;
+}
+
+@keyframes dots {
+  0% {
+    content: ".";
+  }
+  33% {
+    content: "..";
+  }
+  66% {
+    content: "...";
+  }
+  100% {
+    content: ".";
+  }
 }
 </style>

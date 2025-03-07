@@ -1,5 +1,17 @@
 <template>
   <div class="admin-orders">
+    <!-- Loading Overlay -->
+    <div v-if="isLoading" class="loading-overlay">
+      <div class="loading-content">
+        <div class="book">
+          <div class="book-page"></div>
+          <div class="book-page"></div>
+          <div class="book-page"></div>
+        </div>
+        <p>Đang tải<span class="dots"></span></p>
+      </div>
+    </div>
+
     <h1>Quản lý Đơn hàng</h1>
     <div class="order-actions">
       <input
@@ -222,7 +234,8 @@
 
 <script>
 import { ref, onMounted, computed } from "vue";
-import Swal from "sweetalert2"; // Import SweetAlert2
+import Swal from "sweetalert2";
+import { useLoadingStore } from "@/stores/loading";
 import {
   apiGetAllOrderService,
   apiUpdateStatusOrderService,
@@ -233,6 +246,7 @@ import {
 export default {
   name: "OrdersAdmin",
   setup() {
+    const loadingStore = useLoadingStore();
     const orders = ref([]);
     const searchQuery = ref("");
     const sortKey = ref("");
@@ -247,6 +261,7 @@ export default {
     // Lấy danh sách đơn hàng từ API
     const fetchOrders = async () => {
       try {
+        loadingStore.showLoading();
         const response = await apiGetAllOrderService();
         if (response.status === 200 && response.data.err !== 2) {
           orders.value = response.data.data;
@@ -258,19 +273,22 @@ export default {
           title: "Lỗi",
           text: "Lỗi khi tải dữ liệu!",
         });
+      } finally {
+        loadingStore.hideLoading();
       }
     };
 
     // Sửa đơn hàng
     const editOrder = (orderId) => {
       const order = orders.value.find((o) => o.order_id === orderId);
-      editedOrder.value = JSON.parse(JSON.stringify(order)); // Deep copy để tránh thay đổi trực tiếp
+      editedOrder.value = JSON.parse(JSON.stringify(order)); // Deep copy
       showEditOrderPopup.value = true;
     };
 
     // Cập nhật đơn hàng qua API
     const updateOrder = async () => {
       try {
+        loadingStore.showLoading();
         const updatedOrder = { ...editedOrder.value };
         const response = await apiUpdateOrderService(updatedOrder);
         if (response.status === 200 && response.data.err !== 2) {
@@ -280,7 +298,6 @@ export default {
           if (index !== -1) {
             orders.value[index] = updatedOrder;
           }
-          console.log("Cập nhật đơn hàng thành công:", updatedOrder);
           Swal.fire({
             icon: "success",
             title: "Thành công",
@@ -297,6 +314,8 @@ export default {
           title: "Lỗi",
           text: "Không thể cập nhật đơn hàng!",
         });
+      } finally {
+        loadingStore.hideLoading();
       }
     };
 
@@ -314,6 +333,7 @@ export default {
       }).then(async (result) => {
         if (result.isConfirmed) {
           try {
+            loadingStore.showLoading();
             const response = await apiDeleteOrderService({ order_id: orderId });
             if (response.status === 200 && response.data.err !== 2) {
               orders.value = orders.value.filter((o) => o.order_id !== orderId);
@@ -332,6 +352,8 @@ export default {
               title: "Lỗi",
               text: "Không thể xóa đơn hàng!",
             });
+          } finally {
+            loadingStore.hideLoading();
           }
         }
       });
@@ -340,6 +362,7 @@ export default {
     // Cập nhật trạng thái đơn hàng qua API
     const updateOrderStatus = async (orderId, status) => {
       try {
+        loadingStore.showLoading();
         const response = await apiUpdateStatusOrderService({
           order_id: orderId,
           status: status,
@@ -361,6 +384,8 @@ export default {
           title: "Lỗi",
           text: "Không thể cập nhật trạng thái!",
         });
+      } finally {
+        loadingStore.hideLoading();
       }
     };
 
@@ -461,6 +486,7 @@ export default {
     onMounted(fetchOrders);
 
     return {
+      isLoading: loadingStore.isLoading,
       orders,
       searchQuery,
       showEditOrderPopup,
@@ -487,6 +513,87 @@ export default {
 </script>
 
 <style scoped>
+/* Loading Overlay Styles */
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.loading-content {
+  text-align: center;
+  color: #fff;
+}
+
+.book {
+  position: relative;
+  width: 60px;
+  height: 80px;
+  margin: 0 auto 20px;
+}
+
+.book-page {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: #fff;
+  border-radius: 2px;
+  transform-origin: left center;
+  animation: flip 1.5s infinite ease-in-out;
+}
+
+.book-page:nth-child(1) {
+  animation-delay: 0s;
+  background: #f5f5f5;
+}
+
+.book-page:nth-child(2) {
+  animation-delay: 0.3s;
+  background: #e0e0e0;
+}
+
+.book-page:nth-child(3) {
+  animation-delay: 0.6s;
+  background: #d0d0d0;
+}
+
+@keyframes flip {
+  0% { transform: rotateY(0deg); }
+  50% { transform: rotateY(-180deg); }
+  100% { transform: rotateY(0deg); }
+}
+
+.loading-content p {
+  font-size: 18px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dots::after {
+  content: '...';
+  display: inline-block;
+  width: 1em;
+  text-align: left;
+  animation: dots 1.5s infinite;
+}
+
+@keyframes dots {
+  0% { content: '.'; }
+  33% { content: '..'; }
+  66% { content: '...'; }
+  100% { content: '.'; }
+}
+
+/* Existing Styles */
 .admin-orders {
   background-color: white;
   padding: 20px;
@@ -579,20 +686,20 @@ export default {
 }
 
 .order-table select.status-pending {
-  background-color: #fff3cd; /* Vàng nhạt */
-  color: #856404; /* Màu chữ vàng đậm */
+  background-color: #fff3cd;
+  color: #856404;
   border-color: #ffeeba;
 }
 
 .order-table select.status-confirmed {
-  background-color: #d4edda; /* Xanh lá nhạt */
-  color: #155724; /* Màu chữ xanh đậm */
+  background-color: #d4edda;
+  color: #155724;
   border-color: #c3e6cb;
 }
 
 .order-table select.status-rejected {
-  background-color: #f8d7da; /* Đỏ nhạt */
-  color: #721c24; /* Màu chữ đỏ đậm */
+  background-color: #f8d7da;
+  color: #721c24;
   border-color: #f5c6cb;
 }
 

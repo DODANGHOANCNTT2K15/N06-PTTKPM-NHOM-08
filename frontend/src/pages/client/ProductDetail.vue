@@ -1,6 +1,17 @@
 <template>
-  <!-- Template remains unchanged -->
   <div class="product-detail-container">
+    <!-- Loading Overlay -->
+    <div v-if="isLoading" class="loading-overlay">
+      <div class="loading-content">
+        <div class="book">
+          <div class="book-page"></div>
+          <div class="book-page"></div>
+          <div class="book-page"></div>
+        </div>
+        <p>Đang tải<span class="dots"></span></p>
+      </div>
+    </div>
+
     <div class="product-header">
       <nav class="nav-tabs">
         <a href="#">Trang chủ</a> > <a href="#">Sách tiếng Việt</a> >
@@ -51,14 +62,16 @@
         </div>
         <div class="price">
           <span class="current-price">{{ formatPrice(totalPrice) }} VNĐ</span>
-          <span class="original-price">~{{ formatPrice(book.price * quantity) }} VNĐ</span>
+          <span class="original-price"
+            >~{{ formatPrice(book.price * quantity) }} VNĐ</span
+          >
         </div>
 
         <div class="quantity">
           <label>Số lượng</label>
-          <input 
-            type="number" 
-            min="1" 
+          <input
+            type="number"
+            min="1"
             v-model.number="quantity"
             @input="updateQuantity"
           />
@@ -179,16 +192,24 @@
 import ReviewItem from "@/components/client/ReviewItem.vue";
 import { apiGetAllBookByID } from "@/services/client/BookService";
 import { apiAddReview, apiDeleteReview } from "@/services/client/ReviewService";
-import { apiAddToCart, apiGetCountProductOfCart } from "@/services/client/CartService";
-import { apiAddToFavorite, apiDeleteFavorite, apiGetFavorites } from "@/services/client/FavoriteService";
+import {
+  apiAddToCart,
+  apiGetCountProductOfCart,
+} from "@/services/client/CartService";
+import {
+  apiAddToFavorite,
+  apiDeleteFavorite,
+  apiGetFavorites,
+} from "@/services/client/FavoriteService";
 import { useCartStore } from "@/stores/cart";
-import Swal from 'sweetalert2'; // Import SweetAlert2
+import Swal from "sweetalert2";
 
 export default {
   name: "ProductPage",
   components: { ReviewItem },
   data() {
     return {
+      isLoading: false, // Thêm trạng thái loading
       book: {
         book_id: "",
         title: "",
@@ -260,6 +281,7 @@ export default {
       this.currentUserId = this.getUserIdFromToken();
     },
     async fetchBookData() {
+      this.isLoading = true; // Hiển thị loading
       const bookId = this.$route.params.id;
       try {
         const response = await apiGetAllBookByID({ book_id: bookId });
@@ -270,18 +292,21 @@ export default {
         }
       } catch (error) {
         console.error("Lỗi khi lấy thông tin sách:", error);
+      } finally {
+        this.isLoading = false; // Ẩn loading
       }
     },
     async submitReview() {
       if (!this.newReview.reviewText.trim() || !this.newReview.rating) {
         Swal.fire({
-          icon: 'warning',
-          title: 'Thiếu thông tin',
-          text: 'Vui lòng nhập đánh giá và bình luận!',
+          icon: "warning",
+          title: "Thiếu thông tin",
+          text: "Vui lòng nhập đánh giá và bình luận!",
         });
         return;
       }
 
+      this.isLoading = true; // Hiển thị loading
       const bookId = this.$route.params.id;
       const reviewData = {
         book_id: bookId,
@@ -293,55 +318,60 @@ export default {
       try {
         const response = await apiAddReview(reviewData);
         if (response.status === 200 && response.data.err === 0) {
-          this.fetchBookData();
+          await this.fetchBookData();
           this.newReview.reviewText = "";
           this.newReview.rating = 5;
           this.currentPage = Math.ceil(this.reviews.length / this.itemsPerPage);
           Swal.fire({
-            icon: 'success',
-            title: 'Thành công',
-            text: 'Đánh giá của bạn đã được gửi!',
+            icon: "success",
+            title: "Thành công",
+            text: "Đánh giá của bạn đã được gửi!",
           });
         } else {
           Swal.fire({
-            icon: 'error',
-            title: 'Lỗi',
-            text: response.data.msg || 'Có lỗi xảy ra khi gửi đánh giá.',
+            icon: "error",
+            title: "Lỗi",
+            text: response.data.msg || "Có lỗi xảy ra khi gửi đánh giá.",
           });
         }
       } catch (error) {
         console.error("Lỗi khi gửi đánh giá:", error);
         Swal.fire({
-          icon: 'error',
-          title: 'Lỗi',
-          text: 'Có lỗi xảy ra khi gửi đánh giá.',
+          icon: "error",
+          title: "Lỗi",
+          text: "Có lỗi xảy ra khi gửi đánh giá.",
         });
+      } finally {
+        this.isLoading = false; // Ẩn loading
       }
     },
     async deleteReview(reviewId) {
+      this.isLoading = true; // Hiển thị loading
       try {
         const response = await apiDeleteReview({ review_id: reviewId });
         if (response.status === 200 && response.data.err === 0) {
-          this.fetchBookData();
+          await this.fetchBookData();
           Swal.fire({
-            icon: 'success',
-            title: 'Thành công',
-            text: 'Đã xóa đánh giá thành công!',
+            icon: "success",
+            title: "Thành công",
+            text: "Đã xóa đánh giá thành công!",
           });
         } else {
           Swal.fire({
-            icon: 'error',
-            title: 'Lỗi',
-            text: response.data.msg || 'Có lỗi xảy ra khi xóa đánh giá.',
+            icon: "error",
+            title: "Lỗi",
+            text: response.data.msg || "Có lỗi xảy ra khi xóa đánh giá.",
           });
         }
       } catch (error) {
         console.error("Lỗi khi xóa đánh giá:", error);
         Swal.fire({
-          icon: 'error',
-          title: 'Lỗi',
-          text: 'Có lỗi xảy ra khi xóa đánh giá.',
+          icon: "error",
+          title: "Lỗi",
+          text: "Có lỗi xảy ra khi xóa đánh giá.",
         });
+      } finally {
+        this.isLoading = false; // Ẩn loading
       }
     },
     updateQuantity() {
@@ -358,56 +388,60 @@ export default {
     buyNow() {
       console.log("Mua ngay:", this.quantity, "sách:", this.book.title);
       Swal.fire({
-        icon: 'info',
-        title: 'Mua ngay',
+        icon: "info",
+        title: "Mua ngay",
         text: `Bạn đã chọn mua ${this.quantity} cuốn sách: ${this.book.title}`,
       });
     },
     async addToCart() {
       if (!this.currentUserId) {
         Swal.fire({
-          icon: 'warning',
-          title: 'Chưa đăng nhập',
-          text: 'Vui lòng đăng nhập để thêm vào giỏ hàng!',
+          icon: "warning",
+          title: "Chưa đăng nhập",
+          text: "Vui lòng đăng nhập để thêm vào giỏ hàng!",
         });
         this.$router.push("/login");
         return;
       }
 
+      this.isLoading = true; // Hiển thị loading
       const bookId = this.$route.params.id;
       const cartItem = {
         book_id: bookId,
         user_id: this.currentUserId,
         quantity: this.quantity,
-        all_price: this.totalPrice
+        all_price: this.totalPrice,
       };
 
       try {
         const response = await apiAddToCart(cartItem);
         if (response.status === 200 && response.data.err === 0) {
-          Swal.fire({
-            icon: 'success',
-            title: 'Thành công',
-            text: 'Đã thêm vào giỏ hàng thành công!',
-          });
           await this.updateCartCount();
+          Swal.fire({
+            icon: "success",
+            title: "Thành công",
+            text: "Đã thêm vào giỏ hàng thành công!",
+          });
         } else {
           Swal.fire({
-            icon: 'error',
-            title: 'Lỗi',
-            text: response.data.msg || 'Lỗi khi thêm vào giỏ hàng',
+            icon: "error",
+            title: "Lỗi",
+            text: response.data.msg || "Lỗi khi thêm vào giỏ hàng",
           });
         }
       } catch (error) {
         console.error("Lỗi khi thêm vào giỏ hàng:", error);
         Swal.fire({
-          icon: 'error',
-          title: 'Lỗi',
-          text: 'Có lỗi xảy ra khi thêm vào giỏ hàng.',
+          icon: "error",
+          title: "Lỗi",
+          text: "Có lỗi xảy ra khi thêm vào giỏ hàng.",
         });
+      } finally {
+        this.isLoading = false; // Ẩn loading
       }
     },
     async updateCartCount() {
+      this.isLoading = true; // Hiển thị loading
       try {
         const userId = this.getUserIdFromToken();
         if (userId) {
@@ -416,23 +450,29 @@ export default {
             const count = response.data.total_product_types || 0;
             this.cartStore.updatetotal_product_type(count);
           } else {
-            console.error("Lỗi từ API khi lấy số lượng giỏ hàng:", response.data.msg);
+            console.error(
+              "Lỗi từ API khi lấy số lượng giỏ hàng:",
+              response.data.msg
+            );
             this.cartStore.updatetotal_product_type(0);
           }
         }
       } catch (error) {
         console.error("Không thể cập nhật số lượng giỏ hàng:", error);
         this.cartStore.updatetotal_product_type(0);
+      } finally {
+        this.isLoading = false; // Ẩn loading
       }
     },
     async checkFavoriteStatus() {
       if (!this.currentUserId) return;
+      this.isLoading = true; // Hiển thị loading
       const bookId = this.$route.params.id;
       try {
         const response = await apiGetFavorites({ user_id: this.currentUserId });
         if (response.status === 200 && response.data.err === 0) {
           const favorites = response.data.data;
-          const favorite = favorites.find(fav => fav.book_id === bookId);
+          const favorite = favorites.find((fav) => fav.book_id === bookId);
           if (favorite) {
             this.isFavorite = true;
             this.favoriteId = favorite.favorite_id;
@@ -440,24 +480,27 @@ export default {
         }
       } catch (error) {
         console.error("Lỗi khi kiểm tra trạng thái yêu thích:", error);
+      } finally {
+        this.isLoading = false; // Ẩn loading
       }
     },
     async toggleFavorite() {
       if (!this.currentUserId) {
         Swal.fire({
-          icon: 'warning',
-          title: 'Chưa đăng nhập',
-          text: 'Vui lòng đăng nhập để thêm vào danh sách yêu thích!',
+          icon: "warning",
+          title: "Chưa đăng nhập",
+          text: "Vui lòng đăng nhập để thêm vào danh sách yêu thích!",
         });
         this.$router.push("/login");
         return;
       }
 
+      this.isLoading = true; // Hiển thị loading
       const bookId = this.$route.params.id;
       if (!this.isFavorite) {
         const favoriteData = {
           user_id: this.currentUserId,
-          book_id: bookId
+          book_id: bookId,
         };
         try {
           const response = await apiAddToFavorite(favoriteData);
@@ -465,50 +508,56 @@ export default {
             this.isFavorite = true;
             this.favoriteId = response.data.favorite_id;
             Swal.fire({
-              icon: 'success',
-              title: 'Thành công',
-              text: 'Đã thêm vào danh sách yêu thích!',
+              icon: "success",
+              title: "Thành công",
+              text: "Đã thêm vào danh sách yêu thích!",
             });
           } else {
             Swal.fire({
-              icon: 'error',
-              title: 'Lỗi',
-              text: response.data.msg || 'Lỗi khi thêm vào yêu thích',
+              icon: "error",
+              title: "Lỗi",
+              text: response.data.msg || "Lỗi khi thêm vào yêu thích",
             });
           }
         } catch (error) {
           console.error("Lỗi khi thêm vào yêu thích:", error);
           Swal.fire({
-            icon: 'error',
-            title: 'Lỗi',
-            text: 'Có lỗi xảy ra khi thêm vào yêu thích.',
+            icon: "error",
+            title: "Lỗi",
+            text: "Có lỗi xảy ra khi thêm vào yêu thích.",
           });
+        } finally {
+          this.isLoading = false; // Ẩn loading
         }
       } else {
         try {
-          const response = await apiDeleteFavorite({ favorite_id: this.favoriteId });
+          const response = await apiDeleteFavorite({
+            favorite_id: this.favoriteId,
+          });
           if (response.status === 200 && response.data.err === 0) {
             this.isFavorite = false;
             this.favoriteId = null;
             Swal.fire({
-              icon: 'success',
-              title: 'Thành công',
-              text: 'Đã xóa khỏi danh sách yêu thích!',
+              icon: "success",
+              title: "Thành công",
+              text: "Đã xóa khỏi danh sách yêu thích!",
             });
           } else {
             Swal.fire({
-              icon: 'error',
-              title: 'Lỗi',
-              text: response.data.msg || 'Lỗi khi xóa khỏi yêu thích',
+              icon: "error",
+              title: "Lỗi",
+              text: response.data.msg || "Lỗi khi xóa khỏi yêu thích",
             });
           }
         } catch (error) {
           console.error("Lỗi khi xóa khỏi yêu thích:", error);
           Swal.fire({
-            icon: 'error',
-            title: 'Lỗi',
-            text: 'Có lỗi xảy ra khi xóa khỏi yêu thích.',
+            icon: "error",
+            title: "Lỗi",
+            text: "Có lỗi xảy ra khi xóa khỏi yêu thích.",
           });
+        } finally {
+          this.isLoading = false; // Ẩn loading
         }
       }
     },
@@ -531,7 +580,6 @@ export default {
 };
 </script>
 
-<!-- Style remains unchanged -->
 <style scoped>
 @import "@/assets/css/ProductDetail.css";
 @import "@/assets/css/General.css";
@@ -540,6 +588,7 @@ export default {
   max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
+  position: relative; /* Để overlay hoạt động trong container */
 }
 
 .product-header .nav-tabs {
@@ -848,5 +897,99 @@ export default {
 
 .submit-review:hover {
   background-color: #219653;
+}
+
+/* CSS cho Loading Overlay */
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.loading-content {
+  text-align: center;
+  color: #fff;
+}
+
+.book {
+  position: relative;
+  width: 60px;
+  height: 80px;
+  margin: 0 auto 20px;
+}
+
+.book-page {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: #fff;
+  border-radius: 2px;
+  transform-origin: left center;
+  animation: flip 1.5s infinite ease-in-out;
+}
+
+.book-page:nth-child(1) {
+  animation-delay: 0s;
+  background: #f5f5f5;
+}
+
+.book-page:nth-child(2) {
+  animation-delay: 0.3s;
+  background: #e0e0e0;
+}
+
+.book-page:nth-child(3) {
+  animation-delay: 0.6s;
+  background: #d0d0d0;
+}
+
+@keyframes flip {
+  0% {
+    transform: rotateY(0deg);
+  }
+  50% {
+    transform: rotateY(-180deg);
+  }
+  100% {
+    transform: rotateY(0deg);
+  }
+}
+
+p {
+  font-size: 18px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dots::after {
+  content: "...";
+  display: inline-block;
+  width: 1em;
+  text-align: left;
+  animation: dots 1.5s infinite;
+}
+
+@keyframes dots {
+  0% {
+    content: ".";
+  }
+  33% {
+    content: "..";
+  }
+  66% {
+    content: "...";
+  }
+  100% {
+    content: ".";
+  }
 }
 </style>

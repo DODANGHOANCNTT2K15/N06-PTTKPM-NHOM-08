@@ -1,5 +1,17 @@
 <template>
   <div class="admin-book-types">
+    <!-- Loading Overlay -->
+    <div v-if="isLoading" class="loading-overlay">
+      <div class="loading-content">
+        <div class="book">
+          <div class="book-page"></div>
+          <div class="book-page"></div>
+          <div class="book-page"></div>
+        </div>
+        <p>Đang tải<span class="dots"></span></p>
+      </div>
+    </div>
+
     <h1>Quản lý Loại Sách</h1>
     <div class="book-type-actions">
       <input v-model="searchQuery" type="text" placeholder="Tìm kiếm theo tên..." class="search-input" />
@@ -67,7 +79,7 @@
           </div>
           <div class="modal-actions">
             <button type="submit">Lưu</button>
-            <button @click="showAddBookTypePopup = false">Hủy</button>
+            <button @click="cancelAddBookType">Hủy</button>
           </div>
         </form>
       </div>
@@ -106,7 +118,7 @@
 
 <script>
 import { ref, onMounted, computed } from 'vue';
-import Swal from 'sweetalert2'; // Import SweetAlert2
+import Swal from 'sweetalert2';
 import { apiGetAllBookTypes, apiAddBookType, apiEditBookType, apiDeleteBookType } from '@/services/admin/TagBooksService';
 
 export default {
@@ -122,8 +134,10 @@ export default {
     const editedBookType = ref({});
     const currentPage = ref(1);
     const itemsPerPage = ref(10);
+    const isLoading = ref(false); // Thêm trạng thái loading
 
     const fetchBookTypes = async () => {
+      isLoading.value = true; // Hiển thị loading
       try {
         const response = await apiGetAllBookTypes();
         if (response.data.err === 0) {
@@ -143,10 +157,13 @@ export default {
           title: 'Lỗi',
           text: 'Có lỗi xảy ra khi tải danh sách loại sách!',
         });
+      } finally {
+        isLoading.value = false; // Ẩn loading
       }
     };
 
     const addBookType = async () => {
+      isLoading.value = true; // Hiển thị loading
       try {
         const payload = { ...newBookType.value };
         const response = await apiAddBookType(payload);
@@ -175,6 +192,8 @@ export default {
           title: 'Lỗi',
           text: 'Có lỗi xảy ra khi thêm loại sách!',
         });
+      } finally {
+        isLoading.value = false; // Ẩn loading
       }
     };
 
@@ -185,6 +204,7 @@ export default {
     };
 
     const updateBookType = async () => {
+      isLoading.value = true; // Hiển thị loading
       try {
         const payload = { ...editedBookType.value };
         const response = await apiEditBookType(payload);
@@ -212,6 +232,8 @@ export default {
           title: 'Lỗi',
           text: 'Có lỗi xảy ra khi cập nhật loại sách!',
         });
+      } finally {
+        isLoading.value = false; // Ẩn loading
       }
     };
 
@@ -227,6 +249,7 @@ export default {
         cancelButtonText: 'Hủy',
       }).then(async (result) => {
         if (result.isConfirmed) {
+          isLoading.value = true; // Hiển thị loading
           try {
             const payload = { book_type_id: id };
             const response = await apiDeleteBookType(payload);
@@ -253,9 +276,16 @@ export default {
               title: 'Lỗi',
               text: 'Có lỗi xảy ra khi xóa loại sách!',
             });
+          } finally {
+            isLoading.value = false; // Ẩn loading
           }
         }
       });
+    };
+
+    const cancelAddBookType = () => {
+      newBookType.value = { name: '', tag: '', description: '' };
+      showAddBookTypePopup.value = false;
     };
 
     const filteredAndSortedBookTypes = computed(() => {
@@ -336,18 +366,20 @@ export default {
       totalPages,
       prevPage,
       nextPage,
+      cancelAddBookType,
+      isLoading, // Trả về isLoading để template sử dụng
     };
   },
 };
 </script>
 
 <style scoped>
-/* The CSS remains unchanged as it doesn't depend on the database schema */
 .admin-book-types {
   background-color: white;
   padding: 20px;
   border-radius: 8px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  position: relative; /* Để overlay hoạt động trong container */
 }
 
 .admin-book-types h1 {
@@ -407,6 +439,7 @@ export default {
 
 .book-type-table {
   overflow-x: auto;
+  min-height: 80vh;
   background-color: white;
   border-radius: 8px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
@@ -599,5 +632,99 @@ export default {
 
 .pagination-btn:hover:not(:disabled) {
   background-color: #0056b3;
+}
+
+/* CSS cho Loading Overlay */
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.loading-content {
+  text-align: center;
+  color: #fff;
+}
+
+.book {
+  position: relative;
+  width: 60px;
+  height: 80px;
+  margin: 0 auto 20px;
+}
+
+.book-page {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: #fff;
+  border-radius: 2px;
+  transform-origin: left center;
+  animation: flip 1.5s infinite ease-in-out;
+}
+
+.book-page:nth-child(1) {
+  animation-delay: 0s;
+  background: #f5f5f5;
+}
+
+.book-page:nth-child(2) {
+  animation-delay: 0.3s;
+  background: #e0e0e0;
+}
+
+.book-page:nth-child(3) {
+  animation-delay: 0.6s;
+  background: #d0d0d0;
+}
+
+@keyframes flip {
+  0% {
+    transform: rotateY(0deg);
+  }
+  50% {
+    transform: rotateY(-180deg);
+  }
+  100% {
+    transform: rotateY(0deg);
+  }
+}
+
+p {
+  font-size: 18px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dots::after {
+  content: "...";
+  display: inline-block;
+  width: 1em;
+  text-align: left;
+  animation: dots 1.5s infinite;
+}
+
+@keyframes dots {
+  0% {
+    content: ".";
+  }
+  33% {
+    content: "..";
+  }
+  66% {
+    content: "...";
+  }
+  100% {
+    content: ".";
+  }
 }
 </style>
