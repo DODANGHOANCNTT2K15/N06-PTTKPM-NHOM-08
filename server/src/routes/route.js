@@ -12,6 +12,7 @@ import * as paymentService from "../services/paymentService"
 import * as discountController from "../controllers/discountController"
 import * as favoriteController from "../controllers/favoriteController"
 import * as bannerController from "../controllers/bannerController"
+import * as searchController from "../controllers/searchController"
 import * as middleWare from "../middleware/authMiddleWare"
 import { upload } from "../middleware/multerMiddleWare";
 
@@ -92,5 +93,10 @@ router.delete("/order/delete", orderController.deleteOrderController);
 
 // payment
 router.post("/payment", paymentService.payment);
+
+// search
+router.post("/search/suggestion", searchController.searchSuggestionController);
+router.post("/search/books", searchController.searchController);
+
 
 export default router

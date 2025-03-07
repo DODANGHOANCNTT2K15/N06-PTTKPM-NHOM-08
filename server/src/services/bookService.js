@@ -150,7 +150,6 @@ export const addBookService = (req) =>
 
       book = newBook;
 
-      // Tự động tạo mới warehouse cho sách
       try {
         warehouse = await db.WareHouse.create({
           book_id: book.book_id,
