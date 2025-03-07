@@ -21,12 +21,20 @@ export const searchBookSuggestionsService = async ({ key, limit = 5 }) => {
     }
 };
 
-// Tìm kiếm sản phẩm theo từ khóa
+// Tìm kiếm sản phẩm theo từ khóa (tên sách hoặc thể loại)
 export const searchBookService = async ({ key }) => {
     try {
         const suggestions = await db.Book.findAll({
             where: {
-                title: { [db.Sequelize.Op.like]: `%${key}%` } // Tìm kiếm tiêu đề chứa từ khóa
+                [db.Sequelize.Op.or]: [
+                    { title: { [db.Sequelize.Op.like]: `%${key}%` } }, // Tìm theo tên sách
+                    {
+                        '$bookType.tag$': { [db.Sequelize.Op.like]: `%${key}%` } // Tìm theo tag trong BookType
+                    },
+                    {
+                        '$bookType.name$': { [db.Sequelize.Op.like]: `%${key}%` } // Tìm theo name trong BookType
+                    }
+                ]
             },
             include: [
                 {
@@ -37,7 +45,8 @@ export const searchBookService = async ({ key }) => {
                 {
                     model: db.BookType,
                     as: "bookType",
-                    attributes: ["name", "tag"]
+                    attributes: ["name", "tag"],
+                    required: false // Giữ LEFT JOIN để không loại bỏ sách nếu không có BookType khớp
                 },
                 {
                     model: db.WareHouse,
@@ -45,7 +54,7 @@ export const searchBookService = async ({ key }) => {
                     attributes: ["stock_quantity", "sold_quantity"]
                 }
             ],
-            order: [["published_date", "DESC"]] // Sắp xếp theo ngày xuất bản mới nhất
+            order: [["published_date", "DESC"]]
         });
 
         return {
