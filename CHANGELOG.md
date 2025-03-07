@@ -39,3 +39,9 @@ Mọi thay đổi code của dự án sẽ được ghi lại ở đây.
 - Bổ sung các tài liệu thuộc các nội dung 1,2,3,4,5,6
 - Báo cáo học phần.
 - DOCUMENTSLOGS.md (ghi nhận hoạt động của các tài liệu).
+
+## [Đã phát hành] - 7/3/2025
+###Thêm mới 
+- Hoàn thành các tính năng đăng nhập, login, quên mật khẩu
+- Các tính năng Yêu thích, Tìm kiếm, lọc sản phẩm.
+- admin quản lý người dùng, đơn hàng, tag book, giảm giá, đơn hàng.
