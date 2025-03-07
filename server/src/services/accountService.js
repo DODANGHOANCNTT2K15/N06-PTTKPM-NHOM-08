@@ -58,20 +58,12 @@ export const getAccountService = ({ user_id }) =>
 export const updateAccountService = (req) =>
     new Promise(async (resolve, reject) => {
         try {
-            const { email, role, status, user_name } = req.body;
-
-            if (!email) {
-                return resolve({
-                    err: 2,
-                    msg: 'Email là bắt buộc để cập nhật tài khoản.'
-                });
-            }
-
+            const { user_id, email, role, status, user_name } = req.body;
             const trimmedEmail = email.trim();
             const trimmedUsername = user_name?.trim();
 
             const account = await db.User.findOne({
-                where: { email: trimmedEmail }
+                where: { user_id: user_id }
             });
 
             if (!account) {
@@ -84,17 +76,17 @@ export const updateAccountService = (req) =>
             const updateData = req.user.role === 1
                 ? {
                     user_name: trimmedUsername,
-                    status: status !== undefined ? status : account.status,
-                    role: role !== undefined ? role : account.role
+                    status: status,
+                    role: role
                 }
                 : {
-                    user_name: trimmedUsername
+                    user_name: trimmedUsername,
                 };
 
             const [affectedRows] = await db.User.update(
                 updateData,
                 {
-                    where: { email: trimmedEmail }
+                    where: { user_id: user_id }
                 }
             );
 

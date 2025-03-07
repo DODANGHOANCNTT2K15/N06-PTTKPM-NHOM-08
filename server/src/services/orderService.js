@@ -329,7 +329,7 @@ export const updateOrderService = ({
 export const deleteOrderService = (order_id) =>
     new Promise(async (resolve, reject) => {
         try {
-            const deleted = await db.Orders.destroy({
+            const deleted = await db.Order.destroy({
                 where: { order_id },
             });
 
