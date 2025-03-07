@@ -42,7 +42,7 @@ const routes = [
           { path: 'info', name: 'UserInfo', component: UserPage, meta: { title: 'Thông tin cá nhân' } },
           { path: 'orders', name: 'UserOrders', component: UserPage, meta: { title: 'Đơn hàng' } },
           { path: 'address', name: 'UserAddress', component: UserPage, meta: { title: 'Địa chỉ' } },
-          { path: 'favorites', name: 'UserFavorites', component: UserPage, meta: { title: 'Yêu thích' } },
+          { path: 'like', name: 'UserLike', component: UserPage, meta: { title: 'Yêu thích' } },
           { path: 'history', name: 'UserHistory', component: UserPage, meta: { title: 'Lịch sử' } },
         ],
       },
