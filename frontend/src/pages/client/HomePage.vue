@@ -8,6 +8,19 @@
           </div>
           <div>
             <div>
+              <h2>Sách tiếng Việt</h2>
+              <ul>
+                <li
+                  v-for="category in vietnameseCategories"
+                  :key="category.id"
+                  @click="goToCategoryPage(category)"
+                  class="category-item"
+                >
+                  {{ category.name }}
+                </li>
+              </ul>
+            </div>
+            <div>
               <h2>Sách tiếng Anh</h2>
               <ul>
                 <li>Art & Photography</li>
@@ -19,20 +32,6 @@
                 <li>Education - Teaching</li>
                 <li>Magazines</li>
                 <li>Medical Books</li>
-              </ul>
-            </div>
-            <div>
-              <h2>Sách tiếng Việt</h2>
-              <ul>
-                <li>Sách văn học</li>
-                <li>Sách kinh tế</li>
-                <li>Sách thiếu nhi</li>
-                <li>Sách kỹ năng sống</li>
-                <li>Nuôi dạy con</li>
-                <li>Sách giáo khoa - Giáo trình</li>
-                <li>Sách học ngoại ngữ</li>
-                <li>Sách tham khảo</li>
-                <li>Sách kiến thức tổng hợp</li>
               </ul>
             </div>
           </div>
@@ -106,7 +105,7 @@
               :title="product.title"
               :sold="product.sold"
               :tags="product.tags"
-              @click="goToProductDetail(product.id)"
+              @click="goToProductDetail(product)"
             />
           </div>
           <div id="pagination">
@@ -145,7 +144,7 @@
             :title="product.title"
             :sold="product.sold"
             :tags="product.tags"
-            @click="goToProductDetail(product.id)"
+            @click="goToProductDetail(product)"
           />
           <div v-if="viewedProducts.length === 0">
             <p>Chưa có sản phẩm nào được xem.</p>
@@ -160,10 +159,20 @@
         <div>
           <h1>Xin chào,</h1>
           <p>Đăng nhập để trải nghiệm tốt nhất từ PlayBook</p>
-          <input v-model="loginForm.email" type="text" placeholder="Email hoặc số điện thoại" />
-          <input v-model="loginForm.pass_word" type="password" placeholder="Mật khẩu" />
+          <input
+            v-model="loginForm.email"
+            type="text"
+            placeholder="Email hoặc số điện thoại"
+          />
+          <input
+            v-model="loginForm.pass_word"
+            type="password"
+            placeholder="Mật khẩu"
+          />
           <p v-if="errorMessage" class="error-message">{{ errorMessage }}</p>
-          <p v-if="successMessage" class="success-message">{{ successMessage }}</p>
+          <p v-if="successMessage" class="success-message">
+            {{ successMessage }}
+          </p>
           <p id="forget_password">
             <router-link to="/forget-password">Quên mật khẩu?</router-link>
           </p>
@@ -190,14 +199,23 @@
     </div>
 
     <!-- Popup Forget Password -->
-    <div :class="{ hidden: currentRouteName !== 'ForgetPassword' }" id="Forget_Pass_popup">
+    <div
+      :class="{ hidden: currentRouteName !== 'ForgetPassword' }"
+      id="Forget_Pass_popup"
+    >
       <div>
         <div>
           <h1>Oh,</h1>
           <p>Bạn quên mật khẩu?</p>
-          <input v-model="forgetPasswordForm.email" type="text" placeholder="Email hoặc số điện thoại" />
+          <input
+            v-model="forgetPasswordForm.email"
+            type="text"
+            placeholder="Email hoặc số điện thoại"
+          />
           <p v-if="errorMessage" class="error-message">{{ errorMessage }}</p>
-          <p v-if="successMessage" class="success-message">{{ successMessage }}</p>
+          <p v-if="successMessage" class="success-message">
+            {{ successMessage }}
+          </p>
           <button @click="forgetPassword">Gửi mã</button>
           <div id="social_login">
             <img src="@/assets/images/Social_00.png" alt="" />
@@ -226,11 +244,25 @@
         <div>
           <h1>Đăng ký</h1>
           <p>Tham gia PlayBook ngay hôm nay!</p>
-          <input v-model="signupForm.user_name" type="text" placeholder="Họ và tên" />
-          <input v-model="signupForm.email" type="text" placeholder="Email hoặc số điện thoại" />
-          <input v-model="signupForm.pass_word" type="password" placeholder="Mật khẩu" />
+          <input
+            v-model="signupForm.user_name"
+            type="text"
+            placeholder="Họ và tên"
+          />
+          <input
+            v-model="signupForm.email"
+            type="text"
+            placeholder="Email hoặc số điện thoại"
+          />
+          <input
+            v-model="signupForm.pass_word"
+            type="password"
+            placeholder="Mật khẩu"
+          />
           <p v-if="errorMessage" class="error-message">{{ errorMessage }}</p>
-          <p v-if="successMessage" class="success-message">{{ successMessage }}</p>
+          <p v-if="successMessage" class="success-message">
+            {{ successMessage }}
+          </p>
           <button @click="signup">Đăng ký</button>
           <div id="social_login">
             <img src="@/assets/images/Social_00.png" alt="" />
@@ -255,10 +287,91 @@
 
     <!-- Popup Filter -->
     <div :class="{ hidden: !showFilterPopup }" id="filter_popup">
-      <!-- ... existing filter popup content ... -->
+      <div class="filter_popup_content">
+        <div><h1>Tất cả bộ lọc</h1></div>
+        <div class="filter_groups">
+          <div class="filter_group_cover" style="border: none">
+            <h1>Dịch vụ</h1>
+            <div>
+              <div>
+                <input
+                  type="checkbox"
+                  v-model="filters.freeShipping"
+                  id="freeShipping"
+                />
+                <label for="freeShipping">Giao hàng miễn phí</label>
+              </div>
+            </div>
+          </div>
+
+          <div class="filter_group_cover">
+            <h1>Đánh giá</h1>
+            <div>
+              <div
+                class="checkbox_cover"
+                v-for="rating in [1, 2, 3, 4, 5]"
+                :key="rating"
+              >
+                <input
+                  type="checkbox"
+                  v-model="filters.ratings[rating]"
+                  :id="`rating${rating}`"
+                />
+                <label :for="`rating${rating}`"
+                  >{{ "⭐".repeat(rating) }} {{ rating }} Sao</label
+                >
+              </div>
+            </div>
+          </div>
+
+          <div class="filter_group_cover">
+            <h1>Giá</h1>
+            <div>
+              <div
+                class="checkbox_cover"
+                v-for="(label, key) in priceRangeLabels"
+                :key="key"
+              >
+                <input
+                  type="checkbox"
+                  v-model="filters.priceRanges[key]"
+                  :id="key"
+                />
+                <label :for="key">{{ label }}</label>
+              </div>
+            </div>
+            <div v-if="!hasPriceRangeSelected">
+              <h1>Tự nhập khoảng giá</h1>
+              <div id="about_price">
+                <input
+                  type="text"
+                  v-model="customPriceRange.from"
+                  placeholder="Từ"
+                />
+                <span>_</span>
+                <input
+                  type="text"
+                  v-model="customPriceRange.to"
+                  placeholder="Đến"
+                />
+                <button type="button" @click="clearCustomPriceRange">
+                  Xóa
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="filter_popup_button">
+          <button @click="clearAllFilters">Xóa tất cả</button>
+          <button @click="showResults">Xem kết quả</button>
+        </div>
+        <div class="close-icon">
+          <i class="fas fa-times" @click="showFilterPopup = false"></i>
+        </div>
+      </div>
     </div>
 
-    <!-- Thêm component Loading -->
     <Loading />
   </div>
 </template>
@@ -278,7 +391,8 @@ import {
 } from "@/services/client/AuthService";
 import { apiGetAllBooks } from "@/services/client/BookService";
 import { apiGetAllBanners } from "@/services/admin/BannerService";
-import Swal from "sweetalert2"; // Import SweetAlert2
+import { apiGetAllTags } from "@/services/client/TagService";
+import Swal from "sweetalert2";
 
 export default {
   name: "HomePage",
@@ -290,20 +404,28 @@ export default {
     const avatarStore = useAvatarStore();
     const loadingStore = useLoadingStore();
 
+    const priceRangeLabels = {
+      under100k: "Dưới 100.000₫",
+      "100k-200k": "100.000₫ - 200.000₫",
+      "200k-500k": "200.000₫ - 500.000₫",
+      "500k-1m": "500.000₫ - 1.000.000₫",
+      "1m-2m": "1.000.000₫ - 2.000.000₫",
+      over2m: "Trên 2.000.000₫",
+    };
+
+    const vietnameseCategories = ref([]);
     const currentRouteName = computed(() => route.name);
     const showFilterPopup = ref(false);
     const banners = ref([]);
     const currentBanner = ref(0);
     let autoSlideInterval = null;
 
-    // Form states
     const loginForm = ref({ email: "", pass_word: "" });
     const signupForm = ref({ user_name: "", email: "", pass_word: "" });
     const forgetPasswordForm = ref({ email: "" });
-    const errorMessage = ref(""); // Vẫn giữ để hiển thị trong template nếu cần
-    const successMessage = ref(""); // Vẫn giữ để hiển thị trong template nếu cần
+    const errorMessage = ref("");
+    const successMessage = ref("");
 
-    // Filter states (giữ nguyên như cũ)
     const filterTags = ref(["Truyện", "Tiểu thuyết", "Trinh thám"]);
     const selectedTags = ref([]);
     const filters = ref({
@@ -319,21 +441,67 @@ export default {
       },
     });
     const customPriceRange = ref({ from: "", to: "" });
-
-    // Product states (giữ nguyên như cũ)
     const products = ref([]);
-    const viewedProducts = ref(JSON.parse(localStorage.getItem("viewedProducts")) || []);
+    const viewedProducts = ref(
+      JSON.parse(localStorage.getItem("viewedProducts")) || []
+    );
     const sortOption = ref("newest");
     const itemsPerPage = ref(10);
     const currentPage = ref(1);
 
-    // Hàm lấy danh sách banner từ API (giữ nguyên)
+    const goToCategoryPage = (category) => {
+      router.push({
+        path: "/search-results",
+        query: { q: category.name.trim() },
+      });
+    };
+
+    const fetchVietnameseCategories = async () => {
+      try {
+        loadingStore.showLoading();
+        const response = await apiGetAllTags();
+        if (response.data.err === 0) {
+          vietnameseCategories.value = response.data.data;
+        } else {
+          console.error("Lỗi từ API danh mục:", response.data.msg);
+          vietnameseCategories.value = [
+            { id: 1, name: "Sách văn học" },
+            { id: 2, name: "Sách kinh tế" },
+            { id: 3, name: "Sách thiếu nhi" },
+            { id: 4, name: "Sách kỹ năng sống" },
+            { id: 5, name: "Nuôi dạy con" },
+            { id: 6, name: "Sách giáo khoa - Giáo trình" },
+            { id: 7, name: "Sách học ngoại ngữ" },
+            { id: 8, name: "Sách tham khảo" },
+            { id: 9, name: "Sách kiến thức tổng hợp" },
+          ];
+        }
+      } catch (error) {
+        console.error("Không thể lấy danh mục:", error);
+        vietnameseCategories.value = [
+          { id: 1, name: "Sách văn học" },
+          { id: 2, name: "Sách kinh tế" },
+          { id: 3, name: "Sách thiếu nhi" },
+          { id: 4, name: "Sách kỹ năng sống" },
+          { id: 5, name: "Nuôi dạy con" },
+          { id: 6, name: "Sách giáo khoa - Giáo trình" },
+          { id: 7, name: "Sách học ngoại ngữ" },
+          { id: 8, name: "Sách tham khảo" },
+          { id: 9, name: "Sách kiến thức tổng hợp" },
+        ];
+      } finally {
+        loadingStore.hideLoading();
+      }
+    };
+
     const fetchBanners = async () => {
       try {
         loadingStore.showLoading();
         const response = await apiGetAllBanners();
         if (response.data.err === 0) {
-          banners.value = response.data.data.map(banner => banner.banner_path);
+          banners.value = response.data.data.map(
+            (banner) => banner.banner_path
+          );
           if (banners.value.length === 0) {
             banners.value = ["Banner_00.png", "Banner_01.jpg"];
           }
@@ -349,7 +517,6 @@ export default {
       }
     };
 
-    // Authentication functions với SweetAlert2
     const login = async () => {
       try {
         loadingStore.showLoading();
@@ -369,7 +536,6 @@ export default {
           });
           errorMessage.value = "";
           loginForm.value = { email: "", pass_word: "" };
-          setTimeout(() => router.push("/"), 1500); // Chuyển hướng sau khi thông báo
         } else {
           Swal.fire({
             icon: "error",
@@ -382,7 +548,9 @@ export default {
         Swal.fire({
           icon: "error",
           title: "Lỗi",
-          text: error.response?.data?.message || "Lỗi server, vui lòng thử lại sau!",
+          text:
+            error.response?.data?.message ||
+            "Lỗi server, vui lòng thử lại sau!",
         });
         successMessage.value = "";
       } finally {
@@ -400,7 +568,8 @@ export default {
         });
         if (response.status === 200 && response.data.err === 0) {
           authStore.login(response.data.token);
-          const avatarUrl = response.data.data?.avatar || response.data.data?.avata;
+          const avatarUrl =
+            response.data.data?.avatar || response.data.data?.avata;
           avatarStore.updateAvatar(avatarUrl || null);
           Swal.fire({
             icon: "success",
@@ -410,7 +579,6 @@ export default {
           });
           errorMessage.value = "";
           signupForm.value = { user_name: "", email: "", pass_word: "" };
-          setTimeout(() => router.push("/"), 1500);
         } else {
           Swal.fire({
             icon: "error",
@@ -423,7 +591,9 @@ export default {
         Swal.fire({
           icon: "error",
           title: "Lỗi",
-          text: error.response?.data?.message || "Lỗi server, vui lòng thử lại sau!",
+          text:
+            error.response?.data?.message ||
+            "Lỗi server, vui lòng thử lại sau!",
         });
         successMessage.value = "";
       } finally {
@@ -460,7 +630,9 @@ export default {
         Swal.fire({
           icon: "error",
           title: "Lỗi",
-          text: error.response?.data?.message || "Lỗi server, vui lòng thử lại sau!",
+          text:
+            error.response?.data?.message ||
+            "Lỗi server, vui lòng thử lại sau!",
         });
         successMessage.value = "";
       } finally {
@@ -495,7 +667,6 @@ export default {
       });
     };
 
-    // Các hàm còn lại giữ nguyên như cũ
     const goToProductDetail = (id) => {
       const product = products.value.find((p) => p.id === id);
       if (product) {
@@ -518,12 +689,13 @@ export default {
           products.value = response.data.data.map((book) => ({
             id: book.book_id,
             image: book.images[0]?.image_path || "Product_00.png",
-            discountedPrice: book.price * (1 - (book.discount_price || 0) / 100),
+            discountedPrice:
+              book.price * (1 - (book.discount_price || 0) / 100),
             originalPrice: book.price,
             author: book.author,
             title: book.title,
             sold: book.warehouses[0]?.sold_quantity || 0,
-            tags: [`${book.bookType?.tag || ''}`, `${book.rating_avg || 0}Sao`],
+            tags: [`${book.bookType?.tag || ""}`, `${book.rating_avg || 0}Sao`],
             publishedDate: new Date(book.published_date),
             rating: book.rating_avg || 0,
             freeShipping: book.free_shipping || false,
@@ -595,12 +767,18 @@ export default {
           }
           return selectedPriceRanges.some((range) => {
             switch (range) {
-              case "under100k": return price < 100000;
-              case "100k-200k": return price >= 100000 && price <= 200000;
-              case "200k-500k": return price >= 200000 && price <= 500000;
-              case "500k-1m": return price >= 500000 && price <= 1000000;
-              case "1m-2m": return price >= 1000000 && price <= 2000000;
-              case "over2m": return price > 2000000;
+              case "under100k":
+                return price < 100000;
+              case "100k-200k":
+                return price >= 100000 && price <= 200000;
+              case "200k-500k":
+                return price >= 200000 && price <= 500000;
+              case "500k-1m":
+                return price >= 500000 && price <= 1000000;
+              case "1m-2m":
+                return price >= 1000000 && price <= 2000000;
+              case "over2m":
+                return price > 2000000;
             }
           });
         });
@@ -667,6 +845,7 @@ export default {
       avatarStore.initializeAvatar();
       fetchBooks();
       fetchBanners();
+      fetchVietnameseCategories();
     });
 
     onUnmounted(() => {
@@ -707,6 +886,9 @@ export default {
       filterTags,
       selectedTags,
       toggleTag,
+      vietnameseCategories,
+      goToCategoryPage,
+      priceRangeLabels,
     };
   },
 };
@@ -725,7 +907,7 @@ export default {
 #banner {
   position: relative;
   width: 100%;
-  height: 400px; /* Điều chỉnh chiều cao theo thiết kế của bạn */
+  height: 400px;
   overflow: hidden;
 }
 
@@ -741,7 +923,7 @@ export default {
 
 .div_banner.active {
   opacity: 1;
-  animation: slide 0.5s linear; /* Animation với duration 0.5s */
+  animation: slide 0.5s linear;
 }
 
 .div_banner img {
@@ -752,10 +934,10 @@ export default {
 
 @keyframes slide {
   0% {
-    transform: translateX(100%); /* Bắt đầu từ bên phải */
+    transform: translateX(100%);
   }
   100% {
-    transform: translateX(-100%); /* Kết thúc ở bên trái */
+    transform: translateX(-100%);
   }
 }
 
@@ -812,6 +994,146 @@ export default {
 
 .logout-btn:hover {
   background-color: #c82333;
+}
+
+
+/* Style cho Popup Filter */
+#filter_popup {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+#filter_popup.hidden {
+  display: none;
+}
+
+.filter_popup_content {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  width: 90%;
+  max-width: 500px;
+  position: relative;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.filter_popup_content h1 {
+  font-size: 1.5em;
+  margin-bottom: 15px;
+}
+
+.filter_groups {
+  margin-bottom: 20px;
+}
+
+.filter_group_cover {
+  padding: 10px 0;
+  border-bottom: 1px solid #ddd;
+}
+
+.filter_group_cover h1 {
+  font-size: 1.2em;
+  margin-bottom: 10px;
+}
+
+.checkbox_cover {
+  margin: 8px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.checkbox_cover input[type="checkbox"] {
+  margin-right: 5px;
+}
+
+.checkbox_cover label {
+  cursor: pointer;
+}
+
+#about_price {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+#about_price input {
+  width: 100px;
+  padding: 5px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+}
+
+#about_price span {
+  font-size: 1.2em;
+}
+
+#about_price button {
+  padding: 5px 10px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  background: white;
+  cursor: pointer;
+}
+
+#about_price button:hover {
+  background: #f0f0f0;
+}
+
+#filter_popup_button {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+#filter_popup_button button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1em;
+  transition: background-color 0.3s;
+}
+
+#filter_popup_button button:first-child {
+  background: #ddd;
+  color: #333;
+}
+
+#filter_popup_button button:first-child:hover {
+  background: #ccc;
+}
+
+#filter_popup_button button:last-child {
+  background: #007bff;
+  color: white;
+}
+
+#filter_popup_button button:last-child:hover {
+  background: #0056b3;
+}
+
+.close-icon {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 1.5em;
+  cursor: pointer;
+  color: #666;
+}
+
+.close-icon:hover {
+  color: #333;
 }
 
 .error-message {
@@ -880,5 +1202,17 @@ export default {
 #filter_tag_all {
   padding: 8px 15px;
   cursor: pointer;
+}
+
+/* Style cho category item */
+.category-item {
+  cursor: pointer;
+  padding: 5px 10px;
+  transition: all 0.3s ease;
+}
+
+.category-item:hover {
+  background-color: #f0f0f0;
+  color: #007bff;
 }
 </style>

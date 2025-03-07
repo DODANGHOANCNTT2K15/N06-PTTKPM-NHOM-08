@@ -45,6 +45,11 @@
               <select
                 v-model="order.status"
                 @change="updateOrderStatus(order.order_id, order.status)"
+                :class="{
+                  'status-pending': order.status === 0,
+                  'status-confirmed': order.status === 1,
+                  'status-rejected': order.status === 2
+                }"
               >
                 <option :value="0">Chờ xác nhận</option>
                 <option :value="1">Đã xác nhận</option>
@@ -571,6 +576,36 @@ export default {
   font-size: 14px;
   background-color: #fff;
   cursor: pointer;
+}
+
+.order-table select.status-pending {
+  background-color: #fff3cd; /* Vàng nhạt */
+  color: #856404; /* Màu chữ vàng đậm */
+  border-color: #ffeeba;
+}
+
+.order-table select.status-confirmed {
+  background-color: #d4edda; /* Xanh lá nhạt */
+  color: #155724; /* Màu chữ xanh đậm */
+  border-color: #c3e6cb;
+}
+
+.order-table select.status-rejected {
+  background-color: #f8d7da; /* Đỏ nhạt */
+  color: #721c24; /* Màu chữ đỏ đậm */
+  border-color: #f5c6cb;
+}
+
+.order-table select.status-pending:hover {
+  background-color: #ffeeba;
+}
+
+.order-table select.status-confirmed:hover {
+  background-color: #c3e6cb;
+}
+
+.order-table select.status-rejected:hover {
+  background-color: #f5c6cb;
 }
 
 .view-details-btn {
