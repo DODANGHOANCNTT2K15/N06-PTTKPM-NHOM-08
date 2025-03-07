@@ -105,7 +105,7 @@
               :title="product.title"
               :sold="product.sold"
               :tags="product.tags"
-              @click="goToProductDetail(product)"
+              @click="goToProductDetail(product.id)"
             />
           </div>
           <div id="pagination">

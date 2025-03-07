@@ -82,6 +82,18 @@ export default {
 
     // Activities và các computed properties khác giữ nguyên
     const activities = ref([
+      { id: 1, text: 'Người dùng "Tina Bình" đã đặt sách vào 2025-02-27' },
+      { id: 2, text: 'Sách "Thiên Tài Bên Trái" đã được cập nhật' },
+      { id: 3, text: 'Đơn hàng #12345 đã hoàn thành' },
+      { id: 4, text: 'Banner "Ưu đãi Tết 2025" đã được thêm vào 2025-03-01' },
+      { id: 5, text: 'Khuyến mại "Black Friday" đã được chỉnh sửa' },
+      { id: 6, text: 'Người dùng "Nam Anh" đã đăng ký tài khoản' },
+      { id: 7, text: 'Đơn hàng #12346 đã bị hủy' },
+      { id: 8, text: 'Sách "Thiền Luận" đã được thêm vào danh mục' },
+      { id: 9, text: 'Banner "Sách Mới" đã được kích hoạt' },
+      { id: 10, text: 'Khuyến mại "Giảm giá hè" đã hết hạn' },
+      { id: 11, text: 'Người dùng "Lan Nhi" đã đặt đơn hàng mới' },
+      { id: 12, text: 'Đơn hàng #12347 đã được giao thành công' },
       // Danh sách activities mẫu giữ nguyên
     ]);
 
