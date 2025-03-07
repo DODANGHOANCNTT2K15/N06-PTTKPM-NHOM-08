@@ -360,15 +360,12 @@ export default {
           pass_word: loginForm.value.pass_word,
         });
         if (response.status === 200 && response.data.err !== 2) {
-          localStorage.setItem("token", response.data.token);
-          authStore.login();
-          console.log(response.data?.avatar);
+          authStore.login(response.data.token);
           const avatarUrl = response.data?.avatar || response.data?.avata;
           avatarStore.updateAvatar(avatarUrl || null);
           successMessage.value = "Đăng nhập thành công!";
           errorMessage.value = "";
           loginForm.value = { email: "", pass_word: "" };
-          setTimeout(() => router.push("/"), 1000);
         } else {
           errorMessage.value = response.data.msg || "Đăng nhập thất bại";
           successMessage.value = "";

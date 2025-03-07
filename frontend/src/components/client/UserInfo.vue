@@ -167,7 +167,8 @@ export default {
       try {
         const response = await apiUpdateInfor({
           user_name: userInfo.value.fullName,
-          email: email.value
+          email: email.value,
+          user_id: userId.value
         });
         if (response.status === 200 && response.data.err === 0) {
           Swal.fire({

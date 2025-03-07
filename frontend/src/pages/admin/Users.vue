@@ -28,21 +28,25 @@
             <th @click="sort('role')">
               Loại tài khoản <i :class="getSortIcon('role')"></i>
             </th>
+            <th @click="sort('status')">
+              Trạng thái <i :class="getSortIcon('status')"></i>
+            </th>
             <th>Hành động</th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="user in filteredAndSortedUsers" :key="user.id">
+          <tr v-for="user in filteredAndSortedUsers" :key="user.user_id">
             <td>{{ user.user_id }}</td>
             <td>{{ user.user_name }}</td>
             <td>{{ user.email }}</td>
             <td>{{ user.role === 1 ? "Admin" : "Khách hàng" }}</td>
+            <td>{{ user.status === 0 ? "Hoạt động" : "Dừng hoạt động" }}</td>
             <td>
-              <button @click="editUser(user.id)" class="action-btn edit-btn">
+              <button @click="editUser(user.user_id)" class="action-btn edit-btn">
                 <i class="fas fa-pencil-alt"></i>
               </button>
               <button
-                @click="changePopup(user.id)"
+                @click="changePopup(user.user_id)"
                 class="action-btn password-btn"
               >
                 <i class="fas fa-key"></i>
@@ -101,7 +105,7 @@
           <div class="form-group">
             <label>Role:</label>
             <select v-model="newUser.role" required>
-              <option value="0">Người dùng</option>
+              <option value="0">Khách hàng</option>
               <option value="1">Admin</option>
             </select>
           </div>
@@ -140,7 +144,7 @@
           <div class="form-group">
             <label>Role:</label>
             <select v-model="editedUser.role" required>
-              <option value="0">Người dùng</option>
+              <option value="0">Khách hàng</option>
               <option value="1">Admin</option>
             </select>
           </div>
@@ -185,7 +189,7 @@
           <div class="form-group">
             <label>Mật khẩu mới:</label>
             <input
-              v-model="passwordChange.new_pass_word"
+              v-model="passwordChange.pass_word"
               type="password"
               required
             />
@@ -209,7 +213,7 @@ import {
   apiDeleteUser,
   apiChangePassword,
 } from "@/services/admin/UserService";
-import Swal from "sweetalert2"; // Import SweetAlert2
+import Swal from "sweetalert2";
 
 export default {
   name: "UsersAdmin",
@@ -225,11 +229,11 @@ export default {
       user_name: "",
       email: "",
       pass_word: "",
-      role: "0",
-      status: "0",
+      role: 0,
+      status: 0,
     });
     const editedUser = ref({});
-    const passwordChange = ref({ user_id: "", email: "", new_pass_word: "" });
+    const passwordChange = ref({ user_id: "", email: "", pass_word: "" });
     const currentPage = ref(1);
     const itemsPerPage = ref(10);
 
@@ -266,8 +270,8 @@ export default {
             user_name: "",
             email: "",
             pass_word: "",
-            role: "0",
-            status: "0",
+            role: 0,
+            status: 0,
           };
           showAddUserPopup.value = false;
           Swal.fire({
@@ -295,8 +299,8 @@ export default {
       }
     };
 
-    const editUser = (id) => {
-      const user = users.value.find((u) => u.id === id);
+    const editUser = (user_id) => {
+      const user = users.value.find((u) => u.user_id === user_id);
       editedUser.value = { ...user };
       showEditUserPopup.value = true;
     };
@@ -308,6 +312,7 @@ export default {
         if (response.data && response.data.err === 0) {
           await fetchUsers();
           showEditUserPopup.value = false;
+          editedUser.value = {};
           Swal.fire({
             icon: "success",
             title: "Thành công!",
@@ -379,12 +384,12 @@ export default {
       });
     };
 
-    const changePopup = (id) => {
-      const user = users.value.find((u) => u.id === id);
+    const changePopup = (user_id) => {
+      const user = users.value.find((u) => u.user_id === user_id);
       passwordChange.value = {
         user_id: user.user_id,
         email: user.email,
-        new_pass_word: "",
+        pass_word: "",
       };
       showChangePasswordPopup.value = true;
     };
@@ -510,6 +515,7 @@ export default {
 </script>
 
 <style scoped>
+/* Giữ nguyên style từ code gốc */
 .admin-users {
   background-color: white;
   padding: 20px;
@@ -639,11 +645,9 @@ export default {
 
 .user-table .password-btn i {
   color: #ffc107;
-  /* Màu vàng cho icon khóa */
   font-size: 16px;
 }
 
-/* Modal Styles */
 .modal {
   position: fixed;
   top: 0;
@@ -736,7 +740,6 @@ export default {
   background-color: #c0392b;
 }
 
-/* Phân trang */
 .pagination {
   padding: 10px 16px;
   display: flex;

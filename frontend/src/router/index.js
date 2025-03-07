@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router';
+import { useAuthStore } from '@/stores/auth'; // Điều chỉnh đường dẫn nếu cần
 import ClientLayout from '@/layouts/ClientLayout.vue';
 import HomePage from '@/pages/client/HomePage.vue'; 
 import ProductDetail from '@/pages/client/ProductDetail.vue';
@@ -15,146 +16,85 @@ import Tags from '@/pages/admin/Tags.vue';
 import Promotions from '@/pages/admin/Promotions.vue';
 import SearchResults from '@/pages/client/SearchResults.vue';
 
-
+// Định nghĩa routes
 const routes = [
-    {
-      path: '/',
-      component: ClientLayout,
-      children: [
-        {
-          path: '',
-          name: 'HomePage',
-          component: HomePage 
-        },
-        {
-          path: 'product/:id',
-          name: 'ProductPage',
-          component: ProductDetail
-        },
-        {
-          path: 'cart',
-          name: 'CartPage',
-          component: CartPage,
-        },
-        {
-          path: 'user',
-          component: UserPage, // Component chính cho trang user
-          children: [
-            {
-              path: '',
-              name: 'UserInfo',
-              component: UserPage, // Sử dụng cùng UserPage nhưng với default content (info)
-            },
-            {
-              path: 'info',
-              name: 'UserInfo',
-              component: UserPage, // Thông tin tài khoản (default)
-            },
-            {
-              path: 'orders',
-              name: 'UserOrders',
-              component: UserPage, // Giỏ hàng của user
-            },
-            {
-              path: 'address',
-              name: 'UserAddress',
-              component: UserPage, // Địa chỉ của user
-            },
-            {
-              path: 'like',
-              name: 'UserLike',
-              component: UserPage, // Sản phẩm yêu thích
-            },
-            {
-              path: 'history',
-              name: 'UserHistory',
-              component: UserPage, // Lịch sử sản phẩm đã xem
-            },
-          ],
-        },
-        {
-          path: '/login',
-          name: 'Login',
-          component: HomePage, // Sử dụng cùng HomePage.vue
-        },
-        {
-          path: '/forget-password',
-          name: 'ForgetPassword',
-          component: HomePage, // Sử dụng cùng HomePage.vue
-        },
-        {
-          path: '/signup',
-          name: 'Signup',
-          component: HomePage, // Sử dụng cùng HomePage.vue
-        },
-        {
-          path: '/address',
-          name: 'Address',
-          component: HomePage,
-        },
-        {
-          path: '/search-results',
-          name: 'SearchResults',
-          component: SearchResults, 
-        },
-        {
-          path: '/filter',
-          name: 'Filter',
-          component: HomePage,
-        },
-        ]
+  {
+    path: '/',
+    component: ClientLayout,
+    children: [
+      { path: '', name: 'HomePage', component: HomePage },
+      { path: 'product/:id', name: 'ProductPage', component: ProductDetail },
+      { 
+        path: 'cart', 
+        name: 'CartPage', 
+        component: CartPage, 
+        meta: { requiresAuth: true },
       },
       {
-        path: '/admin',
-        component: AdminLayout,
+        path: 'user',
+        component: UserPage,
+        meta: { requiresAuth: true },
         children: [
-          {
-            path: 'dashboard',
-            name: 'AdminDashboard',
-            component: Dashboard,
-          },
-          {
-            path: 'books',
-            name: 'BooksAdmin',
-            component: Books,
-          },
-          {
-            path: 'users',
-            name: 'AdminUsers',
-            component: Users,
-          },
-          {
-            path: 'orders',
-            name: 'AdminOrders',
-            component: Orders,
-          },
-          { 
-            path: 'banners', 
-            name: 'AdminBanners', 
-            component: Banners },
-          { 
-            path: 'tags', 
-            name: 'AdminTags', 
-            component: Tags 
-          },
-          { 
-            path: 'promotions', 
-            component: Promotions, 
-            name: 'AdminPromotions' 
-          },
+          { path: '', name: 'UserInfo', component: UserPage },
+          { path: 'info', name: 'UserInfo', component: UserPage },
+          { path: 'orders', name: 'UserOrders', component: UserPage },
+          { path: 'address', name: 'UserAddress', component: UserPage },
+          { path: 'like', name: 'UserLike', component: UserPage },
+          { path: 'history', name: 'UserHistory', component: UserPage },
         ],
       },
-      {
-        path: '/:pathMatch(.*)*',
-        name: 'NotFound',
-        component: NotFound,
-      },
-  ];
-  
+      { path: '/login', name: 'Login', component: HomePage },
+      { path: '/forget-password', name: 'ForgetPassword', component: HomePage },
+      { path: '/signup', name: 'Signup', component: HomePage },
+      { path: '/address', name: 'Address', component: HomePage },
+      { path: '/search-results', name: 'SearchResults', component: SearchResults },
+      { path: '/filter', name: 'Filter', component: HomePage },
+    ],
+  },
+  {
+    path: '/admin',
+    component: AdminLayout,
+    meta: { requiresAuth: true, requiresAdmin: true },
+    children: [
+      { path: 'dashboard', name: 'AdminDashboard', component: Dashboard },
+      { path: 'books', name: 'BooksAdmin', component: Books },
+      { path: 'users', name: 'AdminUsers', component: Users },
+      { path: 'orders', name: 'AdminOrders', component: Orders },
+      { path: 'banners', name: 'AdminBanners', component: Banners },
+      { path: 'tags', name: 'AdminTags', component: Tags },
+      { path: 'promotions', name: 'AdminPromotions', component: Promotions },
+    ],
+  },
+  {
+    path: '/:pathMatch(.*)*',
+    name: 'NotFound',
+    component: NotFound,
+  },
+];
 
+// Tạo router
 const router = createRouter({
   history: createWebHistory(),
-  routes
+  routes,
+});
+
+// Navigation Guard
+router.beforeEach((to, from, next) => {
+  const authStore = useAuthStore();
+  authStore.initializeAuth(); // Khởi tạo trạng thái từ localStorage
+
+  // Kiểm tra nếu route yêu cầu đăng nhập
+  if (to.meta.requiresAuth && !authStore.isLoggedIn) {
+    next('/login'); // Chuyển hướng đến login nếu chưa đăng nhập
+  }
+  // Kiểm tra nếu route yêu cầu quyền admin
+  else if (to.meta.requiresAdmin && !authStore.isAdmin()) {
+    next('/'); // Chuyển hướng về trang chủ nếu không phải admin
+  }
+  // Cho phép điều hướng nếu không có hạn chế
+  else {
+    next();
+  }
 });
 
 export default router;
